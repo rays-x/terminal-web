@@ -1,0 +1,88 @@
+.TableFooter {
+  display: grid;
+  row-gap: 12px;
+  border-radius: 0 0 20px 20px;
+  background-color: #1e1f2b;
+  padding: 5px 24px 15px;
+}
+
+.TableFooter__text {
+  font-weight: 500;
+  font-size: 13px;
+  color: #8e91a5;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .TableFooter {
+    height: 48px;
+    display: flex;
+    align-items: center;
+
+    // Table padding correction
+    padding: 0 24px 10px;
+  }
+
+  .TableFooter__text {
+    text-align: left;
+    margin-right: 10px;
+  }
+}
+
+.TableFooter__input {
+  padding: 6px 10px;
+  background-color: #353742;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  color: #8e91a5;
+  border: none;
+  outline: none;
+}
+
+.TableFooter__input::placeholder {
+  color: #8e91a5;
+}
+
+.TableFooter__pagination {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.TableFooter__paginationButton {
+  cursor: pointer;
+  width: 36px;
+  height: 32px;
+  background-color: #353742;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.TableFooter__paginationButton:not(:last-child) {
+  margin-right: 4px;
+}
+
+.TableFooter__paginationButton_previous {
+  transform: rotate(-180deg);
+}
+
+.TableFooter__paginationButton:hover {
+  background-color: rgb(255 255 255 / 15%);
+}
+
+.TableFooter__paginationButton:active {
+  transition: background-color 0.1s linear;
+  background-color: rgb(255 255 255 / 20%);
+}
+
+.TableFooter__paginationText {
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  color: #8e91a5;
+  padding: 0 12px 0 8px;
+}

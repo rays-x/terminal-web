@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+
+  nginx:
+    image: ray-nginx-local:latest
+    ports:
+      - 2055:80
+
+  mongo:
+    image: mongo
+    ports:
+      - 27001:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+    volumes:
+      - mongo-db:/data/db
+      - mongo-db-config:/data/configdb
+
+  redis:
+    image: redis:alpine
+    privileged: true
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    sysctls:
+      net.core.somaxconn: 65535
+    command: "/bin/sh -c redis-server & echo 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' > /etc/rc.local"
+
+networks:
+  default:
+    name: "ray"
+
+volumes:
+  mongo-db:
+    name: "ray_mongo-db"
+  mongo-db-config:
+    name: "ray_mongo-db-config"
+  redis:
+    name: "ray_redis"

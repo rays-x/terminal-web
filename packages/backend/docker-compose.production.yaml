@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+
+  nginx:
+    image: bardakdev/ray-client
+    restart: always
+    links:
+      - backend
+    ports:
+      - "80:80"
+    privileged: true
+
+  backend:
+    image: bardakdev/ray
+    restart: always
+    depends_on:
+      - mongo
+      - redis
+    links:
+      - mongo
+      - redis
+    volumes:
+      - media:/usr/src/app/media
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+    volumes:
+      - mongo-db:/data/db
+      - mongo-db-config:/data/configdb
+
+  redis:
+    image: redis:alpine
+    restart: always
+    privileged: true
+    volumes:
+      - redis:/data
+    sysctls:
+      net.core.somaxconn: 65535
+    command: "/bin/sh -c redis-server & echo 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' > /etc/rc.local"
+
+networks:
+  default:
+    name: "ray"
+
+volumes:
+  mongo-db:
+    name: "ray_mongo-db"
+  mongo-db-config:
+    name: "ray_mongo-db-config"
+  redis:
+    name: "ray_redis"
+  media:
+    name: "ray_media"

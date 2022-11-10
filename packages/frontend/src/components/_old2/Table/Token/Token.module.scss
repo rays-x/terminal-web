@@ -1,0 +1,14 @@
+.Token {
+  display: flex;
+  align-items: center;
+}
+
+.Token__text {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.Token__icon {
+  margin-right: 11px;
+}

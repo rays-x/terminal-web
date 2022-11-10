@@ -1,0 +1,21 @@
+{
+  "name": "ray.sx",
+  "version": "0.0.0-development",
+  "license": "GNU LGPL",
+  "private": true,
+  "engines": {
+    "node": ">=19"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "resolutions": {
+    "mongoose": "6.6.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "18.0.25",
+    "@types/react-dom": "18.0.8"
+  }
+}
