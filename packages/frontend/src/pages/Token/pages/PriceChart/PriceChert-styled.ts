@@ -8,6 +8,8 @@ export const Container = styled.div`
     display: grid;
     grid-template-columns: 2.7fr 1fr;
     grid-template-areas: '. .';
+    display: flex;
+    flex-direction: column;
   }
   ${mixins.isMobile(css`
     display: flex;
@@ -40,6 +42,8 @@ export const CoinPairs = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: ${gap[14]};
+  max-height: 80px;
+  overflow: auto;
 `;
 
 export enum PriceChert {

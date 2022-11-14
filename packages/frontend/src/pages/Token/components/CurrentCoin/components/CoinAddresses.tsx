@@ -28,7 +28,6 @@ export const CoinAddresses: FC = () => {
       )}
       {currentCoinData?.platform_ethereum && (
         <CoinPageStyled.CoinAddress>
-          a
           <img
             src={ETHImage}
             style={{width: 20, height: 20}}

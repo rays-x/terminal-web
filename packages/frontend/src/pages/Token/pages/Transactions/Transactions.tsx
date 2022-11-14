@@ -1,4 +1,4 @@
-import React, {FC, useContext, useMemo} from 'react';
+import React from 'react';
 import {useParams} from 'react-router';
 import {CoinPageStyled} from '../../Coin-styled';
 import {CurrentCoinData} from '../../CoinPage';
@@ -11,12 +11,14 @@ import {formatDate} from '../../../../hooks/useFormatDate';
 import {HeaderStyled} from '../../../../components/_old/ui/Header/Header-styled';
 import {TableStyled} from '../../../../components/_old/ui/Table/Table-styled';
 import {HeaderVariant} from '../../../../components/_old/ui/Header/types';
+import {sample} from 'lodash';
 
-const today = new Date();
-
-export const Transactions: FC = () => {
-  const currentCoinData = useContext(CurrentCoinData);
+export const Transactions: React.FC = React.memo(() => {
+  const currentCoinData = React.useContext(CurrentCoinData);
   const coinIndex = currentCoinData?.index;
+
+  const _change = currentCoinData?.price_change_24h || 0;
+  const buy = sample(Array.from({length: 100}).map((_, i) => i + 1));
 
   const {token: coinId} = useParams();
 
@@ -24,31 +26,26 @@ export const Transactions: FC = () => {
     transactions: {
       transactions: [],
       buySellPressure: {
-        buy: undefined,
-        sell: undefined,
-        status: undefined
+        buy: buy,
+        sell: 100 - buy,
+        status: buy
       }
     }
   }/*useMerge(QUERY_TRANSACTIONS_TABLE, SUB_TRANSACTIONS_TABLE, {
     variables: {coinId},
     skip: !coinId
-    /!**
-     * apollo cache duplicates array elements with the same "__typename" and "id" fields..
-     * https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
-     *!/
-    // fetchPolicy: 'no-cache'
   })*/;
 
-  const transactions = useMemo(() => {
+  const transactions = React.useMemo(() => {
     return (data?.transactions?.transactions || []).slice(0, 10);
   }, [data]);
 
   const buySellPressure = data?.transactions?.buySellPressure;
 
-  const columns: Columns[] = useMemo(() => {
+  const columns: Columns[] = React.useMemo(() => {
     return [
       {
-        Header: `Date (${formatDate(today, 'zzzz')})`,
+        Header: `Date (${formatDate(new Date(), 'zzzz')})`,
         accessor: 'date',
         width: 70,
         justify: 'center'
@@ -88,4 +85,4 @@ export const Transactions: FC = () => {
       </TableStyled.Wrapper>
     </TableStyled.Offset>
   );
-};
+});

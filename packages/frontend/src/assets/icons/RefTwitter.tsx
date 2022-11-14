@@ -9,7 +9,7 @@ export default (params) => (
         fill="white"/>
     </g>
     <defs>
-      <filter id="filter0_d_1_360" x="0" y="0" width="24" height="24" color-interpolation-filters="sRGB">
+      <filter id="filter0_d_1_360" x="0" y="0" width="24" height="24" colorInterpolationFilters="sRGB">
         <feFlood floodOpacity="0" result="BackgroundImageFix"/>
         <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
         <feOffset dy="4"/>

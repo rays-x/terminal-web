@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
 import {animated, config} from 'react-spring';
 import {useSpring} from '@react-spring/web';
-import {useLocation} from 'react-router';
+import {useLocation, useNavigate} from 'react-router';
 import {Logo} from '../PageLayout/components/logo';
 import Icons from '../../../../assets';
 // import {useStore} from '../../../../stores';
@@ -67,8 +67,7 @@ export const sidebarPageButtons: SidebarPageButton[] = [
 
 export const SidebarLayout: any = ({children, isOpen, changeDisplayMode}: any) => {
   // const { isMobile } = useAdaptiveTriggers({});
-  // const history = useHistory();
-  const location = useLocation();
+  const navigate = useNavigate();
 
   const pageLink = useSpring({
     width: 110,
@@ -88,15 +87,30 @@ export const SidebarLayout: any = ({children, isOpen, changeDisplayMode}: any) =
           </SidebarLayoutStyled.Close>
         </SidebarLayoutStyled.Header>
         {sidebarPageButtons.map((button, index) => (
-          <SidebarLayoutStyled.PageLink
-            active={index === 0}
-            onClick={() => {
-            }/*history.push(button.path || '/')*/}
-            key={button.text}
-          >
-            <PageLinkIcon>{button.icons}</PageLinkIcon>
-            <animated.div style={pageLink}>{button.text}</animated.div>
-          </SidebarLayoutStyled.PageLink>
+          button.path
+            ? (
+              <SidebarLayoutStyled.PageLink
+                href={button.path}
+                active={index === 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(button.path);
+                }}
+                key={button.text}
+              >
+                <PageLinkIcon>{button.icons}</PageLinkIcon>
+                <animated.div style={pageLink}>{button.text}</animated.div>
+              </SidebarLayoutStyled.PageLink>
+            )
+            : (
+              <SidebarLayoutStyled.PageNonLink
+                active={index === 0}
+                key={button.text}
+              >
+                <PageLinkIcon>{button.icons}</PageLinkIcon>
+                <animated.div style={pageLink}>{button.text}</animated.div>
+              </SidebarLayoutStyled.PageNonLink>
+            )
         ))}
         <SidebarLayoutStyledFooter>
           <SidebarLayoutStyledFooterIcons>

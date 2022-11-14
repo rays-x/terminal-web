@@ -77,7 +77,26 @@ interface PageLinkProps {
   active?: boolean;
 }
 
-export const PageLink = styled.div<PageLinkProps>`
+export const PageLink = styled.a<PageLinkProps>`
+  margin-left: 5px;
+  display: flex;
+  gap: 20px;
+  cursor: pointer;
+  align-items: center;
+  text-decoration: none;
+
+  div {
+    color: ${({active}) =>
+            active ? colors.text.secondary : colors.background.sidebarLink};
+    font-weight: ${({active}) => active ? 700 : 400};
+    font-size: ${fonts.fontSize._14};
+    line-height: 24px;
+  }
+
+  ${mixins.textUnselectable}
+`;
+
+export const PageNonLink = styled.div<PageLinkProps>`
   margin-left: 5px;
   display: flex;
   gap: 20px;
@@ -151,6 +170,7 @@ export const SidebarLayoutStyled = {
   Component,
   Sidebar,
   PageLink,
+  PageNonLink,
   Header,
   Close,
   Overlay

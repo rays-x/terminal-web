@@ -1,5 +1,6 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {NetworkExchangesContext} from './NetworkExchangesContext';
+import {useLocation, useNavigate, useParams} from 'react-router';
 
 const data = [
   {
@@ -27,19 +28,21 @@ const data = [
 ];
 
 export function NetworkExchangesProvider({children}: { children: React.ReactNode }) {
-
-  const [network, setNetwork] = useState('');
-  const [exchange, switchExchange] = useState('');
-
-  const switchNetwork = (_name: string) => {
-    const network = data?.find(({name}) => name === _name);
-    setNetwork(_name);
-    switchExchange(network?.dexes[0].exchange as string);
+  const navigate = useNavigate();
+  const {pathname} = useLocation();
+  const [network, setNetwork] = React.useState<string>();
+  const [exchange, switchExchange] = React.useState<string>();
+  const switchNetwork = (_name?: string, silent = true) => {
+    const network = data.find(({name}) => name === _name) || data[0];
+    setNetwork(network.name);
+    switchExchange(network.dexes[0].exchange);
+    if (!silent && _name && pathname !== '/') {
+      navigate('/');
+    }
   };
-
-  useEffect(() => {
-    switchNetwork(data[0].name);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    switchNetwork(undefined, true);
+  }, []);
 
   return (
     <NetworkExchangesContext.Provider

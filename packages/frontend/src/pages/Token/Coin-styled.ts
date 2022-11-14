@@ -81,7 +81,7 @@ export const CoinRangButton = styled.button`
 
   padding: 3px 11px;
 
-  width: 117px;
+  min-width: 117px;
   height: 32px;
 
   display: flex;

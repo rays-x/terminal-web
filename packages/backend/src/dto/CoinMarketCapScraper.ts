@@ -54,6 +54,19 @@ export class QueryTokensDto {
   sortOrder?: TokensSortOrder = TokensSortOrder.desc;
 }
 
+export class QueryPairsInfoDto {
+  @IsString({
+    each: true
+  })
+  @ApiProperty({
+    isArray: true
+  })
+  pairs!: string[];
+  @IsString()
+  @ApiProperty()
+  platform!: string;
+}
+
 export class ParamTokensDto {
   @IsEnum(TokensSwap)
   @ApiProperty({

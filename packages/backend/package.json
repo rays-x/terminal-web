@@ -59,7 +59,7 @@
     "image-extensions": "1.1.0",
     "ioredis": "5.2.3",
     "jsonwebtoken": "8.5.1",
-    "md5": "2.3.0",
+    "md5": "^2.3.0",
     "mongodb": "4.10.0",
     "mongoose": "6.6.5",
     "mongoose-autopopulate": "^0.16.1",

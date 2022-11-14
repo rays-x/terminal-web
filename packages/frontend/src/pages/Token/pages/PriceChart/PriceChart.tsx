@@ -1,120 +1,120 @@
-import React, {FC, useContext, useMemo, useState} from 'react';
-import {CurrentCoinData} from '../../CoinPage';
+import React from 'react';
 import {PriceChartStyled} from './PriceChert-styled';
 import {ChartComponent} from './chart/Chart';
 import {ChartCoinsButton} from '../../../../components/_old/ui/Buttons/ChartCoinsButton/ChartCoinsButton';
+import {useFetch} from '../../../../hooks';
+import {useParams} from 'react-router';
+import {CmcSearch} from './types';
+import {CMC_ID_PANCAKE_V2, CMC_ID_UNISWAP_V2, CMC_ID_UNISWAP_V3} from '../../../../constants/coinmarketcap';
+import {useLazyFetch} from '../../../../hooks/useFetch';
+import {CmcPairInfo} from './chart/types';
+import {get} from 'lodash';
 
-const USDT = '/icons/usdt.svg';
-const WBNB = '/icons/wbnb.svg';
-const BUSD = '/icons/busd.svg';
-import {useAdaptiveTriggers} from '../../../../hooks/useAdaptiveTrigger';
+export const PriceChart: React.FC = React.memo(() => {
+  const {token, chain} = useParams();
+  const [id] = token.split('_');
+  const [pairAddress, setPairAddress] = React.useState<string>(undefined);
 
-enum VersusOhlcEnum {
-  Bch = 'BCH',
-  Bnb = 'BNB',
-  Usd = 'USD'
-}
-
-type TradingViewChartInput = {
-  mainCoin: string;
-  versusCurrency?: VersusOhlcEnum;
-};
-
-type TradingViewChartType = {
-  close?: number;
-  high?: number;
-  low?: number;
-  open?: number;
-  time?: number;
-}
-
-type OhlcDefaultType = { coinId: string; label: string; icon: string };
-
-const ohlcDefaults: Record<VersusOhlcEnum, OhlcDefaultType> = {
-  [VersusOhlcEnum.Bch]: {
-    coinId: 'binance-usd',
-    label: 'BUSD',
-    icon: BUSD
-  },
-  [VersusOhlcEnum.Bnb]: {
-    coinId: 'binancecoin',
-    label: 'WBNB',
-    icon: WBNB
-  },
-  [VersusOhlcEnum.Usd]: {
-    coinId: 'tether',
-    label: 'USDT',
-    icon: USDT
-  }
-};
-
-const ohlcDefaultsArray: (OhlcDefaultType & {
-  id: keyof typeof ohlcDefaults;
-})[] = Object.entries(ohlcDefaults).map(([key, val]) => ({
-  id: key as VersusOhlcEnum,
-  ...val
-}));
-
-export const PriceChart: FC = () => {
-  const currentCoinData = useContext(CurrentCoinData);
-  const currentCoinDataId = currentCoinData?.id ?? '';
-
-  const compareButtons = useMemo(() => {
-    if (!currentCoinDataId) return ohlcDefaultsArray;
-    return ohlcDefaultsArray.filter(
-      (item) => item.coinId !== currentCoinDataId
-    );
-  }, [currentCoinDataId]);
-
-  const [selectedVersusCurrency, setSelectedVersusCurrency] =
-    useState<VersusOhlcEnum>(compareButtons[0].id);
-
-  const {data, loading} = {
-    loading: false,
-    data: {
-      tradingViewChart: []
-    }
-  } /*useMerge<{ tradingViewChart: TradingViewChartType[] },
-    { input: TradingViewChartInput }>(QUERY_TRADING_VIEW_CHART, SUB_TRADING_VIEW_CHART, {
-    variables: {
-      input: {
-        mainCoin: currentCoinDataId,
-        versusCurrency: selectedVersusCurrency
-      }
+  const {data: _data, loading: _loading} = useFetch<CmcSearch>({
+    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
+    params: {
+      keyword: id,
+      all: true
     },
-    skip: !currentCoinDataId || !selectedVersusCurrency
-  })*/;
+    withCredentials: false
+  });
 
-  const chartData = data?.tradingViewChart || [];
-  const chartDataLoading = loading;
+  const [{data: _dataPairs, loading: _loadingPairs}, getPairsInfo] = useLazyFetch<{
+    [k: string]: CmcPairInfo['data']
+  }>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
+    withCredentials: false
+  });
 
-  const {isMobile} = useAdaptiveTriggers({});
+  React.useEffect(() => {
+    if (!_data?.data) {
+      return;
+    }
+    const {data} = _data;
+    const pairs = data.pairs
+      .filter(pair => (
+        chain === 'eth'
+          ? [CMC_ID_UNISWAP_V3, CMC_ID_UNISWAP_V2]
+          : [CMC_ID_PANCAKE_V2]
+      ).includes(pair.exchangeId));
+    getPairsInfo({
+      params: {
+        platform: chain === 'eth' ? 'Ethereum' : 'BSC',
+        pairs: pairs.map(pair => pair.pairContractAddress)
+      }
+    }).catch();
+  }, [_data]);
 
+  const compareButtons = React.useMemo(() => {
+    if (!_dataPairs) {
+      return [];
+    }
+    const dataPairs = Object.values(_dataPairs)
+      .sort((a, b) => {
+        return (Number(b.volume24h) || 0) - (Number(a.volume24h) || 0);
+      })
+      .map(pair => ({
+        id: pair.address,
+        baseToken: {
+          symbol: pair.baseToken.symbol,
+          image:
+            pair.baseToken.id
+              ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.baseToken.id}.png`
+              : null
+        },
+        quoteToken: {
+          symbol: pair.quoteToken.symbol,
+          image:
+            pair.quoteToken.id
+              ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.quoteToken.id}.png`
+              : null
+        }
+      }));
+    setPairAddress(get(dataPairs, '0.id'));
+    return dataPairs;
+  }, [_dataPairs]);
   return (
-    <PriceChartStyled.Container>
-      <PriceChartStyled.GraphContainer>
-        <PriceChartStyled.CoinPairs>
-          {compareButtons.map((btn) => (
-            <ChartCoinsButton
-              key={btn.id}
-              isSelected={selectedVersusCurrency === btn.id}
-              coinsPair={{
-                firstCoin: {
-                  label: currentCoinData?.index?.toUpperCase() || '',
-                  src: currentCoinData?.image || ''
-                },
-                secondCoin: {
-                  label: btn.label,
-                  src: btn.icon
+    <>
+      {
+        compareButtons.length
+          ? (
+            <PriceChartStyled.Container>
+              <PriceChartStyled.GraphContainer>
+                <PriceChartStyled.CoinPairs>
+                  {compareButtons.map((btn) => (
+                    <ChartCoinsButton
+                      key={btn.id}
+                      isSelected={pairAddress === btn.id}
+                      coinsPair={{
+                        firstCoin: {
+                          label: btn.baseToken.symbol,
+                          src: btn.baseToken.image
+                        },
+                        secondCoin: {
+                          label: btn.quoteToken.symbol,
+                          src: btn.quoteToken.image
+                        }
+                      }}
+                      onClick={() => setPairAddress(btn.id)}
+                    />
+                  ))}
+                </PriceChartStyled.CoinPairs>
+                {
+                  pairAddress
+                    ? <ChartComponent pair={_dataPairs[pairAddress]}/>
+                    : null
                 }
-              }}
-              onClick={() => setSelectedVersusCurrency(btn.id)}
-            />
-          ))}
-        </PriceChartStyled.CoinPairs>
-        <ChartComponent data={chartData} loading={chartDataLoading}/>
-      </PriceChartStyled.GraphContainer>
-      {!isMobile && <PriceChartStyled.CurrentCoin/>}
-    </PriceChartStyled.Container>
+              </PriceChartStyled.GraphContainer>
+              {/*{!isMobile && <PriceChartStyled.CurrentCoin/>}*/}
+            </PriceChartStyled.Container>
+          )
+          : null
+      }
+    </>
   );
-};
+});

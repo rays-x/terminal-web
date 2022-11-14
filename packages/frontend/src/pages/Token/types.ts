@@ -234,3 +234,35 @@ export interface CmcDetail {
   data: Data;
   status: Status;
 }
+
+export type CoinMainPage = {
+  circulation_supply?: number;
+  daily_volume?: number;
+  daily_volume_change?: number;
+  fully_diluted_mc?: number;
+  fully_diluted_mc_change?: number;
+  id?: string;
+  image?: string;
+  index?: string;
+  rank?: string;
+  link_binance?: string;
+  link_coinGecko?: string;
+  link_coinMarketCap?: string;
+  link_homepage?: string;
+  link_telegram?: string;
+  link_twitter?: string;
+  market_cap?: number;
+  name?: string;
+  platform_binance?: string;
+  platform_ethereum?: string;
+  price_btc?: number;
+  price_change_1h?: number;
+  price_change_7d?: number;
+  price_change_24h?: number;
+  price_change_btc?: number;
+  price_change_eth?: number;
+  price_change_usd?: number;
+  price_eth?: number;
+  price_usd?: number;
+  total_supply?: number;
+};

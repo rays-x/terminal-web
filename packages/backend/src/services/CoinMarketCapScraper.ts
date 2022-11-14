@@ -3,6 +3,7 @@ import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
 import {OnModuleInit} from '@nestjs/common';
+import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
 import {TokensSwap} from '../dto/CoinMarketCapScraper';
@@ -34,8 +35,11 @@ type CmcToken = {
   cmcId: number
 }
 
+const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
+
 export class CoinMarketCapScraperService implements OnModuleInit {
 
+  awaitTime: number = DEFAULT_AWAIT_TIME;
   _uniTokens: {
     [k: string]: {
       address: string
@@ -66,7 +70,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       this._uniTokens = cache;
       return cache;
     }
-    Logger.info(`waiting for: ${cacheKey}...`);
+    Logger.debug(`waiting for: ${cacheKey}...`);
     const {body: cryptos} = await got.get<{
       fields: string[],
       values: any[][],
@@ -122,7 +126,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       this._panTokens = cache;
       return cache;
     }
-    Logger.info(`waiting for: ${cacheKey}...`);
+    Logger.debug(`waiting for: ${cacheKey}...`);
     const {body: cryptos} = await got.get<{
       fields: string[],
       values: any[][],
@@ -166,7 +170,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
   }
 
   private async getTokenData(slug: string) {
-    await awaiter(0.65 * 1000);
+    await awaiter(this.awaitTime);
     const {body} = await got.get<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
       headers: {
         'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
@@ -189,6 +193,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       if (cache && (!fromLoop || get(cache, 'status') !== 'active')) {
         return step++;
       }
+      if (cache
+        && new Date(get(cache, 'latestUpdateTime')).getTime() > (new Date().getTime() - 60 * 60 * 60 * 1000)
+      ) {
+        return step++;
+      }
       for (let i = 1; i < 6; i++) {
         try {
           const data = await this.getTokenData(token.slug);
@@ -197,8 +206,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
               Object.fromEntries(
                 Object.entries(data)
                   .filter(([key]) =>
-                    !['platforms',
-                      'relatedCoins',
+                    !['relatedCoins',
                       'relatedExchanges',
                       'wallets',
                       'holders'
@@ -206,7 +214,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
                   )
               )
             ), 'PX', 24 * 60 * 60 * 1000);
-            Logger.info(`cmc:uniInfo, ${step}, ${tokens.length}`);
+            Logger.debug(`cmc:uniInfo, ${step}, ${tokens.length}`);
             return step++;
           } else {
             // await awaiter(i * 30 * 1000);
@@ -217,6 +225,9 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       }
       return step++;
     });
+    if (this.awaitTime === DEFAULT_AWAIT_TIME) {
+      this.awaitTime = DEFAULT_AWAIT_TIME * 3;
+    }
     return this.addInfoToUniTokens(true);
   }
 
@@ -232,6 +243,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       if (cache && (!fromLoop || get(cache, 'status') !== 'active')) {
         return step++;
       }
+      if (cache
+        && new Date(get(cache, 'latestUpdateTime')).getTime() > (new Date().getTime() - 60 * 60 * 60 * 1000)
+      ) {
+        return step++;
+      }
       for (let i = 1; i < 6; i++) {
         try {
           const data = await this.getTokenData(token.slug);
@@ -240,8 +256,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
               Object.fromEntries(
                 Object.entries(data)
                   .filter(([key]) =>
-                    !['platforms',
-                      'relatedCoins',
+                    !['relatedCoins',
                       'relatedExchanges',
                       'wallets',
                       'holders'
@@ -249,7 +264,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
                   )
               )
             ), 'PX', 24 * 60 * 60 * 1000);
-            Logger.info(`cmc:panInfo, ${step}, ${tokens.length}`);
+            Logger.debug(`cmc:panInfo, ${step}, ${tokens.length}`);
             return step++;
           } else {
             // await awaiter(i * 30 * 1000);
@@ -260,6 +275,9 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       }
       return step++;
     });
+    if (this.awaitTime === DEFAULT_AWAIT_TIME) {
+      this.awaitTime = DEFAULT_AWAIT_TIME * 3;
+    }
     return this.addInfoToPanTokens(true);
   }
 
@@ -278,7 +296,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         return;
       }
       return {
-        id: token.address,
+        id: get(get(data, 'platforms', []).find(p => p.contractChainId === (
+          swap === TokensSwap.uniswap
+            ? 1
+            : 56
+        )), 'contractAddress', token.address),
         slug: token.slug,
         name: data.name,
         symbol: data.symbol,
@@ -294,5 +316,38 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         cmcId: data.id
       };
     }))).filter(Boolean);
+  }
+
+  async pairsInfo(platform: string, pairs: string[]): Promise<{
+    [k: string]: unknown
+  }> {
+    const cacheKey = `cmc:pairInfo:${platform}:${md5(pairs.join(','))}`;
+    const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+    const result = {};
+    if (cache) {
+      return cache;
+    }
+    await Promise.all(pairs.map(async (pair) => {
+      const {body} = await got.get(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-info`, {
+        headers: {
+          'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+        },
+        searchParams: {
+          base: 0,
+          t: new Date().getTime(),
+          'dexer-platform-name': platform,
+          address: pair
+        },
+        responseType: 'json'
+      });
+      const data = get(body, 'data');
+      if (data) {
+        result[data['address']] = data;
+      }
+    }));
+    if (pairs.length === Object.keys(result).length) {
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
+    }
+    return result;
   }
 }

@@ -26,11 +26,27 @@ export const ChartCoinsButton: FC<ChartCoinsButtonProps> = ({
   return (
     <ChartCoinButtonStyled.Component onClick={onClick} $isSelected={isSelected}>
       <>
-        <ChartCoinButtonStyled.CoinImage
-          style={{marginRight: '-10px', zIndex: '1'}}
-          src={coinsPair.firstCoin.src}
-        />
-        <ChartCoinButtonStyled.CoinImage src={coinsPair.secondCoin.src}/>
+        {
+          coinsPair.firstCoin.src
+            ? (
+              <ChartCoinButtonStyled.CoinImage
+                style={
+                  coinsPair.secondCoin.src
+                    ? {marginRight: '-10px', zIndex: '1'}
+                    : {}
+                }
+                src={coinsPair.firstCoin.src}
+              />
+            )
+            : null
+        }
+        {
+          coinsPair.secondCoin.src
+            ? (
+              <ChartCoinButtonStyled.CoinImage src={coinsPair.secondCoin.src}/>
+            )
+            : null
+        }
       </>
       <ChartCoinButtonStyled.Label $isSelected={isSelected}>
         {coinsPair.firstCoin.label}/{coinsPair.secondCoin.label}

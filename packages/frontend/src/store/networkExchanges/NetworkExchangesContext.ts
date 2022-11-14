@@ -1,5 +1,6 @@
 import React from 'react';
-import { ApolloError } from '@apollo/client';
+import {ApolloError} from '@apollo/client';
+
 // import { NetworkExchangesQuery } from '../graphql';
 
 export interface INetworkExchangesContext {
@@ -7,14 +8,16 @@ export interface INetworkExchangesContext {
   data?: any;
   // state
   network: string;
-  switchNetwork: (network: string) => void;
+  switchNetwork: (network: string, silent?: boolean) => void;
   exchange: string;
   switchExchange: (exchange: string) => void;
 }
 
 export const NetworkExchangesContext = React.createContext<INetworkExchangesContext>({
   network: '',
-  switchNetwork: () => {},
+  switchNetwork: () => {
+  },
   exchange: '',
-  switchExchange: () => {}
+  switchExchange: () => {
+  }
 });

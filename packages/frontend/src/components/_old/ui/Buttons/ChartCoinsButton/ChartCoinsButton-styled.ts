@@ -14,7 +14,7 @@ export const Component = styled.button<ChartCoinsButtonProps>`
   display: flex;
   align-items: center;
   gap: 3px;
-  width: 147px;
+  min-width: 147px;
   transition: background-color 0.3s;
   ${({ $isSelected }) =>
     $isSelected

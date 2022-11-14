@@ -1,8 +1,9 @@
-import {FC} from 'react';
+import React, {FC, useContext} from 'react';
 import Icons from '../../../../../../assets';
 import {GaugeStyled} from './Gauge-styled';
 import GaugeIcon from '../../../../../../assets/icons/Gauge';
 import GaugeArrow from '../../../../../../assets/icons/GaugeArrow';
+import {CurrentCoinData} from '../../../../CoinPage';
 
 export type BuySellPressureType = {
   buy?: number;
@@ -13,7 +14,7 @@ export type BuySellPressureType = {
 interface GaugeProps extends BuySellPressureType {
 }
 
-export const Gauge: FC<GaugeProps> = ({status, buy, sell}) => {
+export const Gauge: FC<GaugeProps> = React.memo(({status, buy, sell}) => {
   return (
     <GaugeStyled.Wrapper>
       <GaugeStyled.Title>Buy / Sell Pressure</GaugeStyled.Title>
@@ -35,4 +36,4 @@ export const Gauge: FC<GaugeProps> = ({status, buy, sell}) => {
       </GaugeStyled.Buttons>
     </GaugeStyled.Wrapper>
   );
-};
+});

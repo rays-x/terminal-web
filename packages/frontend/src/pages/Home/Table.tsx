@@ -13,10 +13,8 @@ const Table = React.memo(() => {
   return (
     <SidebarLayout isOpen={isOpen} changeDisplayMode={changeDisplayMode}>
       <PageLayout isOpen={isOpen}>
-        <NetworkExchangesProvider>
           <Header isOpen={isOpen} changeDisplayMode={changeDisplayMode}/>
           <TokenList/>
-        </NetworkExchangesProvider>
       </PageLayout>
     </SidebarLayout>
   );

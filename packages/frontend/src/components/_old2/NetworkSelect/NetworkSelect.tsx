@@ -13,7 +13,7 @@ export function NetworkSelect({className}: { className?: string }) {
         color: chain.color
       }))}
       value={network}
-      onChange={switchNetwork}
+      onChange={item => switchNetwork(item, false)}
       className={className}
     />
   );

@@ -14,14 +14,14 @@ import Share from '../../../../assets/icons/Share';
 import Bell from '../../../../assets/icons/Bell';
 import Fall from '../../../../assets/icons/fall';
 import Rise from '../../../../assets/icons/rise';
+import {useParams} from 'react-router';
+import {CMC_ID_ETH} from '../../../../constants/coinmarketcap';
 
-interface CoinLinksProps {
-  title?: string;
-  icon: React.ReactNode;
-}
-
-export const CurrentCoin = () => {
+export const CurrentCoin = React.memo(() => {
+  const {token} = useParams();
   const currentCoinData = useContext(CurrentCoinData);
+  const [, cmcId] = token.split('_');
+  const CMC_ID = Number(cmcId);
 
   return (
     <Card>
@@ -40,9 +40,15 @@ export const CurrentCoin = () => {
           <LinkButton>
             <Bell height={18} width={18}/>
           </LinkButton>
-          <CoinPageStyled.CoinRangButton>
-            rax_rank
-          </CoinPageStyled.CoinRangButton>
+          {
+            currentCoinData?.rank
+              ? (
+                <CoinPageStyled.CoinRangButton>
+                  Rax Rank #{currentCoinData?.rank}
+                </CoinPageStyled.CoinRangButton>
+              )
+              : null
+          }
         </CoinPageStyled.CurrentCoinLinks>
         <CoinLinks/>
         <CoinAddresses/>
@@ -96,22 +102,28 @@ export const CurrentCoin = () => {
                 {currentCoinData?.price_change_btc?.toFixed(3) || EMDASH}%
               </TypographyArrow>
             </CoinPageStyled.CoinStatsPriceChange>
-            <CoinPageStyled.CoinStatsPriceChange>
-              <CoinPageStyled.CoinStatsPriceChangeTitle>
-                {currentCoinData?.price_eth || EMDASH} ETH
-              </CoinPageStyled.CoinStatsPriceChangeTitle>
-              <TypographyArrow
-                color={
-                  currentCoinData?.price_change_eth! > 0
-                    ? ColorVariant.rise
-                    : ColorVariant.fall
-                }
-                lineHeight={14}
-                fontSize={11}
-              >
-                {currentCoinData?.price_change_eth?.toFixed(3)}%
-              </TypographyArrow>
-            </CoinPageStyled.CoinStatsPriceChange>
+            {
+              CMC_ID !== CMC_ID_ETH
+                ? (
+                  <CoinPageStyled.CoinStatsPriceChange>
+                    <CoinPageStyled.CoinStatsPriceChangeTitle>
+                      {currentCoinData?.price_eth || EMDASH} ETH
+                    </CoinPageStyled.CoinStatsPriceChangeTitle>
+                    <TypographyArrow
+                      color={
+                        currentCoinData?.price_change_eth! > 0
+                          ? ColorVariant.rise
+                          : ColorVariant.fall
+                      }
+                      lineHeight={14}
+                      fontSize={11}
+                    >
+                      {currentCoinData?.price_change_eth?.toFixed(3)}%
+                    </TypographyArrow>
+                  </CoinPageStyled.CoinStatsPriceChange>
+                )
+                : null
+            }
           </div>
           <CoinPageStyled.CoinPriceChangeGroups>
             <CoinPriceChange
@@ -131,4 +143,4 @@ export const CurrentCoin = () => {
       </CoinPageStyled.CoinStatsGroup>
     </Card>
   );
-};
+});

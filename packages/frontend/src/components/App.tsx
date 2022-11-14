@@ -1,5 +1,8 @@
 import {Route, Routes} from 'react-router-dom';
 import {get} from 'lodash';
+import {CmcSocketProvider} from '../store/cmcSocket';
+import {HelmetProvider} from 'react-helmet-async';
+import {NetworkExchangesProvider} from '../store/networkExchanges';
 
 const PagePathsWithComponents: {
   [k: string]: {
@@ -19,10 +22,16 @@ const routes = Object.keys(PagePathsWithComponents).map((_path: string) => {
 });
 
 const App = () => (
-  <Routes>
-    {routes.map(({path, component: RouteComp}) => {
-      return <Route key={path} path={path} element={<RouteComp/>}/>;
-    })}
-  </Routes>
+  <HelmetProvider>
+    <CmcSocketProvider>
+      <NetworkExchangesProvider>
+        <Routes>
+          {routes.map(({path, component: RouteComp}) => {
+            return <Route key={path} path={path} element={<RouteComp/>}/>;
+          })}
+        </Routes>
+      </NetworkExchangesProvider>
+    </CmcSocketProvider>
+  </HelmetProvider>
 );
 export default App;
