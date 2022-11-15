@@ -16,6 +16,11 @@ export const Text = styled.div`
   ${mixins.text_tableRow}
 `;
 
+export const Link = styled.a`
+  color: ${colors.text.secondary};
+  ${mixins.text_tableRow}
+`;
+
 export const Component = styled.div`
   min-width: max-content !important;
   cursor: pointer;
@@ -109,6 +114,7 @@ export enum Row {
   Image = 'Image',
   Change = 'Change',
   Text = 'Text',
+  Link = 'Link',
   Side = 'Side'
 }
 
@@ -119,5 +125,6 @@ export const RowStyled: SCG<Row> = {
   [Row.Image]: ImageStyled,
   [Row.Change]: ChangeStyled,
   [Row.Text]: Text,
+  [Row.Link]: Link,
   [Row.Side]: SideStyled
 };

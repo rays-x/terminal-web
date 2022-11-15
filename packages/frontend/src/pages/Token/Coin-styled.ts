@@ -263,7 +263,7 @@ export const SubPagesButtons = styled.div`
   column-gap: 9px;
   row-gap: 20px;
   flex-wrap: wrap;
-  margin: 25px 0;
+  margin: 27px 0 20px 0;
 `;
 
 export const CoinPageStyled = {

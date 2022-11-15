@@ -19,7 +19,8 @@
     "sourceMap": false,
     "target": "ES2017",
     "alwaysStrict": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*", "types/*", "server.ts", "prerender.cts", "node_modules/vite/types/*"],
   "ts-node": {

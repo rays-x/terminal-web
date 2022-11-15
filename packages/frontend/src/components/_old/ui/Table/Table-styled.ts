@@ -39,7 +39,9 @@ export const FiltersTitle = styled.div`
   `)}
 `;
 
-export const Offset = styled.div``;
+export const Offset = styled.div`
+  margin-top: 43px;
+`;
 
 export const Wrapper = styled.div`
   background: ${colors.background.card};
@@ -68,12 +70,12 @@ export const Header = styled.div`
 `;
 
 export const Body = styled.div`
-  min-height: 472px;
+  height: 472px;
   margin-top: 40px;
   padding: 6px 0;
   border-radius: ${radius[20]};
   background: ${colors.background.primary};
-  overflow: hidden;
+  overflow: auto;
 `;
 
 export const Row = styled.div`

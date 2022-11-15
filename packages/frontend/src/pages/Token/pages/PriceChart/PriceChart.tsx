@@ -45,7 +45,7 @@ export const PriceChart: React.FC = React.memo(() => {
     getPairsInfo({
       params: {
         platform: chain === 'eth' ? 'Ethereum' : 'BSC',
-        pairs: pairs.map(pair => pair.pairContractAddress)
+        pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
       }
     }).catch();
   }, [_data]);

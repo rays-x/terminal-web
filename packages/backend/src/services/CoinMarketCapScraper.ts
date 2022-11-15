@@ -7,6 +7,7 @@ import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
 import {TokensSwap} from '../dto/CoinMarketCapScraper';
+import {CmcPairListResponse} from '../types';
 
 type UniToken = {
   chainId: number;
@@ -36,6 +37,10 @@ type CmcToken = {
 }
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
+
+const CMC_ID_UNISWAP_V3 = 1348;
+const CMC_ID_UNISWAP_V2 = 1069;
+const CMC_ID_PANCAKE_V2 = 1344;
 
 export class CoinMarketCapScraperService implements OnModuleInit {
 
@@ -300,7 +305,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           swap === TokensSwap.uniswap
             ? 1
             : 56
-        )), 'contractAddress', token.address),
+        )), 'contractAddress', token.address).toLowerCase(),
         slug: token.slug,
         name: data.name,
         symbol: data.symbol,
@@ -346,6 +351,54 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       }
     }));
     if (pairs.length === Object.keys(result).length) {
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
+    }
+    return result;
+  }
+
+  async pairsList(dex: ('uniswap' | 'pancakeswap')[], address: string, platform: number): Promise<any> {
+    const cacheKey = `cmc:pairList:${dex.sort((a, b) => {
+      return a.localeCompare(b, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+    }).join(',')}:${md5(address)}`;
+    const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+    if (cache) {
+      return cache;
+    }
+    const {body: {data}} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+      headers: {
+        'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+      },
+      searchParams: {
+        'base-address': address,
+        limit: 1000,
+        'platform-id': platform
+      },
+      responseType: 'json'
+    });
+    const result = data?.filter((item => dex.findIndex(_ => {
+      return (() => {
+        switch (_) {
+          case 'uniswap': {
+            return [
+              CMC_ID_UNISWAP_V3,
+              CMC_ID_UNISWAP_V2
+            ];
+          }
+          case 'pancakeswap': {
+            return [
+              CMC_ID_PANCAKE_V2
+            ];
+          }
+          default: {
+            return [];
+          }
+        }
+      })().includes(item.dexerInfo.id);
+    }) > -1));
+    if (data) {
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
     }
     return result;

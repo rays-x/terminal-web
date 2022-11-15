@@ -4651,7 +4651,7 @@ export type TokensUniswapQueryVariables = Exact<{
 export type TokensUniswapQuery = { __typename?: 'Query', tokens: Array<{ __typename?: 'Token', id: string, symbol: string, name: string, totalSupply: any, volumeUSD: any, untrackedVolumeUSD: any, totalValueLocked: any, totalValueLockedUSD: any, totalValueLockedUSDUntracked: any, derivedETH: any, tokenDayData: Array<{ __typename?: 'TokenDayData', id: string, date: number, volume: any, volumeUSD: any, untrackedVolumeUSD: any, totalValueLockedUSD: any, priceUSD: any }> }> };
 
 export type TransactionsSwapsUniswapQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
@@ -4660,7 +4660,7 @@ export type TransactionsSwapsUniswapQueryVariables = Exact<{
 export type TransactionsSwapsUniswapQuery = { __typename?: 'Query', swaps: Array<{ __typename: 'Swap', id: string, timestamp: any, origin: any, amount0: any, amount1: any, amountUSD: any, transaction: { __typename: 'Transaction', id: string }, pool: { __typename: 'Pool', token0: { __typename: 'Token', id: string, symbol: string }, token1: { __typename: 'Token', id: string, symbol: string } } }> };
 
 export type TransactionsMintsUniswapQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
@@ -4669,7 +4669,7 @@ export type TransactionsMintsUniswapQueryVariables = Exact<{
 export type TransactionsMintsUniswapQuery = { __typename?: 'Query', mints: Array<{ __typename: 'Mint', id: string, timestamp: any, owner: any, sender?: any | null, origin: any, amount0: any, amount1: any, amountUSD?: any | null, transaction: { __typename: 'Transaction', id: string }, pool: { __typename: 'Pool', token0: { __typename: 'Token', id: string, symbol: string }, token1: { __typename: 'Token', id: string, symbol: string } } }> };
 
 export type TransactionsBurnsUniswapQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
@@ -4757,13 +4757,13 @@ export type TokensUniswapQueryHookResult = ReturnType<typeof useTokensUniswapQue
 export type TokensUniswapLazyQueryHookResult = ReturnType<typeof useTokensUniswapLazyQuery>;
 export type TokensUniswapQueryResult = Apollo.QueryResult<TokensUniswapQuery, TokensUniswapQueryVariables>;
 export const TransactionsSwapsUniswapDocument = gql`
-    query transactionsSwapsUniswap($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsSwapsUniswap($address: [String!], $first: Int!, $skip: Int!) {
   swaps(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pool: $address}
+    where: {pool_in: $address}
     subgraphError: allow
   ) {
     id
@@ -4824,13 +4824,13 @@ export type TransactionsSwapsUniswapQueryHookResult = ReturnType<typeof useTrans
 export type TransactionsSwapsUniswapLazyQueryHookResult = ReturnType<typeof useTransactionsSwapsUniswapLazyQuery>;
 export type TransactionsSwapsUniswapQueryResult = Apollo.QueryResult<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>;
 export const TransactionsMintsUniswapDocument = gql`
-    query transactionsMintsUniswap($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsMintsUniswap($address: [String!], $first: Int!, $skip: Int!) {
   mints(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pool: $address}
+    where: {pool_in: $address}
     subgraphError: allow
   ) {
     id
@@ -4893,13 +4893,13 @@ export type TransactionsMintsUniswapQueryHookResult = ReturnType<typeof useTrans
 export type TransactionsMintsUniswapLazyQueryHookResult = ReturnType<typeof useTransactionsMintsUniswapLazyQuery>;
 export type TransactionsMintsUniswapQueryResult = Apollo.QueryResult<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>;
 export const TransactionsBurnsUniswapDocument = gql`
-    query transactionsBurnsUniswap($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsBurnsUniswap($address: [String!], $first: Int!, $skip: Int!) {
   burns(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pool: $address}
+    where: {pool_in: $address}
     subgraphError: allow
   ) {
     id

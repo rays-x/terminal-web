@@ -12,7 +12,7 @@ import {useParams} from 'react-router';
 import {get} from 'lodash';
 import {useCmcSocket} from '../../store/cmcSocket';
 import {JsonPrimitive} from 'react-use-websocket/dist/lib/types';
-import {diff} from '../../utils/diff';
+import {diff, toFixedToken} from '../../utils/diff';
 import {CMC_ID_BTC, CMC_ID_ETH} from '../../constants/coinmarketcap';
 import {CmcTokenSocketProvider} from '../../store/cmcTokenSocket';
 
@@ -55,7 +55,7 @@ export const CoinPage: FC = () => {
     const {data: dataBtc} = _dataBtc;
     const {data: dataEth} = _dataEth;
     setData({
-      circulation_supply: data.statistics.circulatingSupply,
+      circulation_supply: data.statistics.circulatingSupply || toFixedToken(data.selfReportedCirculatingSupply, 5),
       daily_volume: data.volume,
       daily_volume_change: data.volumeChangePercentage24h,
       fully_diluted_mc: data.statistics.fullyDilutedMarketCap,
@@ -70,7 +70,11 @@ export const CoinPage: FC = () => {
       link_homepage: get(data, 'urls.website.0'),
       link_telegram: undefined,
       link_twitter: get(data, 'urls.twitter.0'),
-      market_cap: data.statistics.marketCap,
+      market_cap: data.statistics.marketCap || (
+        data.selfReportedCirculatingSupply ?
+          Number(data.selfReportedCirculatingSupply) * data.statistics.price
+          : undefined
+      ),
       name: data.name,
       platform_binance: get(data, 'platforms', []).find(_ => _.contractChainId === 56)?.contractAddress,
       platform_ethereum: get(data, 'platforms', []).find(_ => _.contractChainId === 1)?.contractAddress,
@@ -128,31 +132,31 @@ export const CoinPage: FC = () => {
                     break;
                   }
                   case 'p1h': {
-                    prev['price_change_1h'] = cr.p1h;
+                    prev['price_change_1h'] = cr.p1h || prev['price_change_1h'];
                     break;
                   }
                   case 'p24h': {
-                    prev['price_change_24h'] = cr.p24h;
+                    prev['price_change_24h'] = cr.p24h || prev['price_change_24h'];
                     break;
                   }
                   case 'p7d': {
-                    prev['price_change_7d'] = cr.p7d;
+                    prev['price_change_7d'] = cr.p7d || prev['price_change_7d'];
                     break;
                   }
                   case 'v': {
-                    prev['daily_volume'] = cr.v;
+                    prev['daily_volume'] = cr.v || prev['daily_volume'];
                     break;
                   }
                   case 'vol24hpc': {
-                    prev['daily_volume_change'] = cr.vol24hpc;
+                    prev['daily_volume_change'] = cr.vol24hpc || prev['daily_volume_change'];
                     break;
                   }
                   case 'mc': {
-                    prev['market_cap'] = cr.mc;
+                    prev['market_cap'] = cr.mc || prev['market_cap'];
                     break;
                   }
                   case 'ts': {
-                    prev['total_supply'] = cr.ts;
+                    prev['total_supply'] = cr.ts || prev['total_supply'];
                     break;
                   }
                 }

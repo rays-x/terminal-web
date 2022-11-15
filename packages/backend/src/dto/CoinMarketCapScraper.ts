@@ -1,4 +1,4 @@
-import {IsEnum, IsNumberString, IsOptional, IsString} from 'class-validator';
+import {IsArray, IsEnum, IsNumberString, IsOptional, IsString} from 'class-validator';
 import {ApiProperty, ApiPropertyOptional} from '@nestjs/swagger';
 
 enum TokensSortBy {
@@ -65,6 +65,24 @@ export class QueryPairsInfoDto {
   @IsString()
   @ApiProperty()
   platform!: string;
+}
+
+export class QueryPairListDto {
+  @IsNumberString()
+  @ApiProperty()
+  platform!: number;
+  @IsString()
+  @ApiProperty()
+  address!: string;
+  @IsArray()
+  @IsString({
+    each: true
+  })
+  @ApiProperty({
+    type: String,
+    isArray: true
+  })
+  dex!: ('uniswap' | 'pancakeswap')[];
 }
 
 export class ParamTokensDto {

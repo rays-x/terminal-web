@@ -1,8 +1,15 @@
 import {Controller, Get, HttpCode, Param, Query} from '@nestjs/common';
 import {ApiParam, ApiTags} from '@nestjs/swagger';
 import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
-import {QueryPairsInfoDto, QueryTokensDto, TokensSortOrder, TokensSwap} from '../dto/CoinMarketCapScraper';
+import {
+  QueryPairListDto,
+  QueryPairsInfoDto,
+  QueryTokensDto,
+  TokensSortOrder,
+  TokensSwap
+} from '../dto/CoinMarketCapScraper';
 
+@ApiTags('cmc')
 @Controller('/api/rest/cmc')
 export class CoinMarketCapScraperController {
   constructor(
@@ -10,7 +17,6 @@ export class CoinMarketCapScraperController {
   ) {
   }
 
-  @ApiTags('cmc')
   @ApiParam({
     name: 'swap',
     enum: TokensSwap,
@@ -54,7 +60,6 @@ export class CoinMarketCapScraperController {
     return result;
   }
 
-  @ApiTags('cmc')
   @ApiParam({
     name: 'swap',
     enum: TokensSwap,
@@ -66,5 +71,13 @@ export class CoinMarketCapScraperController {
     @Query() {pairs, platform}: QueryPairsInfoDto
   ) {
     return this.service.pairsInfo(platform, pairs);
+  }
+
+  @Get('dex/pairs-list')
+  @HttpCode(200)
+  async pairList(
+    @Query() {address, dex, platform}: QueryPairListDto
+  ) {
+    return this.service.pairsList(dex, address, platform);
   }
 }

@@ -266,3 +266,58 @@ export type CoinMainPage = {
   price_usd?: number;
   total_supply?: number;
 };
+
+export type TransactionType = {
+  id: string
+  date: Date
+  type: 'Sell' | 'Buy' | 'Add' | 'Remove'
+  totalValue: string
+  tokenValue0?: string
+  tokenValue0Price?: string
+  tokenValue1: string
+  maker: string
+  exchange: 'uniswap' | 'pancake'
+  tx: string
+}
+
+export interface Platform {
+  id: number;
+  name: string;
+  cryptoId: number;
+  dexerPlatformName: string;
+}
+
+export interface BaseToken {
+  name: string;
+  symbol: string;
+  address: string;
+}
+
+export interface QuoteToken {
+  name: string;
+  symbol: string;
+  address: string;
+}
+
+export interface DexerInfo {
+  id: number;
+  name: string;
+}
+
+export interface TransactionsPairs {
+  poolId: string;
+  platform: Platform;
+  baseToken: BaseToken;
+  quoteToken: QuoteToken;
+  dexerInfo: DexerInfo;
+  priceUsd: string;
+  volume24h: string;
+  liquidity: string;
+  priceChange24h: string;
+  pairContractAddress: string;
+  updateDate: any;
+  liquidityScore: string;
+  confidenceScore: string;
+}
+
+export type TransactionsPairsResponse = TransactionsPairs[]

@@ -1,13 +1,13 @@
 import {gql} from '@apollo/client';
 
 export const QUERY_TRANSACTIONS_SWAPS_UNISWAP = gql`
-  query transactionsSwapsUniswap($address: String!, $first: Int!, $skip: Int!) {
+  query transactionsSwapsUniswap($address: [String!], $first: Int!, $skip: Int!) {
     swaps(
       skip: $skip,
       first: $first,
       orderBy: timestamp
       orderDirection: desc
-      where: {pool: $address}
+      where: {pool_in: $address}
       subgraphError: allow
     ) {
       id
@@ -38,13 +38,13 @@ export const QUERY_TRANSACTIONS_SWAPS_UNISWAP = gql`
   }
 `;
 export const QUERY_TRANSACTIONS_MINTS_UNISWAP = gql`
-  query transactionsMintsUniswap($address: String!, $first: Int!, $skip: Int!) {
+  query transactionsMintsUniswap($address: [String!], $first: Int!, $skip: Int!) {
     mints(
       skip: $skip,
       first: $first,
       orderBy: timestamp
       orderDirection: desc
-      where: {pool: $address}
+      where: {pool_in: $address}
       subgraphError: allow
     ) {
       id
@@ -77,13 +77,13 @@ export const QUERY_TRANSACTIONS_MINTS_UNISWAP = gql`
   }
 `;
 export const QUERY_TRANSACTIONS_BURNS_UNISWAP = gql`
-  query transactionsBurnsUniswap($address: String!, $first: Int!, $skip: Int!) {
+  query transactionsBurnsUniswap($address: [String!], $first: Int!, $skip: Int!) {
     burns(
       skip: $skip,
       first: $first,
       orderBy: timestamp
       orderDirection: desc
-      where: {pool: $address}
+      where: {pool_in: $address}
       subgraphError: allow
     ) {
       id

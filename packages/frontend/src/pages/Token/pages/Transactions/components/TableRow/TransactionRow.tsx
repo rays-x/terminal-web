@@ -8,6 +8,8 @@ import {EMDASH} from '../../../../../../utils/data/utf';
 import {RowStyled, SideVariant} from '../../../../../../components/_old/ui/Table/components/Row/Row-styled';
 import {formatDate} from '../../../../../../hooks/useFormatDate';
 import {ImagePreview} from '../../../../../../components/_old/ui/Image/Image';
+import EtherScanIcon from '../../../../../../assets/icons/dex/etherscan.jpg';
+import BscScanIcon from '../../../../../../assets/icons/dex/bscscan.jpg';
 
 export const TransactionRow: FC<{ row }> = ({row}) => {
   return (
@@ -26,10 +28,10 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
             <RowStyled.Side
               {...cell.getCellProps(cellProps)}
               variant={
-                cell.value === 'SELL' ? SideVariant.Sell : SideVariant.Buy
+                ['Buy', 'Add'].includes(cell.value) ? SideVariant.Buy : SideVariant.Sell
               }
             >
-              {cell.value === 'SELL' ? 'Sell' : 'Buy'}
+              {cell.value}
             </RowStyled.Side>
           );
         }
@@ -37,7 +39,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
         if (cell.column.id === 'price_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
-              {formatNumeral(cell.value, NUMERAL_FORMAT_FLOAT, EMDASH)}
+              {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : String(cell.value).replace('-', '')}
             </RowStyled.Text>
           );
         }
@@ -45,7 +47,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
         if (cell.column.id === 'amount') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
-              {formatNumeral(cell.value, NUMERAL_FORMAT_FLOAT, EMDASH)}
+              {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : cell.value}
             </RowStyled.Text>
           );
         }
@@ -53,7 +55,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
         if (cell.column.id === 'total_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
-              {formatNumeral(cell.value, NUMERAL_FORMAT_FLOAT, EMDASH)}
+              {[undefined, 'NaN', 'Infinity', '$0'].includes(cell.value) ? EMDASH : cell.value}
             </RowStyled.Text>
           );
         }
@@ -68,13 +70,24 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
         }
 
         if (
-          cell.column.id === 'exchange_link' ||
-          cell.column.id === 'other_link'
+          cell.column.id === 'exchange_image'
         ) {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               <ImagePreview imageSrc={cell.value}/>
             </RowStyled.Text>
+          );
+        }
+
+        if (
+          cell.column.id === 'explorer_link'
+        ) {
+          return (
+            <RowStyled.Link {...cell.getCellProps(cellProps)} href={cell.value} target="_blank">
+              <ImagePreview imageSrc={cell.value.includes('ether')
+                ? EtherScanIcon
+                : BscScanIcon}/>
+            </RowStyled.Link>
           );
         }
 

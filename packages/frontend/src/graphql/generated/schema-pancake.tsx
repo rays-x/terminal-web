@@ -2307,54 +2307,44 @@ export enum _SubgraphErrorPolicy_ {
 }
 
 export type TransactionsSwapsPancakeQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
 
 
-export type TransactionsSwapsPancakeQuery = { __typename?: 'Query', swaps: Array<{ __typename?: 'Swap', id: string, timestamp: any, from: string, amount0In: any, amount1In: any, amount0Out: any, amount1Out: any, amountUSD: any, pair: { __typename?: 'Pair', token0: { __typename?: 'Token', id: string, symbol: string }, token1: { __typename?: 'Token', id: string, symbol: string } } }> };
+export type TransactionsSwapsPancakeQuery = { __typename?: 'Query', swaps: Array<{ __typename?: 'Swap', id: string, timestamp: any, from: string, amount0In: any, amount1In: any, amount0Out: any, amount1Out: any, amountUSD: any }> };
 
 export type TransactionsMintsPancakeQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
 
 
-export type TransactionsMintsPancakeQuery = { __typename?: 'Query', mints: Array<{ __typename?: 'Mint', id: string, timestamp: any, sender?: string | null, to: string, amount0?: any | null, amount1?: any | null, amountUSD?: any | null, pair: { __typename?: 'Pair', token0: { __typename?: 'Token', id: string, symbol: string }, token1: { __typename?: 'Token', id: string, symbol: string } } }> };
+export type TransactionsMintsPancakeQuery = { __typename?: 'Query', mints: Array<{ __typename?: 'Mint', id: string, timestamp: any, sender?: string | null, to: string, amount0?: any | null, amount1?: any | null, amountUSD?: any | null }> };
 
 export type TransactionsBurnsPancakeQueryVariables = Exact<{
-  address: Scalars['String'];
+  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
   first: Scalars['Int'];
   skip: Scalars['Int'];
 }>;
 
 
-export type TransactionsBurnsPancakeQuery = { __typename?: 'Query', burns: Array<{ __typename?: 'Burn', id: string, timestamp: any, sender?: string | null, amount0?: any | null, amount1?: any | null, amountUSD?: any | null, pair: { __typename?: 'Pair', token0: { __typename?: 'Token', id: string, symbol: string }, token1: { __typename?: 'Token', id: string, symbol: string } } }> };
+export type TransactionsBurnsPancakeQuery = { __typename?: 'Query', burns: Array<{ __typename?: 'Burn', id: string, timestamp: any, sender?: string | null, amount0?: any | null, amount1?: any | null, amountUSD?: any | null }> };
 
 
 export const TransactionsSwapsPancakeDocument = gql`
-    query transactionsSwapsPancake($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsSwapsPancake($address: [String!], $first: Int!, $skip: Int!) {
   swaps(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pair: $address}
+    where: {pair_in: $address}
   ) {
     id
     timestamp
-    pair {
-      token0 {
-        id
-        symbol
-      }
-      token1 {
-        id
-        symbol
-      }
-    }
     from
     amount0In
     amount1In
@@ -2395,26 +2385,16 @@ export type TransactionsSwapsPancakeQueryHookResult = ReturnType<typeof useTrans
 export type TransactionsSwapsPancakeLazyQueryHookResult = ReturnType<typeof useTransactionsSwapsPancakeLazyQuery>;
 export type TransactionsSwapsPancakeQueryResult = Apollo.QueryResult<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>;
 export const TransactionsMintsPancakeDocument = gql`
-    query transactionsMintsPancake($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsMintsPancake($address: [String!], $first: Int!, $skip: Int!) {
   mints(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pair: $address}
+    where: {pair_in: $address}
   ) {
     id
     timestamp
-    pair {
-      token0 {
-        id
-        symbol
-      }
-      token1 {
-        id
-        symbol
-      }
-    }
     sender
     to
     amount0
@@ -2454,26 +2434,16 @@ export type TransactionsMintsPancakeQueryHookResult = ReturnType<typeof useTrans
 export type TransactionsMintsPancakeLazyQueryHookResult = ReturnType<typeof useTransactionsMintsPancakeLazyQuery>;
 export type TransactionsMintsPancakeQueryResult = Apollo.QueryResult<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>;
 export const TransactionsBurnsPancakeDocument = gql`
-    query transactionsBurnsPancake($address: String!, $first: Int!, $skip: Int!) {
+    query transactionsBurnsPancake($address: [String!], $first: Int!, $skip: Int!) {
   burns(
     skip: $skip
     first: $first
     orderBy: timestamp
     orderDirection: desc
-    where: {pair: $address}
+    where: {pair_in: $address}
   ) {
     id
     timestamp
-    pair {
-      token0 {
-        id
-        symbol
-      }
-      token1 {
-        id
-        symbol
-      }
-    }
     sender
     amount0
     amount1

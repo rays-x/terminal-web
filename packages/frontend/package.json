@@ -9,7 +9,7 @@
     "dev:server": "cross-env NODE_ENV=development yarn ts-node-dev server",
     "dev:client": "vite --config vite.config.ts dev --host",
     "start": "yarn dev:client",
-    "build": "rimraf dist && tsc -p tsconfig.prod.json && npm run build:client && npm run build:server && yarn prerender",
+    "build": "rimraf dist && tsc -p tsconfig.prod.json && npm run build:client && npm run build:server && yarn docker:build && yarn docker:push",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "prerender": "cross-env NODE_ENV=production yarn ts-node prerender.cts",
@@ -20,6 +20,7 @@
     "codegen:uniswap": "graphql-codegen --config src/graphql/codegen-uniswap.ts",
     "codegen:pancake": "graphql-codegen --config src/graphql/codegen-pancake.ts",
     "docker:build": "docker buildx build --platform linux/amd64 -t bardakdev/ray-client . --no-cache",
+    "docker:push": "docker push bardakdev/ray-client",
     "docker:build:nginx": "docker buildx build --platform linux/amd64 -t ray-nginx-local . --no-cache"
   },
   "dependencies": {
@@ -54,6 +55,7 @@
     "react-spring": "9.5.5",
     "react-table": "7.8.0",
     "react-use-websocket": "4.2.0",
+    "react-window": "^1.8.8",
     "recharts": "2.1.16",
     "redux": "4.2.0",
     "sass": "1.56.0",
