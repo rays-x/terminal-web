@@ -1,8 +1,8 @@
-export interface Date {
+interface Date {
   date: string;
 }
 
-export interface Transfer {
+interface Transfer {
   date: Date;
   total_amount: number;
   total_amount_usd: number;
@@ -15,11 +15,11 @@ export interface Transfer {
   transfer_count: number;
 }
 
-export interface Stats {
+interface Stats {
   transfers: Transfer[];
 }
 
-export interface Data {
+interface Data {
   stats: Stats;
 }
 

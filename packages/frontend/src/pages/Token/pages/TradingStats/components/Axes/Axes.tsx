@@ -13,7 +13,7 @@ export interface AxesProps {
     tickFormat?: Partial<NumeralFormatType> & { formatString?: string };
   };
   yAxisProps?: YAxisProps & {
-    tickFormat?: Partial<NumeralFormatType> & { formatString?: string };
+    tickFormat?: Partial<NumeralFormatType> & { formatString?: string; formatValue?: (value) => string };
   };
 }
 
@@ -87,16 +87,18 @@ export const Axes = ({
         width={yAxisWidth}
         tickLine={false}
         tick={({x, y, payload: {value}}) => {
-          const tickValue = formatNumeral(
-            value,
-            yAxisProps?.tickFormat?.formatString ||
-            chooseNumeralFormat({
+          const tickValue = yAxisProps?.tickFormat?.formatValue
+            ? yAxisProps?.tickFormat?.formatValue(value)
+            : formatNumeral(
               value,
-              maxLength: 5,
-              type: 'currency',
-              ...yAxisProps?.tickFormat
-            })
-          );
+              yAxisProps?.tickFormat?.formatString ||
+              chooseNumeralFormat({
+                value,
+                maxLength: 5,
+                type: 'currency',
+                ...yAxisProps?.tickFormat
+              })
+            );
           return (
             <g transform={`translate(${x},${y})`}>
               <text

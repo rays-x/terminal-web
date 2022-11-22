@@ -1,13 +1,13 @@
 import React from 'react';
 import {TextInfoStyled} from './TextInfo-styled';
-import {StatsTransferResponse} from '../../../../types';
+import {StatsTransfersResponse} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
 import {get, take, takeRight} from 'lodash';
 
 export const TextInfo = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransferResponse[]>({
+  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
     url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
     withCredentials: false
   });

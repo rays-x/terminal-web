@@ -5,7 +5,9 @@ import {Loader} from '../../../../../components/_old/ui/Loader/Loader';
 import Helmet from '../../../../../components/Helmet';
 import {JsonValue} from 'react-use-websocket/src/lib/types';
 import {useCmcTokenSocket} from '../../../../../store/cmcTokenSocket';
-import TradingView, {ResolutionString} from '../../../../../../public/charting_library/charting_library';
+import TradingView, {
+  ResolutionString
+} from '../../../../../../public/charting_library/charting_library';
 import {ChartComponentProps} from '../types';
 
 export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
@@ -14,20 +16,22 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
                                                                          }) => {
   const {sendMessage, lastMessage} = useCmcTokenSocket();
   const self = React.useMemo(() => new Map, [pair]);
+  const [loading, setLoading] = React.useState(true);
+  const [defaultInterval, setDefaultInterval] = React.useState<any>('60');
+  const intervals = {
+    '1': '1m',
+    '5': '5m',
+    '15': '15m',
+    '30': '15m',
+    '60': '1h',
+    '240': '1h',
+    '480': '1h',
+    '720': '1h',
+    '1D': '1d',
+    '1W': '1d',
+    '1M': '1d'
+  };
   const DataFeeds = React.useCallback(() => {
-    const params = {
-      1: '1m',
-      5: '5m',
-      15: '15m',
-      30: '15m',
-      60: '1h',
-      240: '1h',
-      480: '1h',
-      720: '1h',
-      '1D': '1d',
-      '1W': '1d',
-      '1M': '1d'
-    };
     return {
       sendRequest(datafeedUrl, urlPath, params) {
         if (params !== undefined) {
@@ -128,6 +132,14 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
                   v: []
                 })
               };
+              if (response.s === 'no_data' && !requestParams['to']) {
+                const intervalKeys = Object.keys(intervals);
+                const findCurrentIntervalIndex = intervalKeys.indexOf(defaultInterval);
+                if (findCurrentIntervalIndex + 1 === intervalKeys.length) {
+                  return;
+                }
+                setDefaultInterval(intervalKeys[findCurrentIntervalIndex + 1]);
+              }
               if (response.s !== 'ok' && response.s !== 'no_data') {
                 reject(response.errmsg);
                 return;
@@ -176,7 +188,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         }).catch(onError);
       },
       subscribeBars: (symbolInfo, resolutionIndex, newDataCallback, listenerGuid) => {
-        const name = `dexscan@kline@${pair.platform.id}@${pair.poolId}@${params[resolutionIndex]}`;
+        const name = `dexscan@kline@${pair.platform.id}@${pair.poolId}@${intervals[String(resolutionIndex)]}`;
         const handler = {
           id: listenerGuid,
           callback: newDataCallback
@@ -239,10 +251,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         //
       }
     };
-  }, [pair]);
-
-  const [loading, setLoading] = React.useState(true);
-
+  }, [pair,defaultInterval]);
   React.useEffect(() => {
     if (!lastMessage) {
       return;
@@ -276,7 +285,6 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
     }
     args.handlers.forEach(ret => ret.callback(item));
   }, [lastMessage]);
-
   React.useEffect(() => {
     if (window['TradingView']) {
       return setLoading(false);
@@ -298,7 +306,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
       }
       new (window['TradingView'] as typeof TradingView).widget({
         symbol: pair.poolId,
-        interval: ('60' as unknown as ResolutionString),
+        interval: (defaultInterval as unknown as ResolutionString),
         container: 'tv_chart_container',
         datafeed: DataFeeds(),
         library_path: '/charting_library/charting_library/',
@@ -343,7 +351,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         locale: 'en'
       });
     },
-    [loading, pair]);
+    [loading, pair, defaultInterval]);
   return (
     <>
       <Helmet>

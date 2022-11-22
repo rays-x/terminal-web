@@ -339,7 +339,7 @@ export interface TransactionsResponse {
   txn: string;
 }
 
-export interface StatsTransferResponse {
+export interface StatsTransfersResponse {
   date: string;
   medianTransferAmount: number;
   medianTransferAmountUsd: number;
@@ -350,4 +350,15 @@ export interface StatsTransferResponse {
   uniqReceivers: number;
   uniqSenders: number;
   transferCount: number;
+}
+
+export interface StatsSwapsResponse {
+  date: string;
+  tradeAmountUsd: number;
+  countTxs: number;
+}
+
+export interface StatsHoldersResponse {
+  date: string;
+  count: number;
 }

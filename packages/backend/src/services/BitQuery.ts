@@ -3,11 +3,26 @@ import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
 import md5 from 'md5';
-import {BitQueryStatsTransfersQuery} from '../types/BitQuery';
+import {addDays, format} from 'date-fns';
+import {BitQueryStatsTransfersQuery} from '../types/BitQuery/BitQueryStatsTransfersQuery';
+import {BitQueryStatsSwapsQuery} from '../types/BitQuery/BitQueryStatsSwapsQuery';
+import {BitQueryStatsHoldersQuery} from '../types/BitQuery/BitQueryStatsHoldersQuery';
+import {promiseMap} from '../utils';
+
+const since = format(addDays(new Date(), -20), 'yyyy-MM-dd');
+const sinceArray = Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
 
 export class BitQueryService {
 
   awaiterStatsTransfersList: {
+    [k: string]: boolean
+  } = {};
+
+  awaiterStatsSwapsList: {
+    [k: string]: boolean
+  } = {};
+
+  awaiterStatsHoldersList: {
     [k: string]: boolean
   } = {};
 
@@ -62,15 +77,96 @@ export class BitQueryService {
         `,
         variables: {
           ...variables,
-          since: '2022-07-25'
+          since
         }
       },
       headers: {
-        'x-api-key': 'BQYQid8NgyWUDBn5nMFd0DIfp5DT8IRc'
+        'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
     return transfers;
+  }
+
+  private async getStatsSwaps(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string
+  }) {
+    const {
+      body: {
+        data: {
+          stats: {
+            swaps
+          }
+        }
+      }
+    } = await got.post<BitQueryStatsSwapsQuery>('https://graphql.bitquery.io/', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            swaps: dexTrades(
+              baseCurrency: {is: $token}
+              options: {desc: "date.date"}
+              date: {since: $since, till: null}
+            ) {
+              date {
+                date
+              }
+              tradeAmountUsd: tradeAmount(in: USD)
+              countTxs: count(uniq: txs)
+            }
+          }
+        }
+        `,
+        variables: {
+          ...variables,
+          since
+        }
+      },
+      headers: {
+        'x-api-key': process.env.BITQUERY_API_KEY
+      },
+      responseType: 'json'
+    });
+    return swaps;
+  }
+
+  private async getStatsHolders(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string,
+    till: string
+  }) {
+    const {
+      body: {
+        data: {
+          stats: {
+            holders
+          }
+        }
+      }
+    } = await got.post<BitQueryStatsHoldersQuery>('https://graphql.bitquery.io/', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            holders: transfers(
+              currency: {is: $token}
+              date: {till: $till}
+            ) {
+              count(uniq: receivers, amount: {gt: 0})
+            }
+          }
+        }
+        `,
+        variables
+      },
+      headers: {
+        'x-api-key': process.env.BITQUERY_API_KEY
+      },
+      responseType: 'json'
+    });
+    return holders.shift();
   }
 
   async statsTransfers(btcAddress?: string, ethAddress?: string): Promise<any> {
@@ -143,6 +239,144 @@ export class BitQueryService {
     } catch (e) {
       if (cacheKey in this.awaiterStatsTransfersList) {
         delete this.awaiterStatsTransfersList[cacheKey];
+      }
+    }
+    return [];
+  }
+
+  async statsSwaps(btcAddress?: string, ethAddress?: string): Promise<any> {
+    const cacheKey = `cmc:statsSwaps:${md5(`${btcAddress}_${ethAddress}`)}`;
+    try {
+      if (cacheKey in this.awaiterStatsSwapsList) {
+        return [];
+      }
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+      if (cache) {
+        return cache;
+      }
+      if (!(cacheKey in this.awaiterStatsSwapsList)) {
+        this.awaiterStatsSwapsList[cacheKey] = true;
+      }
+      const data: Promise<{
+        eth?: BitQueryStatsSwapsQuery['data']['stats']['swaps']
+        bsc?: BitQueryStatsSwapsQuery['data']['stats']['swaps']
+      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+        btcAddress,
+        ethAddress
+      }).map(async ([key, token]) => {
+        switch (key) {
+          case 'btcAddress': {
+            return ['btc', token ? await this.getStatsSwaps({
+              network: 'bsc',
+              token
+            }) : undefined];
+          }
+          case 'ethAddress': {
+            return ['eth', token ? await this.getStatsSwaps({
+              network: 'ethereum',
+              token
+            }) : undefined];
+          }
+        }
+      }))).filter(([, data]) => data));
+      const map = {};
+      Object.values(data)
+        .reduce((p, n) => [...p, ...n], [])
+        .forEach((item: BitQueryStatsSwapsQuery['data']['stats']['swaps'][0]) => {
+          set(map, `${item.date.date}.tradeAmountUsd`,
+            item['tradeAmountUsd'] + get(map, `${item.date.date}.tradeAmountUsd`, 0)
+          );
+          set(map, `${item.date.date}.countTxs`,
+            item['countTxs'] + get(map, `${item.date.date}.countTxs`, 0)
+          );
+        });
+      const result = Object.entries(map).map(([date, rest]: [string, any]) => ({date, ...rest}));
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+      if (cacheKey in this.awaiterStatsSwapsList) {
+        delete this.awaiterStatsSwapsList[cacheKey];
+      }
+      return result;
+    } catch (e) {
+      if (cacheKey in this.awaiterStatsSwapsList) {
+        delete this.awaiterStatsSwapsList[cacheKey];
+      }
+    }
+    return [];
+  }
+
+  async statsHolders(btcAddress?: string, ethAddress?: string): Promise<any> {
+    const cacheKey = `cmc:statsHolders:${md5(`${btcAddress}_${ethAddress}`)}`;
+    try {
+      if (cacheKey in this.awaiterStatsHoldersList) {
+        return [];
+      }
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+      if (cache) {
+        return cache;
+      }
+      if (!(cacheKey in this.awaiterStatsHoldersList)) {
+        this.awaiterStatsHoldersList[cacheKey] = true;
+      }
+      const data: Promise<{
+        eth?: {
+          date: string,
+          count: number
+        }[]
+        bsc?: {
+          date: string,
+          count: number
+        }[]
+      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+        btcAddress,
+        ethAddress
+      }).map(async ([key, token]) => {
+        switch (key) {
+          case 'btcAddress': {
+            return ['btc', token ? await promiseMap(sinceArray, async (till) => {
+              return {
+                date: till,
+                count: get(await this.getStatsHolders({
+                  network: 'bsc',
+                  token,
+                  till
+                }), 'count')
+              };
+            }) : undefined];
+          }
+          case 'ethAddress': {
+            return ['eth', token ? await promiseMap(sinceArray, async (till) => {
+              return {
+                date: till,
+                count: get(await this.getStatsHolders({
+                  network: 'ethereum',
+                  token,
+                  till
+                }), 'count')
+              };
+            }) : undefined];
+          }
+        }
+      }))).filter(([, data]) => data));
+      const map = {};
+      Object.values(data)
+        .reduce((p, n) => [...p, ...n], [])
+        .forEach((item: {
+          date: string,
+          count: number
+        }) => {
+          set(map, `${item.date}.count`,
+            item['count'] + get(map, `${item.date}.count`, 0)
+          );
+        });
+      const result = Object.entries(map).map(([date, rest]: [string, any]) => ({date, ...rest}));
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+      if (cacheKey in this.awaiterStatsHoldersList) {
+        delete this.awaiterStatsHoldersList[cacheKey];
+      }
+      return result;
+    } catch (e) {
+      if (cacheKey in this.awaiterStatsHoldersList) {
+        delete this.awaiterStatsHoldersList[cacheKey];
       }
     }
     return [];

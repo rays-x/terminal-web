@@ -8,14 +8,14 @@ import {
 } from '../../../../../../utils/numbers';
 import {TinyAreaChartStyled} from './TinyAreaChart-styled';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsTransferResponse} from '../../../../types';
+import {StatsTransfersResponse} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {takeRight} from 'lodash';
 import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
 
 export const TinyAreaChart = () => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransferResponse[]>({
+  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
     url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
     withCredentials: false
   });

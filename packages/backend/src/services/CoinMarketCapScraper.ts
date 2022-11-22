@@ -45,6 +45,8 @@ const CMC_ID_UNISWAP_V3 = 1348;
 const CMC_ID_UNISWAP_V2 = 1069;
 const CMC_ID_PANCAKE_V2 = 1344;
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 export class CoinMarketCapScraperService implements OnModuleInit {
 
   awaiterPairsList: {
@@ -215,8 +217,10 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           const platform_binance = get(get(data, 'platforms', [])
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
-          if (platform_binance || platform_ethereum) {
+          if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsHolders(platform_binance, platform_ethereum).catch();
           }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(
@@ -271,8 +275,10 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           const platform_binance = get(get(data, 'platforms', [])
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
-          if (platform_binance || platform_ethereum) {
+          if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsHolders(platform_binance, platform_ethereum).catch();
           }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(

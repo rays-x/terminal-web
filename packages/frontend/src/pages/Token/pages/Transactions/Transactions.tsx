@@ -17,16 +17,29 @@ import PancakeIcon from '../../../../assets/icons/dex/pancake.png';
 import {useLazyFetch} from '../../../../hooks/useFetch';
 import {useCmcTokenSocket} from '../../../../store/cmcTokenSocket';
 import {JsonValue} from 'react-use-websocket/src/lib/types';
+import {CmcSearch} from '../PriceChart/types';
+import {CmcPairInfo} from '../PriceChart/chart/types';
 
 const TRANSACTIONS_PAIRS_SLICE = 10;
 
 export const Transactions: React.FC = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
   const {sendMessage, lastMessage} = useCmcTokenSocket();
-  const [{data: dataTransactionPairs}, getTransactionPairs] = useLazyFetch<TransactionsPairsResponse>({
+  const [, getPairsInfo] = useLazyFetch<{
+    [k: string]: CmcPairInfo['data']
+  }>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
+    withCredentials: false
+  });
+  const [, getSearch] = useLazyFetch<CmcSearch>({
+    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
+    withCredentials: false
+  });
+  const [, getTransactionPairs] = useLazyFetch<TransactionsPairsResponse>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-list`,
     withCredentials: false
   });
+  const [dataTransactionPairs, setDataTransactionPairs] = React.useState<TransactionsPairsResponse>();
   const [{data: dataTransactions}, getTransactions] = useLazyFetch<TransactionsResponse[]>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/transactions`,
     method: 'POST',
@@ -37,12 +50,59 @@ export const Transactions: React.FC = React.memo(() => {
     if (!currentCoinData?.id) {
       return;
     }
-    getTransactionPairs({
-      params: {
-        ethAddress: currentCoinData.platform_ethereum,
-        btcAddress: currentCoinData.platform_binance
-      }
-    }).finally();
+    (async () => {
+      const [main, eth, btc] = (await Promise.all([
+        getTransactionPairs({
+          params: {
+            ethAddress: currentCoinData.platform_ethereum,
+            btcAddress: currentCoinData.platform_binance
+          }
+        }).then(({data}) => data),
+        currentCoinData.platform_ethereum
+          ? getSearch({
+            params: {
+              keyword: currentCoinData.platform_ethereum,
+              all: true
+            }
+          }).then(({data: {data: {pairs}}}) => {
+            return getPairsInfo({
+              params: {
+                platform: 'Ethereum',
+                pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
+              }
+            }).then(({data}) => Object.values(data));
+          })
+          : Promise.resolve([]),
+        currentCoinData.platform_binance
+          ? getSearch({
+            params: {
+              keyword: currentCoinData.platform_binance,
+              all: true
+            }
+          }).then(({data: {data: {pairs}}}) => {
+            return getPairsInfo({
+              params: {
+                platform: 'BSC',
+                pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
+              }
+            }).then(({data}) => Object.values(data));
+          })
+          : Promise.resolve([])
+      ]));
+      eth.forEach(pair => {
+        if (main.ethPairs.findIndex(_pair => _pair.poolId === pair.poolId) > -1) {
+          return;
+        }
+        main['ethPairs'].push(pair);
+      });
+      btc.forEach(pair => {
+        if (main.btcPairs.findIndex(_pair => _pair.poolId === pair.poolId) > -1) {
+          return;
+        }
+        main['btcPairs'].push(pair);
+      });
+      setDataTransactionPairs(main);
+    })();
   }, [currentCoinData?.id]);
   React.useEffect(() => {
     if (!dataTransactionPairs) {
@@ -59,7 +119,7 @@ export const Transactions: React.FC = React.memo(() => {
             return `${pair.poolId}_${pair.quoteToken.address.toLowerCase() === currentCoinData.platform_binance}`;
           })
       }
-    }).finally();
+    }).catch();
   }, [dataTransactionPairs]);
 
   React.useEffect(() => {

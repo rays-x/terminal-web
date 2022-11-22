@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {AreaChart, Area, ResponsiveContainer, Tooltip} from 'recharts';
 import {Gradients} from '../Gradients/Gradients';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
@@ -13,68 +13,67 @@ import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/Sub
 import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
 
 import {SwapsChartStyled} from './SwapsChart-styled';
-import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+// import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsSwapsResponse} from '../../../../types';
+import {CurrentCoinData} from '../../../../CoinPage';
 
-type SwapType = {
-  date?: string;
-  price?: number;
-}
-
-type SwapBlockType = {
-  swaps?: SwapType[];
-  total?: number;
-}
-
-const [dropDownState, DropDown] = dropDown<number>({
+/*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
-});
+});*/
 
-export interface SwapsChartProps {
-  coinId: string;
-}
-
-export const SwapsChart: React.FC<SwapsChartProps> = ({coinId}) => {
-  const {
+export const SwapsChart: React.FC = React.memo(() => {
+  const currentCoinData = React.useContext(CurrentCoinData);
+  /*const {
     options,
     selected: [selectedRow, setSelectedRow],
     active: [activeRow, setActiveRow]
   } = dropDownState({
     options: [],
     selectedOption: 10
+  });*/
+
+  const [{data}, getSwapsInfo] = useLazyFetch<StatsSwapsResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/swaps`,
+    withCredentials: false
   });
 
-  const data = {
-    swaps: {
-      swaps: [],
-      total: undefined
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
     }
-  }/*useMerge<{ swaps: SwapBlockType }, { coinId: string }>(
-    QUERY_SWAPS_CHART,
-    SUB_SWAPS_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
-    }
-  )*/;
+    getSwapsInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
 
-  const chartData = useMemo(() => {
-    return data?.swaps?.swaps?.map(dateMapF) ?? [];
+
+  const chartData = React.useMemo(() => {
+    return data?.map(dateMapF).reverse() ?? [];
   }, [data]);
 
-  const totalValue = data?.swaps.total || 0;
-  const value = formatNumeral(
-    totalValue,
-    chooseNumeralFormat({
-      value: totalValue
-    })
-  );
+  const totalValue = React.useMemo(() => {
+    return data?.reduce((p, n) => p + n.countTxs, 0) || 0;
+  }, [data]);
+
+  const value = React.useMemo(() => {
+    return formatNumeral(
+      totalValue,
+      chooseNumeralFormat({
+        value: totalValue
+      })
+    );
+  }, [totalValue]);
 
   return (
     <SwapsChartStyled.Component>
       <SubChartHeader
         title={'Swaps'}
-        titleContent={
+        /*titleContent={
           <DropDown
             title={'Total'}
             options={options}
@@ -83,7 +82,7 @@ export const SwapsChart: React.FC<SwapsChartProps> = ({coinId}) => {
             activeOption={activeRow}
             setActiveOption={setActiveRow}
           />
-        }
+        }*/
         chartValue={<SubChartValue value={value}/>}
       />
 
@@ -93,13 +92,20 @@ export const SwapsChart: React.FC<SwapsChartProps> = ({coinId}) => {
             {Gradients()}
             {Axes({
               data: chartData,
-              dataValueKey: 'price'
+              dataValueKey: 'countTxs',
+              yAxisProps: {
+                tickFormat: {
+                  formatValue: _ => _
+                }
+              }
             })}
-            <Tooltip content={CustomTooltip()}/>
+            <Tooltip content={CustomTooltip({
+              valueFormatter: _ => _
+            })}/>
             <Area
               name="Swaps"
               type="monotone"
-              dataKey="price"
+              dataKey="countTxs"
               {...getLineDefaults('url(#colorful)', 'url(#colorful)')}
             />
           </AreaChart>
@@ -107,4 +113,4 @@ export const SwapsChart: React.FC<SwapsChartProps> = ({coinId}) => {
       </SwapsChartStyled.Body>
     </SwapsChartStyled.Component>
   );
-};
+});

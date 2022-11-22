@@ -138,8 +138,7 @@ export const barData = [
   }
 ];
 
-export const TradingStats = () => {
-  const {token: coinId} = useParams();
+export const TradingStats = React.memo(() => {
 
   return (
     <TradingStatsStyled.Component>
@@ -152,21 +151,21 @@ export const TradingStats = () => {
       <TradingStatsStyled.Grid $colsAmount={4} $height={'auto'}>
         <TradingStatsStyled.GridItem $colSpan={1}>
           <TradingStatsStyled.Card>
-            <SwapsChart coinId={coinId}/>
+            <SwapsChart/>
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
         <TradingStatsStyled.GridItem $colSpan={1}>
           <TradingStatsStyled.Card>
-            <HoldersChart coinId={coinId}/>
+            <HoldersChart/>
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
         <TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
-            <UsersChart coinId={coinId}/>
+            <UsersChart/>
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
 
-        <TradingStatsStyled.GridItem $colSpan={2}>
+        {/*<TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
             <LiquidityChart coinId={coinId}/>
           </TradingStatsStyled.Card>
@@ -186,8 +185,8 @@ export const TradingStats = () => {
           <TradingStatsStyled.Card>
             <TradesVolumeChart coinId={coinId}/>
           </TradingStatsStyled.Card>
-        </TradingStatsStyled.GridItem>
+        </TradingStatsStyled.GridItem>*/}
       </TradingStatsStyled.Grid>
     </TradingStatsStyled.Component>
   );
-};
+});

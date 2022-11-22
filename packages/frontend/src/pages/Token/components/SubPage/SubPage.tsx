@@ -58,7 +58,7 @@ export const subPagesConfig: Record<SubPages, PageButton> = {
   // }
 };
 
-export const SubPage: FC = () => {
+export const SubPage: FC = React.memo(() => {
   return (
     <>
       <CoinPageStyled.SubPagesButtons>
@@ -80,10 +80,10 @@ export const SubPage: FC = () => {
         <Element name={SubPages.TokenStats}>
           <TokenStats/>
         </Element>
-        {/*<Element name={SubPages.TradingStats}>
+        <Element name={SubPages.TradingStats}>
           <TradingStats/>
-        </Element>*/}
+        </Element>
       </>
     </>
   );
-};
+});

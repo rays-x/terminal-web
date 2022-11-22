@@ -71,7 +71,8 @@ export class CoinMarketCapScraperController {
   async pairsInfo(
     @Query() {pairs, platform}: QueryPairsInfoDto
   ) {
-    return this.service.pairsInfo(platform, pairs);
+    const data = await this.service.pairsInfo(platform, pairs);
+    return Object.fromEntries(Object.entries(data).filter(([, value]) => 'priceUsd' in (value as Object)));
   }
 
   @Get('dex/pairs-list')

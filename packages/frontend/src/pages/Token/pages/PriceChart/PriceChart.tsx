@@ -15,14 +15,22 @@ export const PriceChart: React.FC = React.memo(() => {
   const [id] = token.split('_');
   const [pairAddress, setPairAddress] = React.useState<string>(undefined);
 
-  const {data: _data, loading: _loading} = useFetch<CmcSearch>({
+  const [{data: _data, loading: _loading}, getSearch] = useLazyFetch<CmcSearch>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
-    params: {
-      keyword: id,
-      all: true
-    },
     withCredentials: false
   });
+
+  React.useEffect(() => {
+    if (!id) {
+      return;
+    }
+    getSearch({
+      params: {
+        keyword: id,
+        all: true
+      }
+    }).catch();
+  }, [id]);
 
   const [{data: _dataPairs, loading: _loadingPairs}, getPairsInfo] = useLazyFetch<{
     [k: string]: CmcPairInfo['data']

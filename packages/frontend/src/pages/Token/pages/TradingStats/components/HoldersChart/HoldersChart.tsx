@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {
   AreaChart,
   Area,
@@ -18,47 +18,50 @@ import {
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
 import {HoldersChartStyled} from './HoldersChart-styled';
-import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+// import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsHoldersResponse} from '../../../../types';
+import {get} from 'lodash';
 
-const [dropDownState, DropDown] = dropDown<number>({
+/*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
-});
+});*/
 
-export interface HoldersChartProps {
-  coinId: string;
-}
+export const HoldersChart: React.FC = React.memo(() => {
+  /*const {
+  options,
+  selected: [selectedRow, setSelectedRow],
+  active: [activeRow, setActiveRow]
+} = dropDownState({
+  options: [],
+  selectedOption: 10
+});*/
+  const currentCoinData = React.useContext(CurrentCoinData);
 
-export const HoldersChart: React.FC<HoldersChartProps> = ({coinId}) => {
-  const {
-    options,
-    selected: [selectedRow, setSelectedRow],
-    active: [activeRow, setActiveRow]
-  } = dropDownState({
-    options: [],
-    selectedOption: 10
+  const [{data}, getHoldersInfo] = useLazyFetch<StatsHoldersResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/holders`,
+    withCredentials: false
   });
 
-  const data = {
-    holders: {
-      holders: [],
-      total: undefined
-    },
-    coinId: undefined
-  }/*useMerge<{ holders: HolderBlockType }, { coinId: string }>(
-    QUERY_HOLDERS_CHART,
-    SUB_HOLDERS_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
     }
-  )*/;
+    getHoldersInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
 
-  const chartData = useMemo(() => {
-    return data?.holders?.holders?.map(dateMapF) ?? [];
+  const chartData = React.useMemo(() => {
+    return data?.map(dateMapF).reverse() ?? [];
   }, [data]);
 
-  const totalValue = data?.holders?.total || 0;
+  const totalValue = get(data, 'count', 0);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
@@ -70,7 +73,7 @@ export const HoldersChart: React.FC<HoldersChartProps> = ({coinId}) => {
     <HoldersChartStyled.Component>
       <SubChartHeader
         title={'Holders'}
-        titleContent={
+        /*titleContent={
           <DropDown
             title={'Total'}
             options={options}
@@ -79,7 +82,7 @@ export const HoldersChart: React.FC<HoldersChartProps> = ({coinId}) => {
             activeOption={activeRow}
             setActiveOption={setActiveRow}
           />
-        }
+        }*/
         chartValue={<SubChartValue value={value}/>}
       />
 
@@ -91,12 +94,21 @@ export const HoldersChart: React.FC<HoldersChartProps> = ({coinId}) => {
               vertical={false}
             />
             {Gradients()}
-            {Axes({data: chartData})}
-            <Tooltip content={CustomTooltip()}/>
+            {Axes({
+              data: chartData,
+              yAxisProps: {
+                tickFormat: {
+                  formatValue: _ => _
+                }
+              }
+            })}
+            <Tooltip content={CustomTooltip({
+              valueFormatter: _ => _
+            })}/>
             <Area
               name="Holders"
               type="monotone"
-              dataKey="value"
+              dataKey="count"
               {...getLineDefaults('url(#orangeFill)', 'url(#orangeStroke)')}
             />
           </AreaChart>
@@ -104,4 +116,4 @@ export const HoldersChart: React.FC<HoldersChartProps> = ({coinId}) => {
       </HoldersChartStyled.Body>
     </HoldersChartStyled.Component>
   );
-};
+});

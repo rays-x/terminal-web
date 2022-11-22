@@ -23,7 +23,7 @@ import {CurrentCoinData} from '../../../../CoinPage';
 import {EMDASH} from '../../../../../../utils/data/utf';
 import {StackedAreaChartStyled} from './StackedAreaChart-styled';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsTransferResponse} from '../../../../types';
+import {StatsTransfersResponse} from '../../../../types';
 import {takeRight} from 'lodash';
 
 function getLineDefaults(fillColor, strokeColor) {
@@ -44,7 +44,7 @@ function getLineDefaults(fillColor, strokeColor) {
 
 export const StackedAreaChart = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransferResponse[]>({
+  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
     url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
     withCredentials: false
   });

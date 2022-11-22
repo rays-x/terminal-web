@@ -22,56 +22,65 @@ import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/Sub
 import {SubChartHeaderVariant} from '../../../../components/SubChart/SubChartHeader/SubChartHeader-styled';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
 import {UsersChartStyled} from './UsersChart-styled';
-import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
-
-type UsersChartType = {
-  date?: Date;
-  newUsers?: number;
-  oldUsers?: number;
-}
-
-type UsersType = {
-  total?: number;
-  usersChart?: Array<UsersChartType>;
-};
-const [dropDownState, DropDown] = dropDown<number>({
+// import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsHoldersResponse} from '../../../../types';
+import {get} from 'lodash';
+import {addDays, format} from 'date-fns';
+/*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
-});
+});*/
 
-export interface UsersChartProps {
-  coinId: string;
-}
-
-export const UsersChart: React.FC<UsersChartProps> = ({coinId}) => {
-  const {
-    options,
-    selected: [selectedRow, setSelectedRow],
-    active: [activeRow, setActiveRow]
-  } = dropDownState({
-    options: [],
-    selectedOption: 10
+export const UsersChart: React.FC = React.memo(() => {
+  /*const {
+  options,
+  selected: [selectedRow, setSelectedRow],
+  active: [activeRow, setActiveRow]
+} = dropDownState({
+  options: [],
+  selectedOption: 10
+});*/
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data}, getHoldersInfo] = useLazyFetch<StatsHoldersResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/holders`,
+    withCredentials: false
   });
-
-  const data: { users: UsersType, coinId?: string } = {
-    users: {
-      total: undefined,
-      usersChart: []
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
     }
-  }/*useMerge<>(
-    QUERY_USERS_CHART,
-    SUB_USERS_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
-    }
-  )*/;
+    getHoldersInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
 
   const chartData = useMemo(() => {
-    return data?.users?.usersChart?.map(dateMapF) ?? [];
+    const oldUsers = data?.reverse() ?? [];
+    const newUsers = oldUsers.reduce((prev, {
+      date,
+      count
+    }) => {
+      const prevDate = format(addDays(new Date(date), -1), 'yyyy-MM-dd');
+      const foundPrevOldUsers = oldUsers.find(({date}) => date === prevDate);
+      const replaceCount = foundPrevOldUsers ? count - foundPrevOldUsers.count : 0;
+      return [...prev, {date, count: replaceCount}];
+    }, []);
+    return Array.from({length: oldUsers.length}).map((_, i) => dateMapF({
+      date: get(oldUsers, `${i}.date`, undefined),
+      oldUsers: get(oldUsers, `${i - 1}.count`, 0),
+      newUsers: get(newUsers, `${i}.count`, 0)
+    })).slice(1);
   }, [data]);
 
-  const totalValue = data?.users.total || 0;
+  const totalValue = React.useMemo(() => {
+    const users = data?.reverse() ?? [];
+    return get(users, '0.count', 0);
+  }, [data]);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
@@ -84,7 +93,7 @@ export const UsersChart: React.FC<UsersChartProps> = ({coinId}) => {
       <SubChartHeader
         $variant={SubChartHeaderVariant.horizontal}
         title={'New / Old Users'}
-        titleContent={
+        /*titleContent={
           <DropDown
             title={'Total'}
             options={options}
@@ -93,7 +102,7 @@ export const UsersChart: React.FC<UsersChartProps> = ({coinId}) => {
             activeOption={activeRow}
             setActiveOption={setActiveRow}
           />
-        }
+        }*/
         chartValue={<SubChartValue label={'Total Users:'} value={value}/>}
       />
 
@@ -148,4 +157,4 @@ export const UsersChart: React.FC<UsersChartProps> = ({coinId}) => {
       </UsersChartStyled.Body>
     </UsersChartStyled.Component>
   );
-};
+});

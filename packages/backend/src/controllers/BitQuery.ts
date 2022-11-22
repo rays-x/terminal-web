@@ -30,4 +30,26 @@ export class BitQueryController {
   ) {
     return this.service.statsTransfers(btcAddress, ethAddress);
   }
+
+  @Get('stats/swaps')
+  @HttpCode(200)
+  async statsSwaps(
+    @Query() {
+      ethAddress,
+      btcAddress
+    }: QueryStatsTransferDto
+  ) {
+    return this.service.statsSwaps(btcAddress, ethAddress);
+  }
+
+  @Get('stats/holders')
+  @HttpCode(200)
+  async statsHolders(
+    @Query() {
+      ethAddress,
+      btcAddress
+    }: QueryStatsTransferDto
+  ) {
+    return this.service.statsHolders(btcAddress, ethAddress);
+  }
 }
