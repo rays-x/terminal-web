@@ -10,6 +10,7 @@ import {formatDate} from '../../../../../../hooks/useFormatDate';
 import {ImagePreview} from '../../../../../../components/_old/ui/Image/Image';
 import EtherScanIcon from '../../../../../../assets/icons/dex/etherscan.jpg';
 import BscScanIcon from '../../../../../../assets/icons/dex/bscscan.jpg';
+import {capitalize} from 'lodash';
 
 export const TransactionRow: FC<{ row }> = ({row}) => {
   return (
@@ -28,10 +29,10 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
             <RowStyled.Side
               {...cell.getCellProps(cellProps)}
               variant={
-                ['Buy', 'Add'].includes(cell.value) ? SideVariant.Buy : SideVariant.Sell
+                ['buy', 'add'].includes(cell.value) ? SideVariant.Buy : SideVariant.Sell
               }
             >
-              {cell.value}
+              {capitalize(cell.value)}
             </RowStyled.Side>
           );
         }

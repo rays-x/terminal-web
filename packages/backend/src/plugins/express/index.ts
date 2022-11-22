@@ -42,6 +42,7 @@ RedisSessionStore.set = function (sid: string, sess: SessionData, cb: (err) => v
 const expressPlugins = (express: Express) => {
   express.disable('x-powered-by');
   express.set('trust proxy', true);
+  express.set('trust proxy', true);
   express.use(cors({
     origin: [`${process.env.SERVER_URL}`, `${process.env.FRONTEND_URL}`],
     allowedHeaders: [

@@ -298,7 +298,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
       }
       new (window['TradingView'] as typeof TradingView).widget({
         symbol: pair.poolId,
-        interval: ('5' as unknown as ResolutionString),
+        interval: ('60' as unknown as ResolutionString),
         container: 'tv_chart_container',
         datafeed: DataFeeds(),
         library_path: '/charting_library/charting_library/',

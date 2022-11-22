@@ -2,10 +2,10 @@ import type {CodegenConfig} from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   overwrite: true,
-  schema: 'src/graphql/schema/pancake/pancakeswap-schema.graphql',
-  documents: ['src/graphql/queries/pancake/*.ts'],
+  schema: 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2',
+  documents: ["src/graphql/queries/uniswap/*.ts"],
   generates: {
-    'src/graphql/generated/schema-pancake.tsx': {
+    "src/graphql/generated/schema-uniswap.tsx": {
       plugins: [
         'typescript',
         'typescript-operations',

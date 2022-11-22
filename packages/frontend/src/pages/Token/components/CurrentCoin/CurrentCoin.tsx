@@ -88,7 +88,15 @@ export const CurrentCoin = React.memo(() => {
           <div>
             <CoinPageStyled.CoinStatsPriceChange>
               <CoinPageStyled.CoinStatsPriceChangeTitle>
-                {currentCoinData?.price_btc || EMDASH} BTC
+                {
+                  (currentCoinData?.price_btc
+                      ? Number(currentCoinData?.price_btc).toLocaleString('en-US', {
+                        useGrouping: false,
+                        maximumFractionDigits: 18
+                      })
+                      : null
+                  ) || EMDASH
+                } BTC
               </CoinPageStyled.CoinStatsPriceChangeTitle>
               <TypographyArrow
                 color={
@@ -107,7 +115,15 @@ export const CurrentCoin = React.memo(() => {
                 ? (
                   <CoinPageStyled.CoinStatsPriceChange>
                     <CoinPageStyled.CoinStatsPriceChangeTitle>
-                      {currentCoinData?.price_eth || EMDASH} ETH
+                      {
+                        (currentCoinData?.price_eth
+                            ? Number(currentCoinData?.price_eth).toLocaleString('en-US', {
+                              useGrouping: false,
+                              maximumFractionDigits: 18
+                            })
+                            : null
+                        )
+                      } ETH
                     </CoinPageStyled.CoinStatsPriceChangeTitle>
                     <TypographyArrow
                       color={

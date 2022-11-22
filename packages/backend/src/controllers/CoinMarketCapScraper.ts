@@ -1,13 +1,14 @@
-import {Controller, Get, HttpCode, Param, Query} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, Param, Post, Query} from '@nestjs/common';
 import {ApiParam, ApiTags} from '@nestjs/swagger';
 import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
 import {
   QueryPairListDto,
   QueryPairsInfoDto,
-  QueryTokensDto,
+  QueryTokensDto, QueryTransactionsDto,
   TokensSortOrder,
-  TokensSwap
+  TokensSwap, TransactionsResponse
 } from '../dto/CoinMarketCapScraper';
+import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
 
 @ApiTags('cmc')
 @Controller('/api/rest/cmc')
@@ -76,8 +77,27 @@ export class CoinMarketCapScraperController {
   @Get('dex/pairs-list')
   @HttpCode(200)
   async pairList(
-    @Query() {address, dex, platform}: QueryPairListDto
+    @Query() {ethAddress, btcAddress}: QueryPairListDto
   ) {
-    return this.service.pairsList(dex, address, platform);
+    const [ethPairs, btcPairs] = [
+      ethAddress
+        ? await this.service.pairsList(['uniswap'], ethAddress, CMC_ID_ETH_PLATFORM)
+        : [],
+      btcAddress
+        ? await this.service.pairsList(['pancakeswap'], btcAddress, CMC_ID_BTC_PLATFORM)
+        : []
+    ];
+    return {
+      ethPairs: ethPairs.slice(0, 100),
+      btcPairs: btcPairs.slice(0, 100)
+    };
+  }
+
+  @Post('dex/transactions')
+  @HttpCode(200)
+  async transactions(
+    @Body() {btcPairs = [], ethPairs = []}: QueryTransactionsDto
+  ): Promise<TransactionsResponse['data']['transactions']> {
+    return this.service.transactions(btcPairs, ethPairs);
   }
 }

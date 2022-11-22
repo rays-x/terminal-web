@@ -22,6 +22,9 @@ import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/Cust
 import {CurrentCoinData} from '../../../../CoinPage';
 import {EMDASH} from '../../../../../../utils/data/utf';
 import {StackedAreaChartStyled} from './StackedAreaChart-styled';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsTransferResponse} from '../../../../types';
+import {takeRight} from 'lodash';
 
 function getLineDefaults(fillColor, strokeColor) {
   return {
@@ -39,49 +42,58 @@ function getLineDefaults(fillColor, strokeColor) {
   };
 }
 
-export const StackedAreaChart = () => {
-  const currentCoinData = useContext(CurrentCoinData);
+export const StackedAreaChart = React.memo(() => {
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransferResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
+    withCredentials: false
+  });
+
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
+    }
+    getLazyStatsTransfers({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
   const coinIndex = currentCoinData?.index?.toUpperCase();
 
-  const {token: input} = useParams();
-
-  const mergedData = {
-    transfersStats: {
-      chartData: [],
-      overAllData: undefined
-    }
-  }/*useMerge(
-    TRANSFER_STATS_CHARTS_QUERY,
-    TRANSFER_STATS_CHARTS,
-    {
-      variables: {input}
-    }
-  )*/;
-
   const chartData = useMemo(() => {
-    return mergedData?.transfersStats?.chartData.map(dateMapF) || [];
-  }, [mergedData?.transfersStats?.chartData]);
-
-  const mergedFields = {
-    transfersStats: {
-      overAllData: undefined
+    if (!data) {
+      return [];
     }
-  } /*useMerge(
-    TRANSFER_STATS_FIELDS_QUERY,
-    TRANSFER_STATS_FIELDS,
-    {
-      variables: {input}
-    }
-  )*/;
+    return takeRight(data.map(item => ({
+      date: item.date,
+      averageTransferAmount: item.averageTransferAmount,
+      medianTransferAmount: item.medianTransferAmount,
+      totalAmount: item.totalAmount,
+      averageTransferAmountUsd: item.averageTransferAmountUsd,
+      medianTransferAmountUsd: item.medianTransferAmountUsd,
+      totalAmountUsd: item.totalAmountUsd
+    })).map(dateMapF).reverse(), 15);
+  }, [data]);
 
-  const fields = mergedFields?.transfersStats?.overAllData;
+  const fields = chartData.reduce((prev, next) => {
+    prev['totalAmount'] = next['totalAmount'] + prev['totalAmount'];
+    prev['medianTransferAmount'] = next['medianTransferAmount'] + prev['medianTransferAmount'];
+    prev['averageTransferAmount'] = next['averageTransferAmount'] + prev['averageTransferAmount'];
+    return prev;
+  }, {
+    totalAmount: 0,
+    medianTransferAmount: 0,
+    averageTransferAmount: 0
+  });
 
   const headerValues = useMemo(() => {
     return [
       {
         title: 'Total Amount:',
         value: formatNumeral(
-          fields?.total_amount,
+          fields?.totalAmount,
           chooseNumeralFormat({
             value: fields?.total_amount,
             maxLength: 7,
@@ -92,14 +104,14 @@ export const StackedAreaChart = () => {
       {
         title: 'Median Transfer Amount:',
         value: formatNumeral(
-          fields?.median_transfer_amount,
+          fields?.medianTransferAmount,
           NUMERAL_FORMAT_FLOAT
         )
       },
       {
         title: 'Average Transfer Amount:',
         value: formatNumeral(
-          fields?.average_transfer_amount,
+          fields?.averageTransferAmount,
           NUMERAL_FORMAT_FLOAT
         )
       }
@@ -217,7 +229,7 @@ export const StackedAreaChart = () => {
             <Area
               name="Total Amount"
               type="monotone"
-              dataKey="total_amount"
+              dataKey="totalAmountUsd"
               // stackId="1"
               {...getLineDefaults(
                 'url(#totalAmountGradient)',
@@ -227,14 +239,14 @@ export const StackedAreaChart = () => {
             <Area
               name="Median Transfer Amount"
               type="monotone"
-              dataKey="median_transfer_amount"
+              dataKey="medianTransferAmountUsd"
               // stackId="2"
               {...getLineDefaults('#0AEE21', '#05E700')}
             />
             <Area
               name="Average Transfer Amount"
               type="monotone"
-              dataKey="average_transfer_amount"
+              dataKey="averageTransferAmountUsd"
               // stackId="3"
               {...getLineDefaults('#0A21EE', '#4255FF')}
             />
@@ -243,4 +255,4 @@ export const StackedAreaChart = () => {
       </StackedAreaChartStyled.Body>
     </StackedAreaChartStyled.Component>
   );
-};
+});

@@ -50,9 +50,13 @@ const stats: StatsProps[] = [
   }
 ];
 
-export const Statistic: FC = () => {
-  const currentCoinData = useContext(CurrentCoinData);
+const useCoinData = () => {
+  return useContext(CurrentCoinData);
 
+};
+
+export const Statistic: FC = React.memo(() => {
+  const currentCoinData = useCoinData();
   return (
     <StatisticStyled.Component>
       {stats.map((item) => {
@@ -100,4 +104,4 @@ export const Statistic: FC = () => {
       })}
     </StatisticStyled.Component>
   );
-};
+});

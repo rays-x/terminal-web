@@ -161,18 +161,19 @@ const TokenList = React.memo(() => {
           break;
         }
       }
-      return () => {
-        sendMessage({
-          method: 'unsubscribe',
-          id: 'unsubscribePrice'
-        });
-      };
+
     }, [lastMessage]);
     React.useEffect(() => {
       setPage(1);
     }, [search, exchange]);
     React.useEffect(() => {
       getData({url: dataUri}).finally();
+      return () => {
+        sendMessage({
+          method: 'unsubscribe',
+          id: 'unsubscribePrice'
+        });
+      };
     }, [dataUri]);
     const pages = React.useMemo(() => Math.ceil(tableData.tokensCount / rowsShow), [tableData.tokensCount, rowsShow]);
     const getHeaderCellProps = React.useCallback((column: SortByColumn) => ({

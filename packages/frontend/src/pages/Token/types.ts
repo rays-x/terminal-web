@@ -265,18 +265,19 @@ export type CoinMainPage = {
   price_eth?: number;
   price_usd?: number;
   total_supply?: number;
+  dateLaunched?: Date;
 };
 
 export type TransactionType = {
   id: string
   date: Date
-  type: 'Sell' | 'Buy' | 'Add' | 'Remove'
+  type: 'sell' | 'buy' | 'Add' | 'Remove'
   totalValue: string
   tokenValue0?: string
   tokenValue0Price?: string
   tokenValue1: string
   maker: string
-  exchange: 'uniswap' | 'pancake'
+  exchange: 'uniswap' | 'pancakeswap'
   tx: string
 }
 
@@ -320,4 +321,33 @@ export interface TransactionsPairs {
   confidenceScore: string;
 }
 
-export type TransactionsPairsResponse = TransactionsPairs[]
+export type TransactionsPairsResponse = {
+  ethPairs: TransactionsPairs[],
+  btcPairs: TransactionsPairs[]
+}
+
+export interface TransactionsResponse {
+  pairId: string;
+  exchange: 'pancakeswap' | 'uniswap';
+  time: string;
+  type: 'sell' | 'buy';
+  priceUsd: string;
+  priceQuote: string;
+  amount: string;
+  totalUsd: string;
+  totalQuote: string;
+  txn: string;
+}
+
+export interface StatsTransferResponse {
+  date: string;
+  medianTransferAmount: number;
+  medianTransferAmountUsd: number;
+  averageTransferAmount: number;
+  averageTransferAmountUsd: number;
+  totalAmount: number;
+  totalAmountUsd: number;
+  uniqReceivers: number;
+  uniqSenders: number;
+  transferCount: number;
+}

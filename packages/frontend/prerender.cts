@@ -22,6 +22,6 @@ const routesToPrerender = readdirSync(toAbsolute('src/routes')).filter(file => !
     const filePath = `dist/client${url === '/' ? '/index' : url}.html`;
     writeFileSync(toAbsolute(filePath), html);
     console.log('pre-rendered:', filePath);
-    process.exit(0);
   }
+  process.exit(0);
 })();

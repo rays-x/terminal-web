@@ -2,12 +2,15 @@ import {get} from 'lodash';
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
-import {OnModuleInit} from '@nestjs/common';
+import {Inject, OnModuleInit} from '@nestjs/common';
 import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
-import {TokensSwap} from '../dto/CoinMarketCapScraper';
+import {toFixedToken} from '../utils/diff';
+import {TokensSwap, TransactionsResponse} from '../dto/CoinMarketCapScraper';
 import {CmcPairListResponse} from '../types';
+import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
+import {BitQueryService} from './BitQuery';
 
 type UniToken = {
   chainId: number;
@@ -44,6 +47,9 @@ const CMC_ID_PANCAKE_V2 = 1344;
 
 export class CoinMarketCapScraperService implements OnModuleInit {
 
+  awaiterPairsList: {
+    [k: string]: boolean
+  } = {};
   awaitTime: number = DEFAULT_AWAIT_TIME;
   _uniTokens: {
     [k: string]: {
@@ -59,7 +65,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
   } = {};
 
   constructor(
-    @InjectRedisClient('ray.sx') private readonly redisClient: Redis
+    @InjectRedisClient('ray.sx') private readonly redisClient: Redis,
+    @Inject(BitQueryService) private readonly bitQueryService: BitQueryService
   ) {
   }
 
@@ -137,7 +144,6 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
       responseType: 'json'
-
     });
     const slugIndex = cryptos.fields.indexOf('slug');
     const addressIndex = cryptos.fields.indexOf('address');
@@ -206,6 +212,12 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       for (let i = 1; i < 6; i++) {
         try {
           const data = await this.getTokenData(token.slug);
+          const platform_binance = get(get(data, 'platforms', [])
+            .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
+          const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
+          if (platform_binance || platform_ethereum) {
+            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
+          }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(
               Object.fromEntries(
@@ -256,6 +268,12 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       for (let i = 1; i < 6; i++) {
         try {
           const data = await this.getTokenData(token.slug);
+          const platform_binance = get(get(data, 'platforms', [])
+            .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
+          const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
+          if (platform_binance || platform_ethereum) {
+            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
+          }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(
               Object.fromEntries(
@@ -313,7 +331,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         liquidity: data.statistics.fullyDilutedMarketCap,
         volume: data.volume,
         volumeChangePercentage24h: data.volumeChangePercentage24h,
-        circulatingSupply: data.statistics.circulatingSupply,
+        circulatingSupply: Number(data.statistics.circulatingSupply) || Number(data.selfReportedCirculatingSupply || 0),
         marketCap: data.statistics.marketCap,
         price: data.statistics.price,
         priceChangePercentage1h: data.statistics.priceChangePercentage1h,
@@ -363,44 +381,123 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         sensitivity: 'base'
       });
     }).join(',')}:${md5(address)}`;
+    if (cacheKey in this.awaiterPairsList) {
+      return [];
+    }
     const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
     if (cache) {
       return cache;
     }
-    const {body: {data}} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
-      headers: {
-        'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
-      },
-      searchParams: {
-        'base-address': address,
-        limit: 1000,
-        'platform-id': platform
-      },
-      responseType: 'json'
-    });
-    const result = data?.filter((item => dex.findIndex(_ => {
-      return (() => {
-        switch (_) {
-          case 'uniswap': {
-            return [
-              CMC_ID_UNISWAP_V3,
-              CMC_ID_UNISWAP_V2
-            ];
-          }
-          case 'pancakeswap': {
-            return [
-              CMC_ID_PANCAKE_V2
-            ];
-          }
-          default: {
-            return [];
-          }
-        }
-      })().includes(item.dexerInfo.id);
-    }) > -1));
-    if (data) {
-      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
+    if (!(cacheKey in this.awaiterPairsList)) {
+      this.awaiterPairsList[cacheKey] = true;
     }
-    return result;
+    try {
+      const getData = async (params, prev: CmcPairListResponse['data']): Promise<CmcPairListResponse['data']> => {
+        const {body: {data}} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+          headers: {
+            'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+          },
+          searchParams: params,
+          responseType: 'json'
+        });
+        return !data?.length
+          ? prev
+          : await getData({
+            ...params,
+            start: params.start === 1 ? 100 : params.start + 100
+          }, [...prev, ...data]);
+      };
+      const data = await getData({
+        'base-address': address,
+        start: 1,
+        limit: 100,
+        'platform-id': platform
+      }, []);
+      const result = data?.filter((item => dex.findIndex(_ => {
+        return (() => {
+          switch (_) {
+            case 'uniswap': {
+              return [
+                CMC_ID_UNISWAP_V3,
+                CMC_ID_UNISWAP_V2
+              ];
+            }
+            case 'pancakeswap': {
+              return [
+                CMC_ID_PANCAKE_V2
+              ];
+            }
+            default: {
+              return [];
+            }
+          }
+        })().includes(item.dexerInfo.id);
+      }) > -1)).sort((a, b) => {
+        return Number(b.volume24h) - Number(a.volume24h);
+      });
+      if (data) {
+        await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
+      }
+      if (cacheKey in this.awaiterPairsList) {
+        delete this.awaiterPairsList[cacheKey];
+      }
+      return result;
+    } catch (e) {
+      if (cacheKey in this.awaiterPairsList) {
+        delete this.awaiterPairsList[cacheKey];
+      }
+    }
+    return [];
+  }
+
+  async transactions(btcPairs: string[], ethPairs: string[]): Promise<TransactionsResponse['data']['transactions']> {
+    const pairs: {
+      [k: string]: TransactionsResponse['data']['transactions']
+    } = Object.fromEntries(await Promise.all([
+      ...btcPairs.map(pairId => [CMC_ID_BTC_PLATFORM, pairId]),
+      ...ethPairs.map(pairId => [CMC_ID_ETH_PLATFORM, pairId])
+    ].map(async ([key, params]) => {
+      const [pairId, reversOrder, from] = String(params).split('_');
+      const {
+        body: {data: {transactions}}
+      } = await got.get<TransactionsResponse>({
+        headers: {
+          'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+        },
+        url: 'https://api.coinmarketcap.com',
+        pathname: `/kline/v3/k-line/transactions/${key}/${pairId}`,
+        searchParams: from ? {
+          'reverse-order': reversOrder === 'true',
+          from
+        } : {
+          'reverse-order': reversOrder === 'true'
+        },
+        responseType: 'json'
+      });
+      return [
+        pairId,
+        transactions.map(_ => ({
+          pairId,
+          exchange: key === CMC_ID_BTC_PLATFORM ? 'pancakeswap' : 'uniswap',
+          ..._
+        }))
+      ];
+    })));
+    const pairsIds = Object.keys(pairs);
+    const lastTime = pairsIds.reduce((prev, pairId) => {
+      const transactions = pairs[pairId];
+      const lastElementTime = Number(get(transactions.at(-1), 'time'));
+      if (isNaN(prev)) {
+        return lastElementTime;
+      }
+      return lastElementTime < prev ? lastElementTime : prev;
+    }, NaN);
+    if (isNaN(lastTime)) {
+      return [];
+    }
+    return Object.values(pairs).reduce((prev, transactions) => {
+      const filtered = transactions.filter(transaction => Number(transaction.time) >= lastTime);
+      return [...prev, ...filtered];
+    }, []).sort((a, b) => Number(b.time) - Number(a.time));
   }
 }

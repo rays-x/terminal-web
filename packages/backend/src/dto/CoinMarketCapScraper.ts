@@ -68,21 +68,37 @@ export class QueryPairsInfoDto {
 }
 
 export class QueryPairListDto {
-  @IsNumberString()
-  @ApiProperty()
-  platform!: number;
+  @IsOptional()
   @IsString()
   @ApiProperty()
-  address!: string;
+  ethAddress?: string;
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  btcAddress?: string;
+}
+
+export class QueryTransactionsDto {
+  @IsOptional()
   @IsArray()
   @IsString({
     each: true
   })
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     isArray: true
   })
-  dex!: ('uniswap' | 'pancakeswap')[];
+  btcPairs!: string[];
+  @IsOptional()
+  @IsArray()
+  @IsString({
+    each: true
+  })
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true
+  })
+  ethPairs!: string[];
 }
 
 export class ParamTokensDto {
@@ -92,4 +108,33 @@ export class ParamTokensDto {
     default: TokensSwap.uniswap
   })
   swap?: TokensSwap = TokensSwap.uniswap;
+}
+
+interface Transaction {
+  time: string;
+  type: string;
+  priceUsd: string;
+  priceQuote: string;
+  amount: string;
+  totalUsd: string;
+  totalQuote: string;
+  txn: string;
+}
+
+interface Data {
+  transactions: Transaction[];
+  lastId: string;
+}
+
+interface Status {
+  timestamp: Date;
+  error_code: string;
+  error_message: string;
+  elapsed: string;
+  credit_count: number;
+}
+
+export interface TransactionsResponse {
+  data: Data;
+  status: Status;
 }

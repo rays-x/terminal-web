@@ -9,7 +9,8 @@ export const Wrapper = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 0 ${spacing[20]};
-  margin-bottom: ${spacing[8]};
+  margin-bottom: 13px;
+  margin-top: 31px;
   ${mixins.isDesktopSmall(css`
     flex-direction: column;
     align-items: flex-start;

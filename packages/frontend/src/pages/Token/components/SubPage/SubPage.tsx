@@ -77,10 +77,10 @@ export const SubPage: FC = () => {
         <Element name={SubPages.Transactions}>
           <Transactions/>
         </Element>
-        {/*<Element name={SubPages.TokenStats}>
+        <Element name={SubPages.TokenStats}>
           <TokenStats/>
         </Element>
-        <Element name={SubPages.TradingStats}>
+        {/*<Element name={SubPages.TradingStats}>
           <TradingStats/>
         </Element>*/}
       </>

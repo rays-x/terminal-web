@@ -1,6 +1,5 @@
-import React from 'react';
-import {AreaChart, Area, ResponsiveContainer} from 'recharts';
-import {useParams} from 'react-router';
+import React, {useMemo} from 'react';
+import {AreaChart, Area, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
 
 import {
@@ -8,42 +7,53 @@ import {
   formatNumeral
 } from '../../../../../../utils/numbers';
 import {TinyAreaChartStyled} from './TinyAreaChart-styled';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsTransferResponse} from '../../../../types';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {takeRight} from 'lodash';
+import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
 
 export const TinyAreaChart = () => {
-  const {token: input} = useParams();
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransferResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
+    withCredentials: false
+  });
 
-  const mergedData = {
-    transfersStats: {
-      chartData: []
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
     }
-  } /*useMerge(
-    TRANSFER_STATS_UNIQ_CHARTS_QUERY,
-    TRANSFER_STATS_UNIQ_CHARTS,
-    {
-      variables: {input}
+    getLazyStatsTransfers({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
+
+  const chartData = useMemo(() => {
+    if (!data) {
+      return [];
     }
-  )*/;
+    return takeRight(data.map(item => ({
+      date: item.date,
+      transferCount: item.transferCount,
+      uniqReceivers: item.uniqReceivers,
+      uniqSenders: item.uniqSenders
+    })).map(dateMapF).reverse(), 15);
+  }, [data]);
 
-  const chartData = mergedData?.transfersStats?.chartData.map(dateMapF);
-
-  //todo вынести на верхний уровень, обернуть контекстом, и использовать здесь, чтобы не перезапрашивать (или разрулить кэш)
-  // или поправить бэк под ручки к каждому графику
-
-  const mergedFields = {
-    transfersStats: {
-      overAllData: undefined
-    }
-  }/*useMerge(
-    TRANSFER_STATS_FIELDS_QUERY,
-    TRANSFER_STATS_FIELDS,
-    {
-      variables: {input}
-    }
-  )*/;
-
-  const fields = mergedFields?.transfersStats?.overAllData;
-
-  if (!(chartData?.[Symbol.iterator] && fields)) return <></>;
+  const fields = chartData.reduce((prev, next) => {
+    prev['uniqReceivers'] = next['uniqReceivers'] + prev['uniqReceivers'];
+    prev['uniqSenders'] = next['uniqSenders'] + prev['uniqSenders'];
+    prev['transferCount'] = next['transferCount'] + prev['transferCount'];
+    return prev;
+  }, {
+    uniqReceivers: 0,
+    uniqSenders: 0,
+    transferCount: 0
+  });
 
   return (
     <TinyAreaChartStyled.Component>
@@ -52,8 +62,8 @@ export const TinyAreaChart = () => {
           <span>Unique Receivers</span>
           <span>
             {formatNumeral(
-              fields?.uniq_receivers,
-              chooseNumeralFormat({value: fields?.uniq_receivers})
+              fields?.uniqReceivers,
+              chooseNumeralFormat({value: fields?.uniqReceivers})
             )}
           </span>
         </TinyAreaChartStyled.Info>
@@ -66,13 +76,47 @@ export const TinyAreaChart = () => {
                   <stop offset="97.9%" stopColor="rgba(131, 255, 248, 0.5)"/>
                 </linearGradient>
               </defs>
+              <Tooltip
+                content={CustomTooltip({
+                  showLegendDot: false,
+                  shouldBeShortened: false,
+                  showValueLabel: false,
+                  valueFormatter: (value) => value
+                })}
+              />
               <Area
                 type="monotone"
-                dataKey="uniq_receivers"
+                dataKey="uniqReceivers"
                 stroke="url(#gradientBlue)"
                 fill="url(#gradientBlue)"
                 fillOpacity={0.2}
                 strokeWidth={2}
+              />
+              <XAxis
+                hide={true}
+                dataKey="date"
+                tickMargin={10}
+                axisLine={false}
+                tickLine={false}
+                // tickCount={5}
+                interval={'preserveStartEnd'}
+                tick={({x, y, payload}) => {
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={25}
+                        y={10}
+                        // dx={10}
+                        textAnchor="end"
+                        fill="#8E91A5"
+                        fontSize="11"
+                        fontWeight={500}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -84,21 +128,55 @@ export const TinyAreaChart = () => {
           <span>Unique Senders</span>
           <span>
             {formatNumeral(
-              fields?.uniq_senders,
-              chooseNumeralFormat({value: fields?.uniq_senders})
+              fields?.uniqSenders,
+              chooseNumeralFormat({value: fields?.uniqSenders})
             )}
           </span>
         </TinyAreaChartStyled.Info>
         <TinyAreaChartStyled.Chart>
           <ResponsiveContainer width="99%" height="100%">
             <AreaChart data={chartData}>
+              <Tooltip
+                content={CustomTooltip({
+                  showLegendDot: false,
+                  shouldBeShortened: false,
+                  showValueLabel: false,
+                  valueFormatter: (value) => value
+                })}
+              />
               <Area
                 type="monotone"
-                dataKey="uniq_senders"
+                dataKey="uniqSenders"
                 stroke="url(#gradientBlue)"
                 fill="url(#gradientBlue)"
                 fillOpacity={0.2}
                 strokeWidth={2}
+              />
+              <XAxis
+                hide={true}
+                dataKey="date"
+                tickMargin={10}
+                axisLine={false}
+                tickLine={false}
+                // tickCount={5}
+                interval={'preserveStartEnd'}
+                tick={({x, y, payload}) => {
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={25}
+                        y={10}
+                        // dx={10}
+                        textAnchor="end"
+                        fill="#8E91A5"
+                        fontSize="11"
+                        fontWeight={500}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -110,8 +188,8 @@ export const TinyAreaChart = () => {
           <span>Transfers Count</span>
           <span>
             {formatNumeral(
-              fields?.transfer_count,
-              chooseNumeralFormat({value: fields?.transfer_count})
+              fields?.transferCount,
+              chooseNumeralFormat({value: fields?.transferCount})
             )}
           </span>
         </TinyAreaChartStyled.Info>
@@ -129,13 +207,47 @@ export const TinyAreaChart = () => {
                   <stop offset="97.9%" stopColor="#FF782D"/>
                 </linearGradient>
               </defs>
+              <Tooltip
+                content={CustomTooltip({
+                  showLegendDot: false,
+                  shouldBeShortened: false,
+                  showValueLabel: false,
+                  valueFormatter: (value) => value
+                })}
+              />
               <Area
                 type="monotone"
-                dataKey="transfer_count"
+                dataKey="transferCount"
                 stroke="url(#transferCountStroke)"
                 fill="url(#transferCountFill)"
                 fillOpacity={0.2}
                 strokeWidth={2}
+              />
+              <XAxis
+                hide={true}
+                dataKey="date"
+                tickMargin={10}
+                axisLine={false}
+                tickLine={false}
+                // tickCount={5}
+                interval={'preserveStartEnd'}
+                tick={({x, y, payload}) => {
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={25}
+                        y={10}
+                        // dx={10}
+                        textAnchor="end"
+                        fill="#8E91A5"
+                        fontSize="11"
+                        fontWeight={500}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
               />
             </AreaChart>
           </ResponsiveContainer>
