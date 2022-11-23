@@ -29,7 +29,8 @@ export const Transactions: React.FC = React.memo(() => {
     [k: string]: CmcPairInfo['data']
   }>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
-    withCredentials: false
+    withCredentials: false,
+    method:'POST'
   });
   const [, getSearch] = useLazyFetch<CmcSearch>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
@@ -66,7 +67,7 @@ export const Transactions: React.FC = React.memo(() => {
             }
           }).then(({data: {data: {pairs}}}) => {
             return getPairsInfo({
-              params: {
+              data: {
                 platform: 'Ethereum',
                 pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
               }
@@ -81,7 +82,7 @@ export const Transactions: React.FC = React.memo(() => {
             }
           }).then(({data: {data: {pairs}}}) => {
             return getPairsInfo({
-              params: {
+              data: {
                 platform: 'BSC',
                 pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
               }

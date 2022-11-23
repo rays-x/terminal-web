@@ -22,7 +22,7 @@ import {HoldersChartStyled} from './HoldersChart-styled';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
 import {StatsHoldersResponse} from '../../../../types';
-import {get} from 'lodash';
+import {get, takeRight} from 'lodash';
 
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -61,7 +61,7 @@ export const HoldersChart: React.FC = React.memo(() => {
     return data?.map(dateMapF).reverse() ?? [];
   }, [data]);
 
-  const totalValue = get(data, 'count', 0);
+  const totalValue = get(data, '0.count', 0);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({

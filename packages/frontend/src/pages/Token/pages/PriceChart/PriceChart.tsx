@@ -36,7 +36,8 @@ export const PriceChart: React.FC = React.memo(() => {
     [k: string]: CmcPairInfo['data']
   }>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
-    withCredentials: false
+    withCredentials: false,
+    method: 'POST'
   });
 
   React.useEffect(() => {
@@ -51,7 +52,7 @@ export const PriceChart: React.FC = React.memo(() => {
           : [CMC_ID_PANCAKE_V2]
       ).includes(pair.exchangeId));
     getPairsInfo({
-      params: {
+      data: {
         platform: chain === 'eth' ? 'Ethereum' : 'BSC',
         pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
       }

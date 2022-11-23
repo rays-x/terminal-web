@@ -43,7 +43,7 @@ export class BitQueryService {
           }
         }
       }
-    } = await got.post<BitQueryStatsTransfersQuery>('https://graphql.bitquery.io/', {
+    } = await got.post<BitQueryStatsTransfersQuery>('https://explorer.bitquery.io/proxy_graphql', {
       json: {
         query: `
         query (
@@ -81,7 +81,9 @@ export class BitQueryService {
         }
       },
       headers: {
-        'x-api-key': process.env.BITQUERY_API_KEY
+        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
+        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
@@ -100,7 +102,7 @@ export class BitQueryService {
           }
         }
       }
-    } = await got.post<BitQueryStatsSwapsQuery>('https://graphql.bitquery.io/', {
+    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
       json: {
         query: `
         query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
@@ -125,7 +127,9 @@ export class BitQueryService {
         }
       },
       headers: {
-        'x-api-key': process.env.BITQUERY_API_KEY
+        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
+        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
@@ -145,7 +149,7 @@ export class BitQueryService {
           }
         }
       }
-    } = await got.post<BitQueryStatsHoldersQuery>('https://graphql.bitquery.io/', {
+    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
       json: {
         query: `
         query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
@@ -162,11 +166,13 @@ export class BitQueryService {
         variables
       },
       headers: {
-        'x-api-key': process.env.BITQUERY_API_KEY
+        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
+        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
-    return holders.shift();
+    return holders?.shift();
   }
 
   async statsTransfers(btcAddress?: string, ethAddress?: string): Promise<any> {
@@ -308,6 +314,7 @@ export class BitQueryService {
     const cacheKey = `cmc:statsHolders:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
       if (cacheKey in this.awaiterStatsHoldersList) {
+        console.log('statsHolders.cacheKey in await');
         return [];
       }
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
@@ -375,10 +382,11 @@ export class BitQueryService {
       }
       return result;
     } catch (e) {
+      console.log('statsHolders.empty', e);
       if (cacheKey in this.awaiterStatsHoldersList) {
         delete this.awaiterStatsHoldersList[cacheKey];
       }
+      return [];
     }
-    return [];
   }
 }

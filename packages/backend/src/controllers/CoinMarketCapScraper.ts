@@ -66,10 +66,10 @@ export class CoinMarketCapScraperController {
     enum: TokensSwap,
     example: TokensSwap.uniswap
   })
-  @Get('dex/pairs-info')
+  @Post('dex/pairs-info')
   @HttpCode(200)
   async pairsInfo(
-    @Query() {pairs, platform}: QueryPairsInfoDto
+    @Body() {pairs, platform}: QueryPairsInfoDto
   ) {
     const data = await this.service.pairsInfo(platform, pairs);
     return Object.fromEntries(Object.entries(data).filter(([, value]) => 'priceUsd' in (value as Object)));
