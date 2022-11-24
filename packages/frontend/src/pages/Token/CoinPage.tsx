@@ -89,7 +89,11 @@ export const CoinPage: FC = React.memo(() => {
       price_eth: (1 / dataEth.statistics.price) * data.statistics.price,
       price_usd: data.statistics.price,
       total_supply: data.statistics.totalSupply,
-      dateLaunched: data.dateLaunched ? new Date(data.dateLaunched) : undefined
+      dateLaunched: data.dateLaunched ? new Date(data.dateLaunched) : (
+        data.dateAdded
+          ? new Date(data.dateAdded)
+          : undefined
+      )
     });
   }, [_data, _dataBtc, _dataEth]);
 

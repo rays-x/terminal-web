@@ -11,6 +11,7 @@ import {TokensSwap, TransactionsResponse} from '../dto/CoinMarketCapScraper';
 import {CmcPairListResponse} from '../types';
 import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
 import {BitQueryService} from './BitQuery';
+import {CovalentService} from './Covalent';
 
 type UniToken = {
   chainId: number;
@@ -68,7 +69,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
 
   constructor(
     @InjectRedisClient('ray.sx') private readonly redisClient: Redis,
-    @Inject(BitQueryService) private readonly bitQueryService: BitQueryService
+    @Inject(BitQueryService) private readonly bitQueryService: BitQueryService,
+    @Inject(CovalentService) private readonly covalentService: CovalentService
   ) {
   }
 
@@ -218,9 +220,10 @@ export class CoinMarketCapScraperService implements OnModuleInit {
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
           if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
-            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
-            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum).catch();
-            this.bitQueryService.statsHolders(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
+            this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
           }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(
@@ -276,9 +279,10 @@ export class CoinMarketCapScraperService implements OnModuleInit {
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
           if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
-            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum).catch();
-            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum).catch();
-            this.bitQueryService.statsHolders(platform_binance, platform_ethereum).catch();
+            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
+            this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
           }
           if (data) {
             await this.redisClient.set(cacheKey, JSON.stringify(

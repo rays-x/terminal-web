@@ -17,56 +17,52 @@ import {
   getValueChange
 } from '../../../../../../presets/helpers/charts';
 import {LiquidityChartStyled} from './LiquidityChart-styled';
-import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsHoldersResponse, StatsLiquidityResponse} from '../../../../types';
+import {get, take, takeRight} from 'lodash';
+// import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 
-type LiquidityChartType = {
-  date?: Date;
-  value?: number;
-}
-
-type LiquidityType = {
-  liquidityChart?: LiquidityChartType;
-  total?: number;
-}
-
+/*
 const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
-});
+});*/
 
-export interface LiquidityChartProps {
-  coinId: string;
-}
-
-export const LiquidityChart: React.FC<LiquidityChartProps> = ({coinId}) => {
-  const {
+export const LiquidityChart: React.FC = () => {
+  /*const {
     options,
     selected: [selectedRow, setSelectedRow],
     active: [activeRow, setActiveRow]
   } = dropDownState({
     options: [],
     selectedOption: 10
+  });*/
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data}, getLiquidityInfo] = useLazyFetch<StatsLiquidityResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/cov/stats/liquidity`,
+    withCredentials: false
   });
 
-  const data = {
-    liquidity: {
-      liquidityChart: [],
-      total: undefined
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
     }
-  }/*useMerge<{ liquidity: LiquidityType }, { coinId: string }>(
-    QUERY_LIQUIDITY_CHART,
-    SUB_LIQUIDITY_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
-    }
-  )*/;
+    getLiquidityInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
 
-  const chartData = useMemo(() => {
-    return data?.liquidity?.liquidityChart?.map(dateMapF) ?? [];
+  const chartData = useMemo<typeof data>(() => {
+    return takeRight(data, 20).map(dateMapF) ?? [];
   }, [data]);
 
-  const totalValue = data?.liquidity.total || 0;
+  const totalValue = React.useMemo(() => {
+    return get(takeRight(chartData, 1), '0.amount', 0);
+  }, [chartData]);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
@@ -76,14 +72,14 @@ export const LiquidityChart: React.FC<LiquidityChartProps> = ({coinId}) => {
   );
 
   const valueChange = useMemo(() => {
-    return getValueChange(chartData);
+    return getValueChange(chartData, 'amount');
   }, [chartData]);
 
   return (
     <LiquidityChartStyled.Component>
       <SubChartHeader
         title={'Liquidity'}
-        titleContent={
+        /*titleContent={
           <DropDown
             title={'Total'}
             options={options}
@@ -92,7 +88,7 @@ export const LiquidityChart: React.FC<LiquidityChartProps> = ({coinId}) => {
             activeOption={activeRow}
             setActiveOption={setActiveRow}
           />
-        }
+        }*/
         chartValue={
           <SubChartValue
             value={value}
@@ -111,7 +107,7 @@ export const LiquidityChart: React.FC<LiquidityChartProps> = ({coinId}) => {
             <Area
               name="Liquidity"
               type="monotone"
-              dataKey="value"
+              dataKey="amount"
               {...getLineDefaults('#61E9FB', '#66EDFA')}
             />
           </AreaChart>

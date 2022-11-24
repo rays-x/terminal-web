@@ -2,7 +2,6 @@ import {NestFactory} from '@nestjs/core';
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {ExpressAdapter, NestExpressApplication} from '@nestjs/platform-express';
 import {join} from 'path';
-import payload from 'payload';
 import express, {Express} from 'express';
 import mongoose from 'mongoose';
 import {Logger, LogLevel} from './config/logger/api-logger';
@@ -11,7 +10,6 @@ import expressPlugins from './plugins/express';
 import {AppModule} from './app.module';
 import {AsyncApiDocumentBuilder, AsyncApiModule, AsyncServerObject} from 'nestjs-asyncapi';
 import {ValidationPipe} from '@nestjs/common';
-import importQuiz from './import/import.quiz';
 
 process.setMaxListeners(0);
 const bootstrap = async () => {

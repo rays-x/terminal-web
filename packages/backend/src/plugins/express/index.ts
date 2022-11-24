@@ -8,7 +8,6 @@ import {TaggableCache as RedisTaggable} from 'cache-tags';
 import cookieParser from 'cookie-parser';
 import {get} from 'lodash';
 import {REDIS_SESSION_PREFIX} from '../../constants';
-import payloadInit from '../../payload/_payload/payload.init';
 import {parse} from 'cookie';
 
 const RedisStore = connectRedis(session);

@@ -175,14 +175,17 @@ export class BitQueryService {
     return holders?.shift();
   }
 
-  async statsTransfers(btcAddress?: string, ethAddress?: string): Promise<any> {
+  async statsTransfers(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
     const cacheKey = `cmc:statsTransfers:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
       if (cacheKey in this.awaiterStatsTransfersList) {
+        if (cache && !update) {
+          return cache;
+        }
         return [];
       }
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cache) {
+      if (cache && !update) {
         return cache;
       }
       if (!(cacheKey in this.awaiterStatsTransfersList)) {
@@ -250,14 +253,17 @@ export class BitQueryService {
     return [];
   }
 
-  async statsSwaps(btcAddress?: string, ethAddress?: string): Promise<any> {
+  async statsSwaps(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
     const cacheKey = `cmc:statsSwaps:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
       if (cacheKey in this.awaiterStatsSwapsList) {
+        if (cache && !update) {
+          return cache;
+        }
         return [];
       }
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cache) {
+      if (cache && !update) {
         return cache;
       }
       if (!(cacheKey in this.awaiterStatsSwapsList)) {
@@ -310,15 +316,18 @@ export class BitQueryService {
     return [];
   }
 
-  async statsHolders(btcAddress?: string, ethAddress?: string): Promise<any> {
+  async statsHolders(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
     const cacheKey = `cmc:statsHolders:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
       if (cacheKey in this.awaiterStatsHoldersList) {
         console.log('statsHolders.cacheKey in await');
+        if (cache && !update) {
+          return cache;
+        }
         return [];
       }
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cache) {
+      if (cache && !update) {
         return cache;
       }
       if (!(cacheKey in this.awaiterStatsHoldersList)) {

@@ -4,6 +4,7 @@ import {StatsTransfersResponse} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
 import {get, take, takeRight} from 'lodash';
+import {differenceInDays, format} from 'date-fns';
 
 export const TextInfo = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
@@ -25,11 +26,19 @@ export const TextInfo = React.memo(() => {
   }, [currentCoinData?.id]);
 
 
-  const dateTransferFirst = get(takeRight(data, 1), '0.date');
+  const dateTransferFirst = React.useMemo(() => {
+    if (!currentCoinData?.dateLaunched) {
+      return;
+    }
+    return format(currentCoinData.dateLaunched, 'yyyy-MM-dd');
+  }, [currentCoinData?.dateLaunched]);
   const dateTransferLast = get(take(data, 1), '0.date');
-  const dateTransferDays = data?.length;/*first_transfer_date && last_transfer_date
-    ? differenceInDays(new Date(last_transfer_date), new Date(first_transfer_date))
-    : undefined;*/
+  const dateTransferDays = React.useMemo(() => {
+    if (!dateTransferLast || !dateTransferFirst) {
+      return;
+    }
+    return differenceInDays(new Date(dateTransferLast), new Date(dateTransferFirst));
+  }, [dateTransferLast, dateTransferFirst]);
 
   return (
     <TextInfoStyled.Component>

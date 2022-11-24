@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {AreaChart, Area, ResponsiveContainer, Tooltip} from 'recharts';
 import {getLineDefaults} from '../../TradingStats';
 import {Axes} from '../Axes/Axes';
@@ -13,62 +13,66 @@ import {
 } from '../../../../components/SubChart/SubChartValue/SubChartValue';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {
-  getValueChange,
-  timeToDateMapF
+  dateMapF,
+  getValueChange
 } from '../../../../../../presets/helpers/charts';
 import {TradingVolumeChartStyled} from './TradingVolumeChart-styled';
-import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
-
-type VolumeChartType = {
-  time?: Date;
-  value?: number;
-}
-
-type VolumeType = {
-  total?: number;
-  volumeChart?: Array<VolumeChartType>;
-}
-
+import {useFetch} from '../../../../../../hooks';
+import {CmcVolume, Quote} from '../../../../types';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useParams} from 'react-router';
+import {format, startOfDay, subDays} from 'date-fns';
+import {get, takeRight} from 'lodash';
+/*
 const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
-});
-
-export interface TradingVolumeChartProps {
-  coinId: string;
-}
-
-export const TradingVolumeChart: React.FC<TradingVolumeChartProps> = ({
-                                                                        coinId
-                                                                      }) => {
-  const {
+});*/
+const CMC_USD_ID = 2781;
+export const TradingVolumeChart: React.FC = React.memo(() => {
+  /*const {
     options,
     selected: [selectedRow, setSelectedRow],
     active: [activeRow, setActiveRow]
   } = dropDownState({
     options: [],
     selectedOption: 10
+  });*/
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const {token} = useParams();
+  const [, cmcId] = token.split('_');
+  const CMC_ID = Number(cmcId);
+  const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
+  const {data: _data, loading: loading} = useFetch<CmcVolume>({
+    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/historical`,
+    params: {
+      id: CMC_ID,
+      convertId: CMC_USD_ID,
+      timeStart: startOfDay(subDays(new Date(), 19)).getTime() / 1000,
+      timeEnd: startOfDay(subDays(new Date(), 1)).getTime() / 1000
+    },
+    withCredentials: false
   });
 
-  const data: { volumes: VolumeType, coinId?: string } = {
-    volumes: {
-      total: undefined,
-      volumeChart: []
+  React.useEffect(() => {
+    if (!_data || !currentCoinData) {
+      return;
     }
-  } /*useMerge<{ volumes: VolumeType }, { coinId: string }>(
-    QUERY_VOLUMES_CHART,
-    SUB_VOLUMES_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
-    }
-  )*/;
+    const items = get(_data, 'data.quotes', [])
+      .map(({quote: {timestamp, volume}}: Quote) => ({
+        date: format(new Date(timestamp), 'yyyy-MM-dd'),
+        amount: volume
+      })).concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume});
+    setData(items);
+  }, [currentCoinData, _data]);
 
-  const chartData = useMemo(() => {
-    return data?.volumes?.volumeChart?.map(timeToDateMapF) ?? [];
+  const chartData = React.useMemo(() => {
+    return data?.map(dateMapF) ?? [];
   }, [data]);
 
-  const totalValue = data?.volumes.total || 0;
+  const totalValue = React.useMemo(() => {
+    return get(takeRight(chartData, 1), '0.amount', 0);
+  }, [chartData]);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
@@ -77,15 +81,15 @@ export const TradingVolumeChart: React.FC<TradingVolumeChartProps> = ({
     })
   );
 
-  const valueChange = useMemo(() => {
-    return getValueChange(chartData);
+  const valueChange = React.useMemo(() => {
+    return getValueChange(chartData, 'amount');
   }, [chartData]);
 
   return (
     <TradingVolumeChartStyled.Component>
       <SubChartHeader
         title={'Trading Volume'}
-        titleContent={
+        /*titleContent={
           <DropDown
             title={'Total'}
             options={options}
@@ -94,7 +98,7 @@ export const TradingVolumeChart: React.FC<TradingVolumeChartProps> = ({
             activeOption={activeRow}
             setActiveOption={setActiveRow}
           />
-        }
+        }*/
         chartValue={
           <SubChartValue
             value={value}
@@ -110,13 +114,13 @@ export const TradingVolumeChart: React.FC<TradingVolumeChartProps> = ({
             {Gradients()}
             {Axes({
               data: chartData,
-              dataValueKey: 'value'
+              dataValueKey: 'amount'
             })}
             <Tooltip content={CustomTooltip({shouldBeShortened: false})}/>
             <Area
               name="Trading Volume"
               type="monotone"
-              dataKey="value"
+              dataKey="amount"
               {...getLineDefaults('#61E9FB', '#66EDFA')}
             />
           </AreaChart>
@@ -124,4 +128,4 @@ export const TradingVolumeChart: React.FC<TradingVolumeChartProps> = ({
       </TradingVolumeChartStyled.Body>
     </TradingVolumeChartStyled.Component>
   );
-};
+});

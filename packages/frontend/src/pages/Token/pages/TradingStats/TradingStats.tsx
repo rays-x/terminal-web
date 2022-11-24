@@ -165,18 +165,18 @@ export const TradingStats = React.memo(() => {
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
 
-        {/*<TradingStatsStyled.GridItem $colSpan={2}>
+        <TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
-            <LiquidityChart coinId={coinId}/>
+            <LiquidityChart/>
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
         <TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
-            <TradingVolumeChart coinId={coinId}/>
+            <TradingVolumeChart/>
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
 
-        <TradingStatsStyled.GridItem $colSpan={2}>
+        {/*<TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
             <TradersDistributionChart coinId={coinId}/>
           </TradingStatsStyled.Card>
