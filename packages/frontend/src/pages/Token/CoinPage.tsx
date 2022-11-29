@@ -204,7 +204,7 @@ export const CoinPage: FC = React.memo(() => {
                     <CurrentCoin/>
                     <Statistic/>
                   </CoinPageStyled.VerticalGroup>
-                  {!isMobile && <Card/>}
+                  {/*{!isMobile && <Card/>}*/}
                 </CoinPageStyled.Group>
                 <SubPage/>
               </>

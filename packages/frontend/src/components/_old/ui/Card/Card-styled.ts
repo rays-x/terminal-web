@@ -9,7 +9,7 @@ const Component = styled.div`
   `)}
 
   display: flex;
-  justify-content: space-between;
+  //justify-content: space-between;
   background: ${colors.background['card']};
   border-radius: ${radius[20]};
   padding: ${spacing[24]};

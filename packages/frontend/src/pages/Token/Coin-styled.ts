@@ -6,11 +6,11 @@ import {mixins} from '../../presets/mixins';
 export const Component = styled.div``;
 
 export const Group = styled.div`
-  @media (min-width: 768px) {
+  /*@media (min-width: 768px) {
     display: grid;
     grid-template-columns: 2.7fr 1fr;
     grid-template-areas: '. .';
-  }
+  }*/
 
   ${mixins.isMobile(css`
     display: flex;
@@ -139,6 +139,7 @@ export const CoinStatsGroup = styled.div`
   display: flex;
 
   gap: ${gap[24]};
+  margin: 0 auto;
 `;
 
 export const CurrentCoinScore = styled.div`

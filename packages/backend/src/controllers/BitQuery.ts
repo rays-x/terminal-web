@@ -1,14 +1,5 @@
-import {Body, Controller, Get, HttpCode, Param, Post, Query} from '@nestjs/common';
-import {ApiParam, ApiTags} from '@nestjs/swagger';
-import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
-import {
-  QueryPairListDto,
-  QueryPairsInfoDto,
-  QueryTokensDto, QueryTransactionsDto,
-  TokensSortOrder,
-  TokensSwap, TransactionsResponse
-} from '../dto/CoinMarketCapScraper';
-import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
+import {Controller, Get, HttpCode, Query} from '@nestjs/common';
+import {ApiTags} from '@nestjs/swagger';
 import {BitQueryService} from '../services/BitQuery';
 import {QueryStatsTransferDto} from '../dto/BitQuery';
 
@@ -51,5 +42,16 @@ export class BitQueryController {
     }: QueryStatsTransferDto
   ) {
     return this.service.statsHolders(btcAddress, ethAddress);
+  }
+
+  @Get('stats/tdv')
+  @HttpCode(200)
+  async tradersDistributionValue(
+    @Query() {
+      ethAddress,
+      btcAddress
+    }: QueryStatsTransferDto
+  ) {
+    return this.service.statsTradersDistributionValue(btcAddress, ethAddress);
   }
 }

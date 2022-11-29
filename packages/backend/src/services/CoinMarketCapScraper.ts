@@ -6,10 +6,9 @@ import {Inject, OnModuleInit} from '@nestjs/common';
 import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
-import {toFixedToken} from '../utils/diff';
 import {TokensSwap, TransactionsResponse} from '../dto/CoinMarketCapScraper';
 import {CmcPairListResponse} from '../types';
-import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
+import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
 import {BitQueryService} from './BitQuery';
 import {CovalentService} from './Covalent';
 
@@ -188,7 +187,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     await awaiter(this.awaitTime);
     const {body} = await got.get<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
       headers: {
-        'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br'
       }
     });
     const regex = body.match(/<script id="__NEXT_DATA__" type="application\/json">(?<jsonData>.+)<\/script>/m);
@@ -223,6 +223,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsTradersDistributionValue(platform_binance, platform_ethereum, true).catch();
             this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
           }
           if (data) {
@@ -282,6 +283,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
+            this.bitQueryService.statsTradersDistributionValue(platform_binance, platform_ethereum, true).catch();
             this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
           }
           if (data) {
@@ -363,7 +365,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     await Promise.all(pairs.map(async (pair) => {
       const {body} = await got.get(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-info`, {
         headers: {
-          'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+          'user-agent': CMC_USER_AGENT,
+          'accept-encoding': 'gzip, deflate, br'
         },
         searchParams: {
           base: 0,
@@ -405,7 +408,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       const getData = async (params, prev: CmcPairListResponse['data']): Promise<CmcPairListResponse['data']> => {
         const {body: {data}} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
           headers: {
-            'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br'
           },
           searchParams: params,
           responseType: 'json'
@@ -472,7 +476,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         body: {data: {transactions}}
       } = await got.get<TransactionsResponse>({
         headers: {
-          'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)'
+          'user-agent': CMC_USER_AGENT,
+          'accept-encoding': 'gzip, deflate, br'
         },
         url: 'https://api.coinmarketcap.com',
         pathname: `/kline/v3/k-line/transactions/${key}/${pairId}`,

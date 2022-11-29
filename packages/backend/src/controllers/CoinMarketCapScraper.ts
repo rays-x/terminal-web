@@ -1,5 +1,6 @@
-import {Body, Controller, Get, HttpCode, Param, Post, Query} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, Req} from '@nestjs/common';
 import {ApiParam, ApiTags} from '@nestjs/swagger';
+import {Request} from 'express';
 import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
 import {
   QueryPairListDto,
@@ -8,7 +9,10 @@ import {
   TokensSortOrder,
   TokensSwap, TransactionsResponse
 } from '../dto/CoinMarketCapScraper';
-import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM} from '../constants';
+import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
+import {get} from 'lodash';
+import got from 'got';
+import {HttpStatusMessages} from '../messages/http';
 
 @ApiTags('cmc')
 @Controller('/api/rest/cmc')
@@ -100,5 +104,27 @@ export class CoinMarketCapScraperController {
     @Body() {btcPairs = [], ethPairs = []}: QueryTransactionsDto
   ): Promise<TransactionsResponse['data']['transactions']> {
     return this.service.transactions(btcPairs, ethPairs);
+  }
+
+  @Get('proxy*')
+  @HttpCode(200)
+  async proxy(
+    @Req() request: Request,
+    @Query() query: string
+  ): Promise<any> {
+    try {
+      const {body} = await got.get(`https://api.coinmarketcap.com${get(request, 'params.0')}`, {
+        headers: {
+          'user-agent': CMC_USER_AGENT,
+          'accept-Encoding': 'gzip, deflate, br'
+        },
+        responseType: 'json',
+        searchParams: query
+      });
+      return body;
+    } catch (e) {
+      console.error(e);
+    }
+    throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

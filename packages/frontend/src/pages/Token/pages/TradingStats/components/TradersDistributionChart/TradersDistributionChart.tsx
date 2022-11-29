@@ -1,11 +1,5 @@
+import React from 'react';
 import {throttle} from 'lodash-es';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
 import {ResponsiveContainer, Bar, BarChart, Tooltip, Cell} from 'recharts';
 import {Axes} from '../Axes/Axes';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
@@ -16,42 +10,40 @@ import {
   NUMERAL_FORMAT_NUM
 } from '../../../../../../utils/numbers';
 import {TradersDistributionChartStyled} from './TradersDistributionChart-styled';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsTradingDistributionValueResponse} from '../../../../types';
+import {toFixedToken} from '../../../../../../utils/diff';
 
-type TdvType = {
-  tradeAmount?: number;
-  userCount?: number;
-}
+export const TradersDistributionChart: React.FC = React.memo(() => {
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data}, getTradingDistributionValueInfo] = useLazyFetch<StatsTradingDistributionValueResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/tdv`,
+    withCredentials: false
+  });
 
-
-export interface TradersDistributionChartProps {
-  coinId: string;
-}
-
-export const TradersDistributionChart: React.FC<TradersDistributionChartProps> = ({coinId}) => {
-  const barRef = useRef<any>();
-  const [tooltipPosition, setTooltipPosition] = useState<{
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
+    }
+    getTradingDistributionValueInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
+  const barRef = React.useRef<any>();
+  const [tooltipPosition, setTooltipPosition] = React.useState<{
     x: number;
     y: number;
   } | null>(null);
-  const [activeBarId, setActiveBarId] = useState<number | null>(null);
+  const [activeBarId, setActiveBarId] = React.useState<number | null>(null);
 
-  const data: {
-    tdv: TdvType[]
-  } = {
-    tdv: []
-  } /*useMerge<{ tdv: TdvType[] }, { coinId: string }>(
-    QUERY_TRADERS_DIST_BY_VOLUME_CHART,
-    SUB_TRADERS_DIST_BY_VOLUME_CHART,
-    {
-      variables: {coinId},
-      skip: !coinId
-    }
-  )*/;
-
-  const chartData = useMemo(() => {
-    return (data?.tdv || []).map((item) => ({
+  const chartData = React.useMemo(() => {
+    return (data || []).map((item) => ({
       ...item,
-      tradeAmount: formatNumeral(item.tradeAmount, NUMERAL_FORMAT_NUM)
+      tradeAmount: formatNumeral(toFixedToken(item.tradeAmount, 8), NUMERAL_FORMAT_NUM)
     }));
   }, [data]);
 
@@ -66,7 +58,7 @@ export const TradersDistributionChart: React.FC<TradersDistributionChartProps> =
     10
   );
 
-  const BarCell = useCallback(() => {
+  const BarCell = React.useCallback(() => {
     return chartData.map((_, index) => (
       <Cell
         key={index}
@@ -79,7 +71,7 @@ export const TradersDistributionChart: React.FC<TradersDistributionChartProps> =
     ));
   }, [chartData, activeBarId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (activeBarId) {
       const {x, y} = barRef.current?.state?.curData[activeBarId] || {};
       setTooltipPosition({x, y});
@@ -137,4 +129,4 @@ export const TradersDistributionChart: React.FC<TradersDistributionChartProps> =
       </TradersDistributionChartStyled.Body>
     </TradersDistributionChartStyled.Component>
   );
-};
+});

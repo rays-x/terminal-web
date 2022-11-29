@@ -8,9 +8,14 @@ import {BitQueryStatsTransfersQuery} from '../types/BitQuery/BitQueryStatsTransf
 import {BitQueryStatsSwapsQuery} from '../types/BitQuery/BitQueryStatsSwapsQuery';
 import {BitQueryStatsHoldersQuery} from '../types/BitQuery/BitQueryStatsHoldersQuery';
 import {promiseMap} from '../utils';
+import {CMC_USER_AGENT} from '../constants';
+import {BitQueryStatsTradersDistributionValueQuery} from '../types/BitQuery/BitQueryStatsTradersDistributionValueQuery';
+import {getRange} from '../utils/diff';
 
-const since = format(addDays(new Date(), -20), 'yyyy-MM-dd');
-const sinceArray = Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
+const since = () => format(addDays(new Date(), -20), 'yyyy-MM-dd');
+const sinceArray = () => Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
+const sinceYesterday = () => `${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`;
+const tillToday = () => `${format(new Date(), 'yyyy-MM-dd')}T00:00:00.000Z`;
 
 export class BitQueryService {
 
@@ -23,6 +28,10 @@ export class BitQueryService {
   } = {};
 
   awaiterStatsHoldersList: {
+    [k: string]: boolean
+  } = {};
+
+  awaiterTradersDistributionValueList: {
     [k: string]: boolean
   } = {};
 
@@ -77,13 +86,14 @@ export class BitQueryService {
         `,
         variables: {
           ...variables,
-          since
+          since: since()
         }
       },
       headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
         'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
         'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
-        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
@@ -123,13 +133,14 @@ export class BitQueryService {
         `,
         variables: {
           ...variables,
-          since
+          since: since()
         }
       },
       headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
         'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
         'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
-        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
@@ -166,13 +177,79 @@ export class BitQueryService {
         variables
       },
       headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
         'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
         'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
-        // 'x-api-key': process.env.BITQUERY_API_KEY
       },
       responseType: 'json'
     });
     return holders?.shift();
+  }
+
+  private async getStatsTradersDistributionValue(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string,
+    since: string
+    till: string
+  }): Promise<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']> {
+    let result = [];
+    let offsetStep = 0;
+    while (offsetStep < 10) {
+      try {
+        const {
+          body: {
+            data: {
+              stats: {
+                tradersDistributionValue
+              }
+            }
+          }
+        } = await got.post<BitQueryStatsTradersDistributionValueQuery>('https://explorer.bitquery.io/proxy_graphql', {
+          json: {
+            query: `
+            query ($network: EthereumNetwork!, $token: String!, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
+              stats: ethereum(network: $network) {
+                tradersDistributionValue: dexTrades(
+                  options: {limit: $limit, offset: $offset}
+                  baseCurrency: {is: $token}
+                  date: {since: $since, till: $till}
+                  tradeAmountUsd: {gt: 0}
+                ) {
+                  maker {
+                    address
+                  }
+                  taker {
+                    address
+                  }
+                  tradeAmount(in: USD)
+                }
+              }
+            }
+            `,
+            variables: {
+              ...variables,
+              offset: 25000 * offsetStep
+            }
+          },
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br',
+            'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
+            'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+          },
+          responseType: 'json'
+        });
+        if (!tradersDistributionValue.length) {
+          break;
+        }
+        result = result.concat(tradersDistributionValue);
+      } catch (e) {
+        break;
+      }
+      offsetStep++;
+    }
+    return result;
   }
 
   async statsTransfers(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
@@ -321,7 +398,7 @@ export class BitQueryService {
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
       if (cacheKey in this.awaiterStatsHoldersList) {
-        console.log('statsHolders.cacheKey in await');
+        // console.log('statsHolders.cacheKey in await');
         if (cache && !update) {
           return cache;
         }
@@ -342,13 +419,13 @@ export class BitQueryService {
           date: string,
           count: number
         }[]
-      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+      }> = Object.fromEntries((await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
         switch (key) {
           case 'btcAddress': {
-            return ['btc', token ? await promiseMap(sinceArray, async (till) => {
+            return ['btc', token ? await promiseMap(sinceArray(), async (till) => {
               return {
                 date: till,
                 count: get(await this.getStatsHolders({
@@ -360,7 +437,7 @@ export class BitQueryService {
             }) : undefined];
           }
           case 'ethAddress': {
-            return ['eth', token ? await promiseMap(sinceArray, async (till) => {
+            return ['eth', token ? await promiseMap(sinceArray(), async (till) => {
               return {
                 date: till,
                 count: get(await this.getStatsHolders({
@@ -372,10 +449,10 @@ export class BitQueryService {
             }) : undefined];
           }
         }
-      }))).filter(([, data]) => data));
+      }))).filter(([, data]) => data?.length));
       const map = {};
       Object.values(data)
-        .reduce((p, n) => [...p, ...n], [])
+        .reduce((p, n) => [...p || [], ...(n || [])], [])
         .forEach((item: {
           date: string,
           count: number
@@ -391,9 +468,91 @@ export class BitQueryService {
       }
       return result;
     } catch (e) {
-      console.log('statsHolders.empty', e);
+      // console.log('statsHolders.error', e);
       if (cacheKey in this.awaiterStatsHoldersList) {
         delete this.awaiterStatsHoldersList[cacheKey];
+      }
+      return [];
+    }
+  }
+
+  async statsTradersDistributionValue(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
+    const since = sinceYesterday();
+    const till = tillToday();
+    const cacheKey = `cmc:tradersDistributionValue:${md5(`${btcAddress}_${ethAddress}`)}:${since}:${till}`;
+    try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+      if (cacheKey in this.awaiterTradersDistributionValueList) {
+        // console.log('statsHolders.cacheKey in await');
+        if (cache && !update) {
+          return cache;
+        }
+        return [];
+      }
+      if (cache && !update) {
+        return cache;
+      }
+      if (!(cacheKey in this.awaiterTradersDistributionValueList)) {
+        this.awaiterTradersDistributionValueList[cacheKey] = true;
+      }
+      const data = (await Promise.all(Object.entries({
+        btcAddress,
+        ethAddress
+      }).map(async ([key, token]) => {
+        switch (key) {
+          case 'btcAddress': {
+            return ['btc', token ? await this.getStatsTradersDistributionValue({
+              network: 'bsc',
+              token,
+              since,
+              till
+            }) : undefined];
+          }
+          case 'ethAddress': {
+            return ['eth', token ? await this.getStatsTradersDistributionValue({
+              network: 'ethereum',
+              token,
+              since,
+              till
+            }) : undefined];
+          }
+        }
+      }))).reduce<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']>((prev, [, data]) => {
+        return Array.isArray(data) && data.length ? [...prev, ...data] : prev;
+      }, []);
+      const amounts = data.map((t) => t.tradeAmount);
+      const minAmount: number = Math.min(...amounts);
+      const maxAmount: number = Math.max(...amounts);
+      const steps = getRange(minAmount, maxAmount, 25).map(tradeAmount => ({
+        tradeAmount,
+        userCount: 0
+      }));
+      const users = new Set(data.flatMap((t) => [t.maker.address, t.taker.address]));
+      for (const user of users) {
+        const userTrades: number[] = [];
+        for (const trade of data) {
+          if (trade.maker.address === user || trade.taker.address === user) {
+            userTrades.push(trade.tradeAmount);
+          }
+        }
+        for (const userTrade of userTrades) {
+          for (let i = 0; i < steps.length - 1; i++) {
+            if (steps[i].tradeAmount <= userTrade && userTrade < steps[i + 1].tradeAmount) {
+              steps[i].userCount += 1;
+            }
+          }
+        }
+      }
+      const result = steps.filter(({userCount}) => userCount > 0);
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+      if (cacheKey in this.awaiterTradersDistributionValueList) {
+        delete this.awaiterTradersDistributionValueList[cacheKey];
+      }
+      return result;
+    } catch (e) {
+      // console.log('statsHolders.error', e);
+      if (cacheKey in this.awaiterTradersDistributionValueList) {
+        delete this.awaiterTradersDistributionValueList[cacheKey];
       }
       return [];
     }

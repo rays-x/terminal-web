@@ -319,6 +319,7 @@ export interface TransactionsPairs {
   updateDate: any;
   liquidityScore: string;
   confidenceScore: string;
+  reverseOrder?: boolean;
 }
 
 export type TransactionsPairsResponse = {
@@ -404,4 +405,9 @@ export interface Status {
 export interface CmcVolume {
   data: Data;
   status: Status;
+}
+
+export interface StatsTradingDistributionValueResponse {
+  tradeAmount: number;
+  userCount: number;
 }

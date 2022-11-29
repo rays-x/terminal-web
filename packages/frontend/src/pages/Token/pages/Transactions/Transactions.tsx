@@ -30,7 +30,7 @@ export const Transactions: React.FC = React.memo(() => {
   }>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
     withCredentials: false,
-    method:'POST'
+    method: 'POST'
   });
   const [, getSearch] = useLazyFetch<CmcSearch>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
@@ -113,11 +113,12 @@ export const Transactions: React.FC = React.memo(() => {
       data: {
         ethPairs: take(dataTransactionPairs.ethPairs, TRANSACTIONS_PAIRS_SLICE)
           .map(pair => {
-            return `${pair.poolId}_${pair.quoteToken.address.toLowerCase() === currentCoinData.platform_ethereum}`;
+            return `${pair.poolId}_${Boolean(pair.reverseOrder)}`;
           }),
         btcPairs: take(dataTransactionPairs.btcPairs, TRANSACTIONS_PAIRS_SLICE)
           .map(pair => {
-            return `${pair.poolId}_${pair.quoteToken.address.toLowerCase() === currentCoinData.platform_binance}`;
+            console.log('pair', pair);
+            return `${pair.poolId}_${Boolean(pair.reverseOrder)}`;
           })
       }
     }).catch();
@@ -132,14 +133,14 @@ export const Transactions: React.FC = React.memo(() => {
         id: transaction.txn,//string
         date: new Date(Number(transaction.time) * 1000),//Date
         type: transaction.type,//'Sell' | 'Buy' | 'Add' | 'Remove'
-        totalValue: millify(toFixedToken(transaction.totalUsd, 2), {
-          precision: 2
+        totalValue: millify(toFixedToken(transaction.totalUsd, 3), {
+          precision: 3
         }),//string
-        tokenValue0: millify(toFixedToken(transaction.amount, 2), {
-          precision: 2
+        tokenValue0: millify(toFixedToken(transaction.amount, 3), {
+          precision: 3
         }),//?string
-        tokenValue0Price: millify(toFixedToken(transaction.priceUsd, 2), {
-          precision: 2
+        tokenValue0Price: millify(toFixedToken(transaction.priceUsd, 3), {
+          precision: 3
         }),//?string
         tokenValue1: '',//string
         maker: '',//string

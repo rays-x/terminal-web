@@ -8,12 +8,24 @@ export function diff(a: string | number, b: string | number, d = 1): number {
 
 export function avgBuy(
   arr: {
-    price: string|number;
-    qty: string|number;
+    price: string | number;
+    qty: string | number;
   }[]
-): number{
+): number {
   return Number(
-    arr.reduce((prev,next) => prev+Number(next.price)*Number(next.qty),0)/
-    arr.reduce((prev,next) => prev+Number(next.qty),0)
+    arr.reduce((prev, next) => prev + Number(next.price) * Number(next.qty), 0) /
+    arr.reduce((prev, next) => prev + Number(next.qty), 0)
   );
+}
+
+
+export function getRange(lower: number, upper: number, steps: number) {
+  const increment = (upper - lower) / (steps - 1);
+  return [
+    lower,
+    ...Array.from({length: steps - 2}).map((_, i) => {
+      return lower + (increment * (i + 1));
+    }),
+    upper
+  ];
 }
