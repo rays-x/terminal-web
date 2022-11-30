@@ -3,11 +3,6 @@ import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
 import md5 from 'md5';
-import {addDays, format} from 'date-fns';
-import {BitQueryStatsTransfersQuery} from '../types/BitQuery/BitQueryStatsTransfersQuery';
-import {BitQueryStatsSwapsQuery} from '../types/BitQuery/BitQueryStatsSwapsQuery';
-import {BitQueryStatsHoldersQuery} from '../types/BitQuery/BitQueryStatsHoldersQuery';
-import {promiseMap} from '../utils';
 import {CovalentStatsLiquidityQuery} from '../types/Covalent/CovalentStatsTransfersQuery';
 
 export class CovalentService {
@@ -90,7 +85,7 @@ export class CovalentService {
       const data: Promise<{
         eth?: { [date: string]: number }
         bsc?: { [date: string]: number }
-      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+      }> = Object.fromEntries((await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {

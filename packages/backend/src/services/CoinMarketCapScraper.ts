@@ -219,6 +219,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           const platform_binance = get(get(data, 'platforms', [])
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
+          // console.log('collect1', (platform_binance || platform_ethereum) && IS_PRODUCTION);
           if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
@@ -242,7 +243,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
             Logger.debug(`cmc:uniInfo, ${step}, ${tokens.length}`);
             return step++;
           } else {
-            // await awaiter(i * 30 * 1000);
+            await awaiter(i * 30 * 1000);
           }
         } catch (e) {
           await awaiter(i * 60 * 1000);
@@ -279,6 +280,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           const platform_binance = get(get(data, 'platforms', [])
             .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
           const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
+          // console.log('collect2', token.slug, platform_binance, platform_ethereum, IS_PRODUCTION);
           if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
             this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
             this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();

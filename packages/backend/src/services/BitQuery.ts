@@ -11,6 +11,7 @@ import {promiseMap} from '../utils';
 import {CMC_USER_AGENT} from '../constants';
 import {BitQueryStatsTradersDistributionValueQuery} from '../types/BitQuery/BitQueryStatsTradersDistributionValueQuery';
 import {getRange} from '../utils/diff';
+import {pre} from '@typegoose/typegoose';
 
 const since = () => format(addDays(new Date(), -20), 'yyyy-MM-dd');
 const sinceArray = () => Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
@@ -271,7 +272,7 @@ export class BitQueryService {
       const data: Promise<{
         eth?: BitQueryStatsTransfersQuery['data']['stats']['transfers']
         bsc?: BitQueryStatsTransfersQuery['data']['stats']['transfers']
-      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+      }> = Object.fromEntries((await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
@@ -349,7 +350,7 @@ export class BitQueryService {
       const data: Promise<{
         eth?: BitQueryStatsSwapsQuery['data']['stats']['swaps']
         bsc?: BitQueryStatsSwapsQuery['data']['stats']['swaps']
-      }> = cache || Object.fromEntries((await Promise.all(Object.entries({
+      }> = Object.fromEntries((await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
@@ -495,7 +496,7 @@ export class BitQueryService {
       if (!(cacheKey in this.awaiterTradersDistributionValueList)) {
         this.awaiterTradersDistributionValueList[cacheKey] = true;
       }
-      const data = (await Promise.all(Object.entries({
+      const trades = (await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
@@ -520,30 +521,35 @@ export class BitQueryService {
       }))).reduce<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']>((prev, [, data]) => {
         return Array.isArray(data) && data.length ? [...prev, ...data] : prev;
       }, []);
-      const amounts = data.map((t) => t.tradeAmount);
+      const amounts = trades.map((t) => t.tradeAmount);
       const minAmount: number = Math.min(...amounts);
       const maxAmount: number = Math.max(...amounts);
       const steps = getRange(minAmount, maxAmount, 25).map(tradeAmount => ({
         tradeAmount,
-        userCount: 0
+        userCount: 0,
+        swapsCount: 0
       }));
-      const users = new Set(data.flatMap((t) => [t.maker.address, t.taker.address]));
-      for (const user of users) {
-        const userTrades: number[] = [];
-        for (const trade of data) {
-          if (trade.maker.address === user || trade.taker.address === user) {
-            userTrades.push(trade.tradeAmount);
-          }
+      trades.reduce((userStepsCount: string[], trade) => {
+        const stepIndex = steps.findIndex(({tradeAmount}, index) => {
+          const lastStep = index + 1 === steps.length;
+          return tradeAmount <= trade.tradeAmount
+            && (lastStep || trade.tradeAmount < get(steps, `${index + 1}.tradeAmount`, 0));
+        });
+        if (stepIndex == -1) {
+          return userStepsCount;
         }
-        for (const userTrade of userTrades) {
-          for (let i = 0; i < steps.length - 1; i++) {
-            if (steps[i].tradeAmount <= userTrade && userTrade < steps[i + 1].tradeAmount) {
-              steps[i].userCount += 1;
-            }
+        [...new Set([trade.maker.address, trade.taker.address])].forEach(user => {
+          const cacheUserStep = `${user}_${stepIndex}`;
+          if (userStepsCount.includes(cacheUserStep)) {
+            return;
           }
-        }
-      }
-      const result = steps.filter(({userCount}) => userCount > 0);
+          steps[stepIndex]['userCount']++;
+          userStepsCount.push(cacheUserStep);
+        });
+        steps[stepIndex]['swapsCount']++;
+        return userStepsCount;
+      }, []);
+      const result = steps.filter(({swapsCount, userCount}) => swapsCount || userCount);
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
       if (cacheKey in this.awaiterTradersDistributionValueList) {
         delete this.awaiterTradersDistributionValueList[cacheKey];

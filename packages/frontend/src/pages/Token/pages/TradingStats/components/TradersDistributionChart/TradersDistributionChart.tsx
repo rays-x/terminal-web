@@ -42,7 +42,7 @@ export const TradersDistributionChart: React.FC = React.memo(() => {
 
   const chartData = React.useMemo(() => {
     return (data || []).map((item) => ({
-      ...item,
+      userCount: item.userCount,
       tradeAmount: formatNumeral(toFixedToken(item.tradeAmount, 8), NUMERAL_FORMAT_NUM)
     }));
   }, [data]);

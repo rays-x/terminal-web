@@ -16,19 +16,34 @@ import {
   NUMERAL_FORMAT_NUM
 } from '../../../../../../utils/numbers';
 import {TradesVolumeChartStyled} from './TradesVolumeChart-styled';
+import {CurrentCoinData} from '../../../../CoinPage';
+import {useLazyFetch} from '../../../../../../hooks/useFetch';
+import {StatsTradingDistributionValueResponse} from '../../../../types';
+import {toFixedToken} from '../../../../../../utils/diff';
 
 type TvdType = {
   swapsCount?: number;
   tradeAmount?: number;
 }
 
-export interface TradesVolumeChartProps {
-  coinId: string;
-}
+export const TradesVolumeChart: React.FC = React.memo(() => {
+  const currentCoinData = React.useContext(CurrentCoinData);
+  const [{data}, getTradingDistributionValueInfo] = useLazyFetch<StatsTradingDistributionValueResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/tdv`,
+    withCredentials: false
+  });
 
-export const TradesVolumeChart: React.FC<TradesVolumeChartProps> = ({
-                                                                      coinId
-                                                                    }) => {
+  React.useEffect(() => {
+    if (!currentCoinData?.id) {
+      return;
+    }
+    getTradingDistributionValueInfo({
+      params: {
+        btcAddress: currentCoinData.platform_binance,
+        ethAddress: currentCoinData.platform_ethereum
+      }
+    }).catch();
+  }, [currentCoinData?.id]);
   const barRef = useRef<any>();
   const [tooltipPosition, setTooltipPosition] = useState<{
     x: number;
@@ -36,21 +51,10 @@ export const TradesVolumeChart: React.FC<TradesVolumeChartProps> = ({
   } | null>(null);
   const [activeBarId, setActiveBarId] = useState<number | null>(null);
 
-  const data: { tvd: TvdType[], coinId?: string } = {
-    tvd: []
-  } /*useMerge<{ tvd: TvdType[] }, { coinId: string }>(
-    QUERY_TRADERS_VOLUME_DIST_CHART,
-    SUB_TRADERS_VOLUME_DIST_CHART,
-    {
-      variables: { coinId },
-      skip: !coinId
-    }
-  )*/;
-
-  const chartData = useMemo(() => {
-    return (data?.tvd || []).map((item) => ({
-      ...item,
-      tradeAmount: formatNumeral(item.tradeAmount, NUMERAL_FORMAT_NUM)
+  const chartData = React.useMemo(() => {
+    return (data || []).map((item) => ({
+      swapsCount: item.swapsCount,
+      tradeAmount: formatNumeral(toFixedToken(item.tradeAmount, 8), NUMERAL_FORMAT_NUM)
     }));
   }, [data]);
 
@@ -136,4 +140,4 @@ export const TradesVolumeChart: React.FC<TradesVolumeChartProps> = ({
       </TradesVolumeChartStyled.Body>
     </TradesVolumeChartStyled.Component>
   );
-};
+});

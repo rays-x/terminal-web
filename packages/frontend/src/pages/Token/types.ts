@@ -410,4 +410,5 @@ export interface CmcVolume {
 export interface StatsTradingDistributionValueResponse {
   tradeAmount: number;
   userCount: number;
+  swapsCount: number;
 }
