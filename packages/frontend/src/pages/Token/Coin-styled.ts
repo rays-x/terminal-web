@@ -17,6 +17,7 @@ export const Group = styled.div`
     flex-direction: column;
   `)}
 
+  margin-top: 24px;
   gap: ${gap[14]};
 `;
 export const TransactionGroup = styled.div`

@@ -12,3 +12,27 @@ export class QueryStatsTransferDto {
   @ApiPropertyOptional()
   ethAddress?: string;
 }
+
+export class QueryStatsPairStatisticsDto {
+  @IsOptional()
+  @IsArray()
+  @IsString({
+    each: true
+  })
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true
+  })
+  btcAddress_poolContract: string[] = [];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({
+    each: true
+  })
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true
+  })
+  ethAddress_poolContract: string[] = [];
+}

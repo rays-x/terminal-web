@@ -51,9 +51,9 @@ export const ChartCoinsButton: FC<ChartCoinsButtonProps> = ({
       <ChartCoinButtonStyled.Label $isSelected={isSelected}>
         {coinsPair.firstCoin.label}/{coinsPair.secondCoin.label}
       </ChartCoinButtonStyled.Label>
-      <CoinPairShare
+      {/*<CoinPairShare
         color={!isSelected ? colors.text.secondary : '#161824'}
-      />
+      />*/}
     </ChartCoinButtonStyled.Component>
   );
 };

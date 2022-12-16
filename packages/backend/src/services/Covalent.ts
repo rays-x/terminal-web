@@ -26,12 +26,10 @@ export class CovalentService {
     while (true) {
       try {
         const {
-          body: {
-            data: {
-              items: liquiditySources,
-              pagination: {
-                has_more
-              }
+          data: {
+            items: liquiditySources,
+            pagination: {
+              has_more
             }
           }
         } = await got.get<CovalentStatsLiquidityQuery>(`https://api.covalenthq.com/v1/${chain}/xy=k/${dex}/tokens/address/${token}/`, {
@@ -42,6 +40,7 @@ export class CovalentService {
             'page-size': 500,
             key: 'ckey_65c7c5729a7141889c2cdea0556'
           },
+          resolveBodyOnly: true,
           responseType: 'json'
         });
         const tokenLiquidityCharts = liquiditySources.map((ls) => ls.liquidity_timeseries_30d);
@@ -59,7 +58,7 @@ export class CovalentService {
           page++;
         }
       } catch (e) {
-        console.error(e);
+        console.error(get(e, 'message', e));
         break;
       }
     }

@@ -117,7 +117,6 @@ export const Transactions: React.FC = React.memo(() => {
           }),
         btcPairs: take(dataTransactionPairs.btcPairs, TRANSACTIONS_PAIRS_SLICE)
           .map(pair => {
-            console.log('pair', pair);
             return `${pair.poolId}_${Boolean(pair.reverseOrder)}`;
           })
       }

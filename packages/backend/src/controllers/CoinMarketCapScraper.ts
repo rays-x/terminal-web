@@ -7,7 +7,7 @@ import {
   QueryPairsInfoDto,
   QueryTokensDto, QueryTransactionsDto,
   TokensSortOrder,
-  TokensSwap, TransactionsResponse
+  TransactionsResponse
 } from '../dto/CoinMarketCapScraper';
 import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
 import {get} from 'lodash';
@@ -22,26 +22,22 @@ export class CoinMarketCapScraperController {
   ) {
   }
 
-  @ApiParam({
-    name: 'swap',
-    enum: TokensSwap,
-    example: TokensSwap.uniswap
-  })
-  @Get('tokens/:swap')
+  @Get('tokens')
   @HttpCode(200)
   async uniTokens(
     @Query() {
+      networks: _networks,
       search,
       limit,
       offset,
       sortBy,
       sortOrder
-    }: QueryTokensDto,
-    @Param('swap') swap: TokensSwap
+    }: QueryTokensDto
   ) {
-    const tokens = (await this.service.tokens(swap)).filter((token) => {
+    const networks = typeof _networks === 'string' ? [_networks] : _networks;
+    const tokens = (await this.service.tokens(networks)).filter((token) => {
       return search ? [
-        token.id.toLowerCase(),
+        // token.id.toLowerCase(),
         token.name.toLowerCase(),
         token.symbol.toLowerCase()
       ].find((_) => _.includes(search.toLowerCase())) : true;
@@ -65,18 +61,18 @@ export class CoinMarketCapScraperController {
     return result;
   }
 
-  @ApiParam({
-    name: 'swap',
-    enum: TokensSwap,
-    example: TokensSwap.uniswap
-  })
   @Post('dex/pairs-info')
   @HttpCode(200)
   async pairsInfo(
     @Body() {pairs, platform}: QueryPairsInfoDto
   ) {
-    const data = await this.service.pairsInfo(platform, pairs);
-    return Object.fromEntries(Object.entries(data).filter(([, value]) => 'priceUsd' in (value as Object)));
+    try {
+      const data = await this.service.pairsInfo(platform, pairs);
+      return Object.fromEntries(Object.entries(data).filter(([, value]) => 'priceUsd' in (value as Object)));
+    } catch (e) {
+      console.error(get(e, 'message', e));
+    }
+    throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @Get('dex/pairs-list')
@@ -103,7 +99,12 @@ export class CoinMarketCapScraperController {
   async transactions(
     @Body() {btcPairs = [], ethPairs = []}: QueryTransactionsDto
   ): Promise<TransactionsResponse['data']['transactions']> {
-    return this.service.transactions(btcPairs, ethPairs);
+    try {
+      return this.service.transactions(btcPairs, ethPairs);
+    } catch (e) {
+      console.error(get(e, 'message', e));
+    }
+    throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @Get('proxy*')
@@ -123,7 +124,7 @@ export class CoinMarketCapScraperController {
       });
       return body;
     } catch (e) {
-      console.error(e);
+      console.error(get(e, 'message', e));
     }
     throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
   }

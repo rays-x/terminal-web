@@ -9,8 +9,6 @@ export const center = css`
 `;
 
 export interface ComponentProps {
-  $centerContent?: boolean;
-  $sidebarOpen?: boolean;
 }
 
 export const Component = styled(animated.div)<ComponentProps>`
@@ -23,15 +21,6 @@ export const Component = styled(animated.div)<ComponentProps>`
   width: 100%;
   background: ${colors.background.primary};
   padding-left: 0;
-  @media (min-width: ${breakpoints.width['tabletMin']}) {
-    padding-left: 240px;
-  }
-  ${({ $sidebarOpen }) =>
-    $sidebarOpen &&
-    css`
-      height: 100vh;
-      overflow: hidden;
-    `};
 `;
 
 export const Content = styled.div`
@@ -39,7 +28,7 @@ export const Content = styled.div`
   flex-grow: 1;
   flex-shrink: 0;
   display: flex;
-  padding: 30px;
+  padding: 24px 64px;
   flex-direction: column;
   width: 100%;
   max-width: 1560px;

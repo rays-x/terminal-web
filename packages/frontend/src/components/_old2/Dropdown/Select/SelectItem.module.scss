@@ -6,6 +6,7 @@
   padding: 0 10px;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .SelectItem:not(:only-child) {

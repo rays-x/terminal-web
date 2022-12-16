@@ -18,9 +18,9 @@ export enum TokensSortOrder {
   desc = 'desc',
 }
 
-export enum TokensSwap {
-  uniswap = 'uniswap',
-  pancakeswap = 'pancakeswap',
+export enum Network {
+  bsc = 'bsc',
+  eth = 'eth',
 }
 
 export class QueryTokensDto {
@@ -28,6 +28,16 @@ export class QueryTokensDto {
   @IsString()
   @ApiPropertyOptional()
   search?: string;
+
+  @IsOptional()
+  @IsEnum(Network, {
+    each: true
+  })
+  @ApiPropertyOptional({
+    type: Network,
+    isArray: true
+  })
+  networks: Network[] = [Network.bsc, Network.eth];
 
   @IsOptional()
   @IsNumberString()
@@ -99,15 +109,6 @@ export class QueryTransactionsDto {
     isArray: true
   })
   ethPairs!: string[];
-}
-
-export class ParamTokensDto {
-  @IsEnum(TokensSwap)
-  @ApiProperty({
-    enum: TokensSwap,
-    default: TokensSwap.uniswap
-  })
-  swap?: TokensSwap = TokensSwap.uniswap;
 }
 
 interface Transaction {

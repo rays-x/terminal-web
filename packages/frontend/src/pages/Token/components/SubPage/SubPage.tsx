@@ -9,6 +9,7 @@ import {PageButton, SubPages} from '../../types';
 import {
   AnimatedGradientButton
 } from '../../../../components/_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton';
+import {TradingPairStatistics} from '../../pages/TradingPairStatistics/TradingPairStatistics';
 
 export const subPagesConfig: Record<SubPages, PageButton> = {
   [SubPages.PriceChart]: {
@@ -30,7 +31,12 @@ export const subPagesConfig: Record<SubPages, PageButton> = {
     width: 136,
     height: 40,
     label: 'Trading Stats'
-  }
+  },
+  [SubPages.TradingPairStatistics]: {
+    width: 188,
+    height: 40,
+    label: 'Trading Pair Statistics'
+  },
   // [SubPages.Pair]: {
   //   width: 162,
   //   height: 40,
@@ -82,6 +88,9 @@ export const SubPage: FC = React.memo(() => {
         </Element>
         <Element name={SubPages.TradingStats}>
           <TradingStats/>
+        </Element>
+        <Element name={SubPages.TradingPairStatistics}>
+          <TradingPairStatistics/>
         </Element>
       </>
     </>

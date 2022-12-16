@@ -6,7 +6,7 @@ import {Inject, OnModuleInit} from '@nestjs/common';
 import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
-import {TokensSwap, TransactionsResponse} from '../dto/CoinMarketCapScraper';
+import {Network, TransactionsResponse} from '../dto/CoinMarketCapScraper';
 import {CmcPairListResponse} from '../types';
 import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
 import {BitQueryService} from './BitQuery';
@@ -74,8 +74,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    this.addInfoToUniTokens().finally();
-    this.addInfoToPanTokens().finally();
+    this.addInfoToUniTokens().catch();
+    this.addInfoToPanTokens().catch();
   }
 
   private async getUniTokens(): Promise<typeof this._uniTokens> {
@@ -86,28 +86,30 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       return cache;
     }
     Logger.debug(`waiting for: ${cacheKey}...`);
-    const {body: cryptos} = await got.get<{
+    const {fields, values} = await got.get<{
       fields: string[],
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
-    const slugIndex = cryptos.fields.indexOf('slug');
-    const addressIndex = cryptos.fields.indexOf('address');
+    const slugIndex = fields.indexOf('slug');
+    const addressIndex = fields.indexOf('address');
     const slugs: {
       [k: string]: string[]
     } = Object.fromEntries(
-      cryptos.values
+      values
         .filter(_ => _[addressIndex].length)
         .map((item) => [
           item[slugIndex],
           item[addressIndex].map(_ => _.toLowerCase())
         ])
     );
-    const {body: {tokens}} = await got.get <{
+    const {tokens} = await got.get <{
       tokens: Omit<UniToken, 'slug'>[]
     }>('https://api.coinmarketcap.com/data-api/v3/uniswap/all.json', {
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
     this._uniTokens = Object.fromEntries(tokens.reduce((prev, {address = ''}) => {
       let slug = Object.entries(slugs).find(([, addresses]) => {
@@ -142,26 +144,28 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       return cache;
     }
     Logger.debug(`waiting for: ${cacheKey}...`);
-    const {body: cryptos} = await got.get<{
+    const {fields, values} = await got.get<{
       fields: string[],
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
-    const slugIndex = cryptos.fields.indexOf('slug');
-    const addressIndex = cryptos.fields.indexOf('address');
+    const slugIndex = fields.indexOf('slug');
+    const addressIndex = fields.indexOf('address');
     const slugs: [string, string[]][] =
-      cryptos.values
+      values
         .filter(_ => _[addressIndex].length)
         .map((item) => [
           item[slugIndex],
           item[addressIndex].map(_ => _.toLowerCase()).join(',')
         ]);
-    const {body} = await got.get('https://api.covalenthq.com/v1/56/xy=k/pancakeswap_v2/tokens/', {
+    const body = await got.get('https://api.covalenthq.com/v1/56/xy=k/pancakeswap_v2/tokens/', {
       searchParams: {
         key: 'ckey_65c7c5729a7141889c2cdea0556',
         'page-size': 50000
-      }
+      },
+      resolveBodyOnly: true
     });
     const items = body.match(/"0x.{40}",/gm)?.map(_ => _.substring(1, 42).toLowerCase());
     this._panTokens = Object.fromEntries(items.reduce((prev, address) => {
@@ -185,11 +189,12 @@ export class CoinMarketCapScraperService implements OnModuleInit {
 
   private async getTokenData(slug: string) {
     await awaiter(this.awaitTime);
-    const {body} = await got.get<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
+    const body = await got.get<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br'
-      }
+      },
+      resolveBodyOnly: true
     });
     const regex = body.match(/<script id="__NEXT_DATA__" type="application\/json">(?<jsonData>.+)<\/script>/m);
     const data = JSON.parse(get(regex, 'groups.jsonData', 'null') || 'null');
@@ -254,7 +259,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     if (this.awaitTime === DEFAULT_AWAIT_TIME) {
       this.awaitTime = DEFAULT_AWAIT_TIME * 3;
     }
-    return this.addInfoToUniTokens(true);
+    return this.addInfoToUniTokens(true).catch();
   }
 
   private async addInfoToPanTokens(fromLoop = false) {
@@ -315,15 +320,20 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     if (this.awaitTime === DEFAULT_AWAIT_TIME) {
       this.awaitTime = DEFAULT_AWAIT_TIME * 3;
     }
-    return this.addInfoToPanTokens(true);
+    return this.addInfoToPanTokens(true).catch();
   }
 
-  async tokens(swap: TokensSwap): Promise<CmcToken[]> {
-    const tokens = Object.values(
-      swap === TokensSwap.uniswap
-        ? this._uniTokens
-        : this._panTokens
-    );
+  async tokens(networks: Network[] = [Network.bsc, Network.eth]): Promise<CmcToken[]> {
+    const tokens = networks.reduce((tokens, network) => {
+      switch (network) {
+        case Network.bsc: {
+          return [...tokens, ...Object.values(this._panTokens)];
+        }
+        case Network.eth: {
+          return [...tokens, ...Object.values(this._uniTokens)];
+        }
+      }
+    }, []);
     return (await Promise.all(tokens.map(async token => {
       const data = JSON.parse(await this.redisClient.get(`cmc:ait:${token.slug}`) || 'null');
       if (!data) {
@@ -333,11 +343,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         return;
       }
       return {
-        id: get(get(data, 'platforms', []).find(p => p.contractChainId === (
-          swap === TokensSwap.uniswap
-            ? 1
-            : 56
-        )), 'contractAddress', token.address).toLowerCase(),
+        id: data.id,
         slug: token.slug,
         name: data.name,
         symbol: data.symbol,
@@ -352,7 +358,12 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         priceChangePercentage24h: data.statistics.priceChangePercentage24h,
         cmcId: data.id
       };
-    }))).filter(Boolean);
+    }))).reduce((prev, item) => {
+      if (!item || prev.findIndex(({cmcId}) => item?.cmcId === cmcId) > -1) {
+        return prev;
+      }
+      return [...prev, item];
+    }, []);
   }
 
   async pairsInfo(platform: string, pairs: string[]): Promise<{
@@ -408,13 +419,14 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     }
     try {
       const getData = async (params, prev: CmcPairListResponse['data']): Promise<CmcPairListResponse['data']> => {
-        const {body: {data}} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+        const {data} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
           headers: {
             'user-agent': CMC_USER_AGENT,
             'accept-encoding': 'gzip, deflate, br'
           },
           searchParams: params,
-          responseType: 'json'
+          responseType: 'json',
+          resolveBodyOnly: true
         });
         return !data?.length
           ? prev
@@ -475,7 +487,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     ].map(async ([key, params]) => {
       const [pairId, reversOrder, from] = String(params).split('_');
       const {
-        body: {data: {transactions}}
+        data: {transactions}
       } = await got.get<TransactionsResponse>({
         headers: {
           'user-agent': CMC_USER_AGENT,
@@ -489,7 +501,8 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         } : {
           'reverse-order': reversOrder === 'true'
         },
-        responseType: 'json'
+        responseType: 'json',
+        resolveBodyOnly: true
       });
       return [
         pairId,

@@ -1,4 +1,18 @@
 .TableFooter {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  row-gap: 12px;
+  border-radius: 0 0 20px 20px;
+  background-color: #1e1f2b;
+  padding: 5px 24px 15px;
+}
+
+.TableFooterSearch .TableFooter__pagination {
+  margin: 0 auto;
+}
+
+.TableFooterSearch {
   display: grid;
   row-gap: 12px;
   border-radius: 0 0 20px 20px;
@@ -17,10 +31,24 @@
   .TableFooter {
     height: 48px;
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    // Table padding correction
+    padding: 0 24px 10px;
+  }
+
+  .TableFooterSearch {
+    height: 48px;
+    display: flex;
     align-items: center;
 
     // Table padding correction
     padding: 0 24px 10px;
+  }
+
+  .TableFooterSearch .TableFooter__pagination {
+    margin: 0 0 0 auto;
   }
 
   .TableFooter__text {
@@ -46,7 +74,6 @@
 }
 
 .TableFooter__pagination {
-  margin-left: auto;
   display: flex;
   align-items: center;
 }

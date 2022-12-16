@@ -5,11 +5,10 @@ import {PageLayoutStyled} from './PageLayout-styled';
 
 export interface PageLayoutProps {
   centerContent?: boolean;
-  isOpen?: boolean;
   children?: React.ReactNode;
 }
 
-export const PageLayout: React.FC<PageLayoutProps> = (({centerContent, children, isOpen}) => {
+export const PageLayout: React.FC<PageLayoutProps> = (({centerContent, children}) => {
 
     const padding = useSpring({
       config: config.default
@@ -19,7 +18,7 @@ export const PageLayout: React.FC<PageLayoutProps> = (({centerContent, children,
       <PageLayoutStyled.Component
         style={padding}
         $centerContent={centerContent}
-        $sidebarOpen={isOpen}
+        // $sidebarOpen={isOpen}
       >
         <PageLayoutStyled.Content>
           {children}

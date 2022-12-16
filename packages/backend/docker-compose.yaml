@@ -2,10 +2,10 @@ version: '3.7'
 
 services:
 
-  nginx:
-    image: ray-nginx-local:latest
-    ports:
-      - 2055:80
+#  nginx:
+#    image: ray-nginx-local:latest
+#    ports:
+#      - 2055:80
 
   mongo:
     image: mongo

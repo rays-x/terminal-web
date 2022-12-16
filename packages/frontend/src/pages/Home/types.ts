@@ -93,6 +93,7 @@ export type RankByType = {
 export type TablePair = {
   id: string,
   symbol: string,
+  slug: string,
   image: string,
   priceChangePercentage1h: number,
   priceChangePercentage24h: number,

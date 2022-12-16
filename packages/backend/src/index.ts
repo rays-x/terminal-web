@@ -73,12 +73,6 @@ const bootstrap = async () => {
   await app.listen(parseInt(String(process.env.PORT)) || 2050, '0.0.0.0', async () => {
     DefaultLogger.restoreOriginalLogLevel();
     logWelcomeMessage();
-    // await importQuiz(payload);
-    // await algorithmQuiz(payload);
-    // await importFixQuiz(payload);
-    // await importIdQuiz(payload)
-    // await importLangQuizUserDataFix(payload)
-    // await importFlowFix(payload)
   });
   app.enableShutdownHooks();
 };

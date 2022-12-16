@@ -16,12 +16,10 @@ const Token = React.memo(() => {
     switchNetwork(chain, true);
   }, []);
   return (
-    <SidebarLayout isOpen={isOpen} changeDisplayMode={changeDisplayMode}>
-      <PageLayout isOpen={isOpen}>
-        <Header isOpen={isOpen} changeDisplayMode={changeDisplayMode}/>
-        <CoinPage/>
-      </PageLayout>
-    </SidebarLayout>
+    <PageLayout>
+      <Header/>
+      <CoinPage/>
+    </PageLayout>
   );
 });
 export default Token;

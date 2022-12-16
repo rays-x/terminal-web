@@ -3,10 +3,11 @@ import s from './TableRowLink.module.scss';
 import {TableContext} from './TableContext';
 import {useNavigate} from 'react-router';
 
-export function TableRowLink({to, children}: { to: string; children: React.ReactNode }) {
+export function TableRowLink({to, children}: { to?: string; children: React.ReactNode }) {
   const {columns} = useContext(TableContext);
   const navigate = useNavigate();
-  return (
+
+  return to ? (
     <a href={to} onClick={(e) => {
       e.preventDefault();
       navigate(to);
@@ -16,5 +17,12 @@ export function TableRowLink({to, children}: { to: string; children: React.React
     }}>
       {children}
     </a>
+  ) : (
+    <div className={s.TableRowLink} style={{
+      textDecoration: 'none',
+      gridTemplateColumns: columns.join(' ')
+    }}>
+      {children}
+    </div>
   );
 }

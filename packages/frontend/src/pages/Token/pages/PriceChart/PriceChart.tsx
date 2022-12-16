@@ -1,38 +1,103 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {PriceChartStyled} from './PriceChert-styled';
 import {ChartComponent} from './chart/Chart';
 import {ChartCoinsButton} from '../../../../components/_old/ui/Buttons/ChartCoinsButton/ChartCoinsButton';
 import {useFetch} from '../../../../hooks';
 import {useParams} from 'react-router';
 import {CmcSearch} from './types';
-import {CMC_ID_PANCAKE_V2, CMC_ID_UNISWAP_V2, CMC_ID_UNISWAP_V3} from '../../../../constants/coinmarketcap';
+import {
+  CMC_ID_BTC_PLATFORM,
+  CMC_ID_ETH_PLATFORM,
+  CMC_ID_PANCAKE_V2,
+  CMC_ID_UNISWAP_V2,
+  CMC_ID_UNISWAP_V3
+} from '../../../../constants/coinmarketcap';
 import {useLazyFetch} from '../../../../hooks/useFetch';
 import {CmcPairInfo} from './chart/types';
 import {get} from 'lodash';
+import {CurrentCoinData} from '../../CoinPage';
+import {data} from '../TradingStats/TradingStats';
 
 export const PriceChart: React.FC = React.memo(() => {
-  const {token, chain} = useParams();
-  const [id] = token.split('_');
+  const currentCoinData = useContext(CurrentCoinData);
+  const ids = React.useMemo(() => {
+    return [currentCoinData.platform_ethereum, currentCoinData.platform_binance].filter(Boolean);
+  }, [currentCoinData.id]);
   const [pairAddress, setPairAddress] = React.useState<string>(undefined);
 
-  const [{data: _data, loading: _loading}, getSearch] = useLazyFetch<CmcSearch>({
+  const [dataPairs, setDataPairs] = React.useState({});
+  const [, getSearch] = useLazyFetch<CmcSearch>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
     withCredentials: false
   });
 
   React.useEffect(() => {
-    if (!id) {
+    if (!ids.length) {
       return;
     }
-    getSearch({
-      params: {
-        keyword: id,
-        all: true
-      }
-    }).catch();
-  }, [id]);
+    (async () => {
+      const _pairsData = (await Promise.all(ids.map(async id => {
+        const {data: {data: {pairs}}} = await getSearch({
+          params: {
+            keyword: id,
+            all: true
+          }
+        });
+        const pairsBtc = pairs
+          .filter(pair => pair.platformId === CMC_ID_BTC_PLATFORM)
+          .map(pair => pair.pairContractAddress.toLowerCase());
+        const pairsEth = pairs
+          .filter(pair => pair.platformId === CMC_ID_ETH_PLATFORM)
+          .map(pair => pair.pairContractAddress.toLowerCase());
+        return (await Promise.all([
+          {platform: 'BSC', pairs: pairsBtc},
+          {platform: 'Ethereum', pairs: pairsEth}
+        ].map(async ({pairs, platform}) => {
+          return pairs.length ?
+            Object.values((await getPairsInfo({
+              data: {
+                platform,
+                pairs
+              }
+            })).data) : undefined;
+        }))).filter(Boolean).flatMap(_ => _);
+      }))).flatMap(_ => _).reduce((prev, pair) => {
+        const found = prev.findIndex(({id}) => id === pair.address) > -1;
+        return found ? prev : [...prev, pair];
+      }, []);
+      setDataPairs(prev => ({
+        ...prev,
+        ...Object.fromEntries(_pairsData.map(({address, ...rest}) => [address, {address, ...rest}]))
+      }));
+      const compareButtons = _pairsData
+        .sort((a, b) => {
+          return (Number(b.volume24h) || 0) - (Number(a.volume24h) || 0);
+        })
+        .map(pair => {
+          return {
+            id: pair.address,
+            baseToken: {
+              symbol: pair.baseToken.symbol,
+              image:
+                pair.baseToken.id
+                  ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.baseToken.id}.png`
+                  : null
+            },
+            quoteToken: {
+              symbol: pair.quoteToken.symbol,
+              image:
+                pair.quoteToken.id
+                  ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.quoteToken.id}.png`
+                  : null
+            }
+          };
+        });
+      setCompareButtons(compareButtons);
+      setPairAddress(get(compareButtons, '0.id'));
+    })();
+  }, [ids]);
 
-  const [{data: _dataPairs, loading: _loadingPairs}, getPairsInfo] = useLazyFetch<{
+  const [, getPairsInfo] = useLazyFetch<{
     [k: string]: CmcPairInfo['data']
   }>({
     url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
@@ -40,53 +105,7 @@ export const PriceChart: React.FC = React.memo(() => {
     method: 'POST'
   });
 
-  React.useEffect(() => {
-    if (!_data?.data) {
-      return;
-    }
-    const {data} = _data;
-    const pairs = data.pairs
-      .filter(pair => (
-        chain === 'eth'
-          ? [CMC_ID_UNISWAP_V3, CMC_ID_UNISWAP_V2]
-          : [CMC_ID_PANCAKE_V2]
-      ).includes(pair.exchangeId));
-    getPairsInfo({
-      data: {
-        platform: chain === 'eth' ? 'Ethereum' : 'BSC',
-        pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
-      }
-    }).catch();
-  }, [_data]);
-
-  const compareButtons = React.useMemo(() => {
-    if (!_dataPairs) {
-      return [];
-    }
-    const dataPairs = Object.values(_dataPairs)
-      .sort((a, b) => {
-        return (Number(b.volume24h) || 0) - (Number(a.volume24h) || 0);
-      })
-      .map(pair => ({
-        id: pair.address,
-        baseToken: {
-          symbol: pair.baseToken.symbol,
-          image:
-            pair.baseToken.id
-              ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.baseToken.id}.png`
-              : null
-        },
-        quoteToken: {
-          symbol: pair.quoteToken.symbol,
-          image:
-            pair.quoteToken.id
-              ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.quoteToken.id}.png`
-              : null
-        }
-      }));
-    setPairAddress(get(dataPairs, '0.id'));
-    return dataPairs;
-  }, [_dataPairs]);
+  const [compareButtons, setCompareButtons] = React.useState([]);
   return (
     <>
       {
@@ -115,7 +134,7 @@ export const PriceChart: React.FC = React.memo(() => {
                 </PriceChartStyled.CoinPairs>
                 {
                   pairAddress
-                    ? <ChartComponent pair={_dataPairs[pairAddress]}/>
+                    ? <ChartComponent pair={dataPairs[pairAddress]}/>
                     : null
                 }
               </PriceChartStyled.GraphContainer>

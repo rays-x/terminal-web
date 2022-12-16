@@ -3,6 +3,7 @@ import {get} from 'lodash';
 import {CmcSocketProvider} from '../store/cmcSocket';
 import {HelmetProvider} from 'react-helmet-async';
 import {NetworkExchangesProvider} from '../store/networkExchanges';
+import {NetworkWalletProvider} from '../store/networkWallet';
 
 const PagePathsWithComponents: {
   [k: string]: {
@@ -25,11 +26,13 @@ const App = () => (
   <HelmetProvider>
     <CmcSocketProvider>
       <NetworkExchangesProvider>
-        <Routes>
-          {routes.map(({path, component: RouteComp}) => {
-            return <Route key={path} path={path} element={<RouteComp/>}/>;
-          })}
-        </Routes>
+        <NetworkWalletProvider>
+          <Routes>
+            {routes.map(({path, component: RouteComp}) => {
+              return <Route key={path} path={path} element={<RouteComp/>}/>;
+            })}
+          </Routes>
+        </NetworkWalletProvider>
       </NetworkExchangesProvider>
     </CmcSocketProvider>
   </HelmetProvider>

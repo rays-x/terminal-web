@@ -25,6 +25,12 @@ import {EMDASH} from '../../../utils/UTF';
 import {JsonPrimitive} from 'react-use-websocket/dist/lib/types';
 import {useCmcSocket} from '../../../store/cmcSocket';
 import {Loader} from '../../../components/_old/ui/Loader/Loader';
+import SearchIcon from '../../../assets/icons/new/SearchIcon';
+import {
+  AnimatedGradientButton
+} from '../../../components/_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton';
+import {NavigationStyled} from '../../../components/_old/ui/Navigation/Navigation-styled';
+import {NetworkSelect} from '../../../components/_old2/NetworkSelect';
 
 enum Show {
   SHOW20 = 20,
@@ -53,13 +59,14 @@ const TokenList = React.memo(() => {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState(SortByColumn.MARKET_CAP);
     const [sortDescending, setSortDescending] = useState(true);
-    const {network, exchange} = useNetworkExchanges();
+    const {network} = useNetworkExchanges();
     const [tableData, setTableData] = React.useState<TableData>({
       tokens: [],
       tokensCount: 0
     });
     const dataUri = React.useMemo(() => {
       const params = qs.stringify({
+        networks: [network],
         limit: rowsShow,
         offset: rowsShow * (page - 1),
         sortBy,
@@ -68,8 +75,8 @@ const TokenList = React.memo(() => {
       }, {
         addQueryPrefix: true
       });
-      return `${import.meta.env.VITE_BACKEND_URL}/cmc/tokens/${exchange}${params}`;
-    }, [page, rowsShow, sortBy, sortDescending, search, exchange]);
+      return `${import.meta.env.VITE_BACKEND_URL}/cmc/tokens/${params}`;
+    }, [page, rowsShow, sortBy, sortDescending, search, network]);
     const {sendMessage, lastMessage} = useCmcSocket();
     const [{data, loading}, getData] = useLazyFetch<{
       tokens: PrototypePair[],
@@ -85,6 +92,7 @@ const TokenList = React.memo(() => {
         return {
           id: token.id,
           symbol: token.symbol,
+          slug: token.slug,
           image: token.logoURI,
           priceChangePercentage1h: token.priceChangePercentage1h,
           priceChangePercentage24h: token.priceChangePercentage24h,
@@ -165,7 +173,7 @@ const TokenList = React.memo(() => {
     }, [lastMessage]);
     React.useEffect(() => {
       setPage(1);
-    }, [search, exchange]);
+    }, [search, network]);
     React.useEffect(() => {
       getData({url: dataUri}).finally();
       return () => {
@@ -188,11 +196,24 @@ const TokenList = React.memo(() => {
         }
       }
     }), [sortBy, sortDescending]);
-
     return (
       <>
         <div className={s.TokenListPage__headingContainer}>
-          <h1 className={s.TokenListPage__heading}>Rax Rank</h1>
+          <h1 className={s.TokenListPage__heading}>DEX Rank</h1>
+          <div className={s.TokenListPage__headingInputContainer}>
+            <div className={s.TokenListPage__headingInputContainerBackground}/>
+            <div className={s.TokenListPage__headingInputContainerIcon}>
+              <SearchIcon/>
+            </div>
+            <input className={s.TokenListPage__headingInput}
+                   placeholder="Search Pair by Symbol, Name, Pair Contract or Token Contract"
+                   value={search}
+                   onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className={s.TokenListPage__headingSelectorContainer}>
+          <NetworkSelect/>
           <div className={s.TokenListPage__selectContainer}>
             <div className={s.TokenListPage__selectLabel}>Show:</div>
             <Select
@@ -258,7 +279,7 @@ const TokenList = React.memo(() => {
                         const icons = [token.image];
                         // if (token.additional_logo_url) icons.push(token.additional_logo_url);
                         return (
-                          <TableRowLink key={token.id} to={`/token/${network}/${token.id}_${token.cmcId}`}>
+                          <TableRowLink key={token.id} to={`/token/${token.slug}`}>
                             <RowNumber>{rowsShow * (page - 1) + 1 + i}</RowNumber>
                             <Token icons={icons}>{token.symbol}</Token>
                             <RowText>{valueOrDash(millify(token.liquidity))}</RowText>
@@ -301,6 +322,7 @@ const TokenList = React.memo(() => {
           </Table>
         </div>
         <TableFooter
+          hideQuery={true}
           showFrom={rowsShow * (page - 1) + 1}
           showTo={tableData.tokensCount && Math.min(page * rowsShow, tableData.tokensCount)}
           totalCount={tableData.tokensCount}

@@ -4,7 +4,6 @@ import {CurrentCoin} from './components/CurrentCoin/CurrentCoin';
 import {Statistic} from './components/Statistic/Statistic';
 import {SubPage} from './components/SubPage/SubPage';
 import {Loader} from '../../components/_old/ui/Loader/Loader';
-import {Card} from '../../components/_old/ui/Card/Card';
 import {useAdaptiveTriggers} from '../../hooks/useAdaptiveTrigger';
 import {useFetch} from '../../hooks';
 import {CmcDetail, CoinMainPage} from './types';
@@ -20,18 +19,16 @@ import {CmcTokenSocketProvider} from '../../store/cmcTokenSocket';
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
 
 export const CoinPage: FC = React.memo(() => {
-  const {token} = useParams();
-  const [, cmcId] = token.split('_');
-  const CMC_ID = Number(cmcId);
+  const {token: slug} = useParams();
   const [data, setData] = React.useState<CoinMainPage>();
+  const CMC_ID = Number(data?.id);
   const {data: _data, loading} = useFetch<CmcDetail>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/detail`,
     params: {
-      id: CMC_ID
+      slug: slug
     },
     withCredentials: false
   });
-
   const {data: _dataBtc, loading: loadingBtc} = useFetch<CmcDetail>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/detail`,
     params: {
@@ -98,6 +95,9 @@ export const CoinPage: FC = React.memo(() => {
   }, [_data, _dataBtc, _dataEth]);
 
   React.useEffect(() => {
+    if (!CMC_ID) {
+      return;
+    }
     sendMessage({
       method: 'subscribe',
       id: 'price',
@@ -112,7 +112,7 @@ export const CoinPage: FC = React.memo(() => {
         id: 'unsubscribePrice'
       });
     };
-  }, []);
+  }, [CMC_ID]);
 
   React.useEffect(() => {
     if (!lastMessage) {

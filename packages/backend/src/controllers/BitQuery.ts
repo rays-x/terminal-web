@@ -1,7 +1,7 @@
-import {Controller, Get, HttpCode, Query} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, Post, Query} from '@nestjs/common';
 import {ApiTags} from '@nestjs/swagger';
 import {BitQueryService} from '../services/BitQuery';
-import {QueryStatsTransferDto} from '../dto/BitQuery';
+import {QueryStatsPairStatisticsDto, QueryStatsTransferDto} from '../dto/BitQuery';
 
 @ApiTags('bq')
 @Controller('/api/rest/bq')
@@ -53,5 +53,16 @@ export class BitQueryController {
     }: QueryStatsTransferDto
   ) {
     return this.service.statsTradersDistributionValue(btcAddress, ethAddress);
+  }
+
+  @Post('stats/pair-statistics')
+  @HttpCode(200)
+  async statsPairStatistics(
+    @Body() {
+      btcAddress_poolContract,
+      ethAddress_poolContract
+    }: QueryStatsPairStatisticsDto
+  ) {
+    return this.service.statsPairStatistics(btcAddress_poolContract, ethAddress_poolContract);
   }
 }

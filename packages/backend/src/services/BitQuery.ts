@@ -11,12 +11,15 @@ import {promiseMap} from '../utils';
 import {CMC_USER_AGENT} from '../constants';
 import {BitQueryStatsTradersDistributionValueQuery} from '../types/BitQuery/BitQueryStatsTradersDistributionValueQuery';
 import {getRange} from '../utils/diff';
+import {BitQueryStatsPairStatisticsQuery} from '../types/BitQuery/BitQueryStatsPairStatisticsQuery';
 import {pre} from '@typegoose/typegoose';
 
 const since = () => format(addDays(new Date(), -20), 'yyyy-MM-dd');
 const sinceArray = () => Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
 const sinceYesterday = () => `${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`;
+const sinceLastWeek = () => `${format(addDays(new Date(), -8), 'yyyy-MM-dd')}T00:00:00.000Z`;
 const tillToday = () => `${format(new Date(), 'yyyy-MM-dd')}T00:00:00.000Z`;
+const DEEP_OF_STEP = 100;
 
 export class BitQueryService {
 
@@ -36,9 +39,18 @@ export class BitQueryService {
     [k: string]: boolean
   } = {};
 
+  awaiterPairStatisticsList: {
+    [k: string]: boolean
+  } = {};
+
+  cookie: string;
+  token: string;
+
   constructor(
     @InjectRedisClient('ray.sx') private readonly redisClient: Redis
   ) {
+    this.cookie = '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D';
+    this.token = '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ==';
   }
 
   private async getStatsTransfers(variables: {
@@ -46,11 +58,9 @@ export class BitQueryService {
     token: string
   }) {
     const {
-      body: {
-        data: {
-          stats: {
-            transfers
-          }
+      data: {
+        stats: {
+          transfers
         }
       }
     } = await got.post<BitQueryStatsTransfersQuery>('https://explorer.bitquery.io/proxy_graphql', {
@@ -93,10 +103,11 @@ export class BitQueryService {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br',
-        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
-        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
       },
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
     return transfers;
   }
@@ -106,11 +117,9 @@ export class BitQueryService {
     token: string
   }) {
     const {
-      body: {
-        data: {
-          stats: {
-            swaps
-          }
+      data: {
+        stats: {
+          swaps
         }
       }
     } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
@@ -140,10 +149,11 @@ export class BitQueryService {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br',
-        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
-        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
       },
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
     return swaps;
   }
@@ -154,11 +164,9 @@ export class BitQueryService {
     till: string
   }) {
     const {
-      body: {
-        data: {
-          stats: {
-            holders
-          }
+      data: {
+        stats: {
+          holders
         }
       }
     } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
@@ -180,10 +188,11 @@ export class BitQueryService {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br',
-        'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
-        'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
       },
-      responseType: 'json'
+      responseType: 'json',
+      resolveBodyOnly: true
     });
     return holders?.shift();
   }
@@ -199,11 +208,9 @@ export class BitQueryService {
     while (offsetStep < 10) {
       try {
         const {
-          body: {
-            data: {
-              stats: {
-                tradersDistributionValue
-              }
+          data: {
+            stats: {
+              tradersDistributionValue
             }
           }
         } = await got.post<BitQueryStatsTradersDistributionValueQuery>('https://explorer.bitquery.io/proxy_graphql', {
@@ -236,15 +243,105 @@ export class BitQueryService {
           headers: {
             'user-agent': CMC_USER_AGENT,
             'accept-encoding': 'gzip, deflate, br',
-            'Cookie': '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D',
-            'X-CSRF-Token': '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ=='
+            'Cookie': this.cookie,
+            'X-CSRF-Token': this.token
           },
-          responseType: 'json'
+          responseType: 'json',
+          resolveBodyOnly: true
         });
         if (!tradersDistributionValue.length) {
           break;
         }
         result = result.concat(tradersDistributionValue);
+      } catch (e) {
+        break;
+      }
+      offsetStep++;
+    }
+    return result;
+  }
+
+  private async getStatsPairStatistics(variables: {
+    network: 'ethereum' | 'bsc',
+    contracts: string[],
+    since: string
+    till: string
+  }): Promise<BitQueryStatsPairStatisticsQuery['data']['stats']['pairStatistics']> {
+    let result = [];
+    let offsetStep = 0;
+    while (offsetStep < DEEP_OF_STEP) {
+      try {
+        const {
+          data: {
+            stats: {
+              pairStatistics
+            }
+          }
+        } = await got.post<BitQueryStatsPairStatisticsQuery>('https://explorer.bitquery.io/proxy_graphql', {
+          json: {
+            query: `
+            query ($network: EthereumNetwork!, $contracts: [String!], $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
+              stats: ethereum(network: $network) {
+                pairStatistics: dexTrades(
+                  options: {desc: ["block.height", "tradeIndex"], limit: $limit, offset: $offset}
+                  smartContractAddress: {in: $contracts}
+                  date: {since: $since, till: $till}
+                  tradeAmountUsd: {gt: 0}
+                ) {
+                  maker {
+                    address
+                  }
+                  taker {
+                    address
+                  }
+                  block {
+                    timestamp {
+                      time(format: "%Y-%m-%d %H:%M:%S")
+                    }
+                    height
+                  }
+                  tradeIndex
+                  exchange {
+                    fullName
+                  }
+                  buyAmount(in: USD)
+                  buyCurrency {
+                    address
+                    symbol
+                  }
+                  sellAmount(in: USD)
+                  sellCurrency {
+                    address
+                    symbol
+                  }
+                  transaction {
+                    hash
+                  }
+                  exchange {
+                    fullName
+                  }
+                }
+              }
+            }
+            `,
+            variables: {
+              ...variables,
+              offset: 25000 * offsetStep
+            }
+          },
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br',
+            'Cookie': this.cookie,
+            'X-CSRF-Token': this.token
+          },
+          responseType: 'json',
+          resolveBodyOnly: true
+        });
+        if (!pairStatistics.length) {
+          break;
+        }
+        result = result.concat(pairStatistics);
       } catch (e) {
         break;
       }
@@ -561,6 +658,114 @@ export class BitQueryService {
         delete this.awaiterTradersDistributionValueList[cacheKey];
       }
       return [];
+    }
+  }
+
+  async statsPairStatistics(btcAddress_poolContract: string[], ethAddress_poolContract: string[], update = false): Promise<any> {
+    const [btcAddress, btcPoolContract] = btcAddress_poolContract.reduce<[string, string[]]>((_prev, pair) => {
+      const [_, prev] = _prev;
+      const [address, poolContract] = pair.split('_');
+      prev.push(poolContract);
+      return [address, prev];
+    }, ['', []]);
+    const [ethAddress, ethPoolContract] = ethAddress_poolContract.reduce<[string, string[]]>((_prev, pair) => {
+      const [_, prev] = _prev;
+      const [address, poolContract] = pair.split('_');
+      prev.push(poolContract);
+      return [address, prev];
+    }, ['', []]);
+    const tokenAddresses = `${btcAddress.toLowerCase()}:${ethAddress.toLowerCase()}`;
+    const since = sinceLastWeek();
+    const till = tillToday();
+    const cacheKey = `cmc:pairStatistics:${md5(`${btcPoolContract.join('_')}_${ethPoolContract.join('_')}`)}:${since}:${till}`;
+    try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+      if (cacheKey in this.awaiterPairStatisticsList) {
+        // console.log('statsPairStatistics.cacheKey in await');
+        if (cache && !update) {
+          return cache;
+        }
+        return [];
+      }
+      if (cache && !update) {
+        return cache;
+      }
+      if (!(cacheKey in this.awaiterPairStatisticsList)) {
+        this.awaiterPairStatisticsList[cacheKey] = true;
+      }
+      const trades = (await Promise.all(Object.entries({
+        btcContract: btcPoolContract,
+        ethContract: ethPoolContract
+      }).map(async ([key, contracts]) => {
+        switch (key) {
+          case 'btcContract': {
+            return ['btc', contracts.length ? await this.getStatsPairStatistics({
+              network: 'bsc',
+              contracts,
+              since,
+              till
+            }) : undefined];
+          }
+          case 'ethContract': {
+            return ['eth', contracts.length ? await this.getStatsPairStatistics({
+              network: 'ethereum',
+              contracts,
+              since,
+              till
+            }) : undefined];
+          }
+        }
+      }))).reduce<BitQueryStatsPairStatisticsQuery['data']['stats']['pairStatistics']>((prev, [, data]) => {
+        return Array.isArray(data) && data.length ? [...prev, ...data] : prev;
+      }, []);
+      const result = (({
+                         buyers,
+                         sellers,
+                         buyersVolume,
+                         sellersVolume,
+                         ...rest
+                       }) => {
+        const buyersUnique = [...new Set(buyers)];
+        const sellersUnique = [...new Set(sellers)];
+        return {
+          ...rest,
+          buyersVolume,
+          sellersVolume,
+          totalVolume: buyersVolume + sellersVolume,
+          buyersCount: buyersUnique.length,
+          sellersCount: sellersUnique.length,
+          buyersAndSellersCount: [...new Set([...buyersUnique, ...sellersUnique])].length
+        };
+      })(trades.reduce((prev, trade) => {
+        if (tokenAddresses.includes(trade.buyCurrency.address)) {
+          prev.tradesBuyCount++;
+          prev.buyers.push(trade.taker.address);
+          prev.buyersVolume += trade.buyAmount;
+        } else {
+          prev.tradesSellCount++;
+          prev.sellers.push(trade.taker.address);
+          prev.sellersVolume += trade.sellAmount;
+        }
+        return prev;
+      }, {
+        buyers: [],
+        buyersVolume: 0,
+        sellers: [],
+        sellersVolume: 0,
+        tradesBuyCount: 0,
+        tradesSellCount: 0
+      }));
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+      if (cacheKey in this.awaiterPairStatisticsList) {
+        delete this.awaiterPairStatisticsList[cacheKey];
+      }
+      return result;
+    } catch (e) {
+      // console.log('statsPairStatistics.error', e);
+      if (cacheKey in this.awaiterPairStatisticsList) {
+        delete this.awaiterPairStatisticsList[cacheKey];
+      }
+      return null;
     }
   }
 }

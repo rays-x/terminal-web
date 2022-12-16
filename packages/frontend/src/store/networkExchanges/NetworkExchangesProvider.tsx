@@ -1,53 +1,55 @@
 import React from 'react';
 import {NetworkExchangesContext} from './NetworkExchangesContext';
-import {useLocation, useNavigate, useParams} from 'react-router';
+import BSCIcon from '../../assets/icons/new/BSCIcon.png';
+import ETHIcon from '../../assets/icons/new/ETHIcon.png';
+import AVAXIcon from '../../assets/icons/new/AVAXIcon.svg';
+import MATICIcon from '../../assets/icons/new/MATICIcon.svg';
+import FantomIcon from '../../assets/icons/new/FantomIcon.svg';
 
 const data = [
   {
-    name: 'eth',
-    label: 'Ethereum Mainnet',
-    logo_url: 'https://www.covalenthq.com/static/images/icons/display-icons/ethereum-eth-logo.png',
-    color: 'rgb(115, 138, 225)',
-    dexes: [{
-      exchange: 'uniswap',
-      label: 'UniSwap',
-      logo_url: 'https://cryptologos.cc/logos/uniswap-uni-logo.png?v=023'
-    }]
+    name: 'bsc',
+    label: 'BSC',
+    logo: BSCIcon,
+    color: '#F0B90B'
   },
   {
-    name: 'bsc',
-    label: 'Binance Smart Chain',
-    logo_url: 'https://www.covalenthq.com/static/images/icons/display-icons/binance-coin-bnb-logo.png',
-    color: 'rgb(240, 185, 11)',
-    dexes: [{
-      exchange: 'pancakeswap',
-      label: 'PancakeSwap',
-      logo_url: 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png'
-    }]
+    name: 'eth',
+    label: 'ETH',
+    logo: ETHIcon,
+    color: '#FFFFFF'
+  },
+  {
+    name: 'avax',
+    label: 'AVAX',
+    logo: AVAXIcon,
+    soon: true
+  },
+  {
+    name: 'poly',
+    label: 'POLY',
+    logo: MATICIcon,
+    soon: true
+  },
+  {
+    name: 'fantom',
+    label: 'FANTOM',
+    logo: FantomIcon,
+    soon: true
   }
 ];
 
 export function NetworkExchangesProvider({children}: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const {pathname} = useLocation();
   const [network, setNetwork] = React.useState<string>();
-  const [exchange, switchExchange] = React.useState<string>();
-  const switchNetwork = (_name?: string, silent = true) => {
-    const network = data.find(({name}) => name === _name) || data[0];
-    setNetwork(network.name);
-    switchExchange(network.dexes[0].exchange);
-    if (!silent && _name && pathname !== '/') {
-      navigate('/');
-    }
+  const switchNetwork = (_name?: string) => {
+    const network = data.find(({name}) => name === _name);
+    setNetwork(network?.name);
   };
-  React.useEffect(() => {
-    switchNetwork(undefined, true);
-  }, []);
 
   return (
     <NetworkExchangesContext.Provider
-      value={{data, network, switchNetwork, exchange, switchExchange}}>
-      {data && network && exchange && children}
+      value={{data, network, switchNetwork}}>
+      {children}
     </NetworkExchangesContext.Provider>
   );
 }

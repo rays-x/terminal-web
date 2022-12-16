@@ -1,3 +1,5 @@
+import {TradingPairStatistics} from './pages/TradingPairStatistics/TradingPairStatistics';
+
 export interface PageButton {
   width: number;
   height: number;
@@ -8,7 +10,8 @@ export enum SubPages {
   PriceChart = 'PriceChart',
   Transactions = 'Transactions',
   TokenStats = 'TokenStats',
-  TradingStats = 'TradingStats'
+  TradingStats = 'TradingStats',
+  TradingPairStatistics = 'TradingPairStatistics',
   // Pair = 'Pair',
   // Dex = 'Dex',
   // Traders = 'Traders',
@@ -281,6 +284,21 @@ export type TransactionType = {
   tx: string
 }
 
+export type PoolType = {
+  pair: string,
+  icons: [string, string]
+  trades: number
+  buys: number
+  sells: number
+  traders: number
+  buyers: number
+  sellers: number
+  volume: number
+  volumeBuy: number
+  volumeSell: number
+  liquidity: number
+}
+
 export interface Platform {
   id: number;
   name: string;
@@ -289,12 +307,14 @@ export interface Platform {
 }
 
 export interface BaseToken {
+  id: string;
   name: string;
   symbol: string;
   address: string;
 }
 
 export interface QuoteToken {
+  id: string;
   name: string;
   symbol: string;
   address: string;
@@ -306,6 +326,7 @@ export interface DexerInfo {
 }
 
 export interface TransactionsPairs {
+  address?: string;
   poolId: string;
   platform: Platform;
   baseToken: BaseToken;
@@ -315,7 +336,7 @@ export interface TransactionsPairs {
   volume24h: string;
   liquidity: string;
   priceChange24h: string;
-  pairContractAddress: string;
+  pairContractAddress?: string;
   updateDate: any;
   liquidityScore: string;
   confidenceScore: string;
@@ -411,4 +432,15 @@ export interface StatsTradingDistributionValueResponse {
   tradeAmount: number;
   userCount: number;
   swapsCount: number;
+}
+
+export interface StatsPairStatisticsResponse {
+  tradesBuyCount: number;
+  tradesSellCount: number;
+  buyersVolume: number;
+  sellersVolume: number;
+  totalVolume: number;
+  buyersCount: number;
+  sellersCount: number;
+  buyersAndSellersCount: number;
 }

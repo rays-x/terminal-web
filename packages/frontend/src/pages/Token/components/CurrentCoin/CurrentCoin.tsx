@@ -18,10 +18,8 @@ import {useParams} from 'react-router';
 import {CMC_ID_ETH} from '../../../../constants/coinmarketcap';
 
 export const CurrentCoin = React.memo(() => {
-  const {token} = useParams();
   const currentCoinData = useContext(CurrentCoinData);
-  const [, cmcId] = token.split('_');
-  const CMC_ID = Number(cmcId);
+  const CMC_ID = Number(currentCoinData.id);
 
   return (
     <Card>
