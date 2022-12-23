@@ -1,7 +1,7 @@
 import {get} from 'lodash';
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
-import got from 'got';
+import got, {Got} from 'got';
 import {Inject, OnModuleInit} from '@nestjs/common';
 import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
@@ -11,6 +11,8 @@ import {CmcPairListResponse} from '../types';
 import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
 import {BitQueryService} from './BitQuery';
 import {CovalentService} from './Covalent';
+import {OptionsOfJSONResponseBody} from 'got/dist/source/types';
+import qs from 'qs';
 
 type UniToken = {
   chainId: number;
@@ -22,7 +24,7 @@ type UniToken = {
   slug: string;
 }
 
-type CmcToken = {
+export type CmcToken = {
   id: string,
   slug: string,
   name: string,
@@ -47,7 +49,7 @@ const CMC_ID_PANCAKE_V2 = 1344;
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-export class CoinMarketCapScraperService implements OnModuleInit {
+export class CoinMarketCapScraperService {
 
   awaiterPairsList: {
     [k: string]: boolean
@@ -73,9 +75,31 @@ export class CoinMarketCapScraperService implements OnModuleInit {
   ) {
   }
 
-  async onModuleInit() {
-    this.addInfoToUniTokens().catch();
-    this.addInfoToPanTokens().catch();
+  async proxyRequest<T>(_url: string = undefined, {
+    url = undefined,
+    pathname = undefined,
+    searchParams = undefined,
+    ...rest
+  }: OptionsOfJSONResponseBody) {
+    try {
+      return got.get<T>(_url, {
+        url,
+        pathname,
+        searchParams,
+        ...rest,
+        resolveBodyOnly: true
+      });
+    } catch (e) {
+      const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
+        addQueryPrefix: true
+      })}`;
+      const encodeUri = encodeURIComponent(uri);
+      return got.get<T>(`https://translate.yandex.ru/translate?url=${encodeUri}`, {
+        ...rest,
+        followRedirect: true,
+        resolveBodyOnly: true
+      });
+    }
   }
 
   private async getUniTokens(): Promise<typeof this._uniTokens> {
@@ -86,12 +110,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       return cache;
     }
     Logger.debug(`waiting for: ${cacheKey}...`);
-    const {fields, values} = await got.get<{
+    const {fields, values} = await this.proxyRequest<{
       fields: string[],
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
-      responseType: 'json',
-      resolveBodyOnly: true
+      responseType: 'json'
     });
     const slugIndex = fields.indexOf('slug');
     const addressIndex = fields.indexOf('address');
@@ -105,11 +128,10 @@ export class CoinMarketCapScraperService implements OnModuleInit {
           item[addressIndex].map(_ => _.toLowerCase())
         ])
     );
-    const {tokens} = await got.get <{
+    const {tokens} = await this.proxyRequest <{
       tokens: Omit<UniToken, 'slug'>[]
     }>('https://api.coinmarketcap.com/data-api/v3/uniswap/all.json', {
-      responseType: 'json',
-      resolveBodyOnly: true
+      responseType: 'json'
     });
     this._uniTokens = Object.fromEntries(tokens.reduce((prev, {address = ''}) => {
       let slug = Object.entries(slugs).find(([, addresses]) => {
@@ -144,12 +166,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       return cache;
     }
     Logger.debug(`waiting for: ${cacheKey}...`);
-    const {fields, values} = await got.get<{
+    const {fields, values} = await this.proxyRequest<{
       fields: string[],
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
-      responseType: 'json',
-      resolveBodyOnly: true
+      responseType: 'json'
     });
     const slugIndex = fields.indexOf('slug');
     const addressIndex = fields.indexOf('address');
@@ -189,12 +210,11 @@ export class CoinMarketCapScraperService implements OnModuleInit {
 
   private async getTokenData(slug: string) {
     await awaiter(this.awaitTime);
-    const body = await got.get<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
+    const body = await this.proxyRequest<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br'
-      },
-      resolveBodyOnly: true
+      }
     });
     const regex = body.match(/<script id="__NEXT_DATA__" type="application\/json">(?<jsonData>.+)<\/script>/m);
     const data = JSON.parse(get(regex, 'groups.jsonData', 'null') || 'null');
@@ -376,7 +396,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       return cache;
     }
     await Promise.all(pairs.map(async (pair) => {
-      const {body} = await got.get(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-info`, {
+      const body = await this.proxyRequest(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-info`, {
         headers: {
           'user-agent': CMC_USER_AGENT,
           'accept-encoding': 'gzip, deflate, br'
@@ -419,14 +439,13 @@ export class CoinMarketCapScraperService implements OnModuleInit {
     }
     try {
       const getData = async (params, prev: CmcPairListResponse['data']): Promise<CmcPairListResponse['data']> => {
-        const {data} = await got.get<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+        const {data} = await this.proxyRequest<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
           headers: {
             'user-agent': CMC_USER_AGENT,
             'accept-encoding': 'gzip, deflate, br'
           },
           searchParams: params,
-          responseType: 'json',
-          resolveBodyOnly: true
+          responseType: 'json'
         });
         return !data?.length
           ? prev
@@ -488,7 +507,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
       const [pairId, reversOrder, from] = String(params).split('_');
       const {
         data: {transactions}
-      } = await got.get<TransactionsResponse>({
+      } = await this.proxyRequest<TransactionsResponse>(undefined, {
         headers: {
           'user-agent': CMC_USER_AGENT,
           'accept-encoding': 'gzip, deflate, br'
@@ -501,8 +520,7 @@ export class CoinMarketCapScraperService implements OnModuleInit {
         } : {
           'reverse-order': reversOrder === 'true'
         },
-        responseType: 'json',
-        resolveBodyOnly: true
+        responseType: 'json'
       });
       return [
         pairId,

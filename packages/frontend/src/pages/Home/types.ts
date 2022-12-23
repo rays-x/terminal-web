@@ -105,6 +105,11 @@ export type TablePair = {
   marketCap: number,
   liquidity: number,
   cmcId?: number
+  platforms: {
+    id: string
+    address: string
+    platformId: string
+  }[]
 }
 export type TableData = {
   tokens: TablePair[]
@@ -442,4 +447,9 @@ export interface PrototypePair {
   priceChangePercentage1h: number;
   priceChangePercentage24h: number;
   cmcId: number;
+  platforms: {
+    id: string
+    address: string
+    platformId: string
+  }[];
 }

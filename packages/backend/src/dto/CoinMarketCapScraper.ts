@@ -1,12 +1,14 @@
-import {IsArray, IsEnum, IsNumberString, IsOptional, IsString} from 'class-validator';
+import {IsArray, IsEnum, IsMongoId, IsNumberString, IsOptional, IsString} from 'class-validator';
 import {ApiProperty, ApiPropertyOptional} from '@nestjs/swagger';
+import {Types} from 'mongoose';
 
-enum TokensSortBy {
-  marketCap = 'marketCap',
+export enum TokensSortBy {
   symbol = 'symbol',
-  liquidity = 'liquidity',
   volume = 'volume',
   volumeChangePercentage24h = 'volumeChangePercentage24h',
+
+  marketCap = 'marketCap',
+  liquidity = 'liquidity',
   circulatingSupply = 'circulatingSupply',
   price = 'price',
   priceChangePercentage1h = 'priceChangePercentage1h',
@@ -21,6 +23,11 @@ export enum TokensSortOrder {
 export enum Network {
   bsc = 'bsc',
   eth = 'eth',
+}
+
+export enum Chains {
+  bsc = 51,
+  eth = 1,
 }
 
 export class QueryTokensDto {
@@ -38,6 +45,47 @@ export class QueryTokensDto {
     isArray: true
   })
   networks: Network[] = [Network.bsc, Network.eth];
+
+  @IsOptional()
+  @IsNumberString()
+  @ApiPropertyOptional()
+  limit?: string = '20';
+
+  @IsOptional()
+  @IsNumberString()
+  @ApiPropertyOptional()
+  offset?: string = '0';
+
+  @IsOptional()
+  @IsEnum(TokensSortBy)
+  @ApiPropertyOptional({
+    enum: TokensSortBy
+  })
+  sortBy?: TokensSortBy = TokensSortBy.marketCap;
+
+  @IsOptional()
+  @IsEnum(TokensSortOrder)
+  @ApiPropertyOptional({
+    enum: TokensSortOrder
+  })
+  sortOrder?: TokensSortOrder = TokensSortOrder.desc;
+}
+
+export class NewQueryTokensDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  search?: string;
+
+  @IsOptional()
+  @IsMongoId({
+    each: true
+  })
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true
+  })
+  chains?: Types.ObjectId[] = [];
 
   @IsOptional()
   @IsNumberString()

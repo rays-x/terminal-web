@@ -12,3 +12,17 @@
 .Token__icon {
   margin-right: 11px;
 }
+
+.Token__platform {
+  margin-left: 6px;
+  height: 16px;
+  font-family: 'Work Sans', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 20px;
+  padding: 0 4.72px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}

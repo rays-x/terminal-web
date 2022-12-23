@@ -6,26 +6,27 @@ import {NavigationStyled, NetworkGroup} from '../../_old/ui/Navigation/Navigatio
 import s from '../../../pages/Home/components/TokenList.module.scss';
 
 export function NetworkSelect({className}: { className?: string }) {
-  const {data, network, switchNetwork} = useNetworkExchanges();
+  const {data, networks, switchNetwork} = useNetworkExchanges();
   return (
     <div className={s.TokenListPage__headingNetworkSelectorContainer}>
       <NavigationStyled.NetworkGroup>
         <NavigationStyled.NetworkButton
-          selected={!network}
+          selected={!networks.length}
           onClick={() => {
             switchNetwork(undefined);
           }}
         >
           All Networks
         </NavigationStyled.NetworkButton>
-        {data.map(({name, label, color, logo, soon}) => (
+        {data.map(({id, label, color, logo, soon, beta}) => (
           <NavigationStyled.NetworkButton
-            key={name}
+            key={id}
             logo={logo}
             borderColor={color}
             soon={soon}
-            selected={network === name}
-            onClick={() => soon ? undefined : switchNetwork(name)}
+            beta={beta}
+            selected={networks.includes(id)}
+            onClick={() => soon ? undefined : switchNetwork(id)}
           >
             {label}
           </NavigationStyled.NetworkButton>

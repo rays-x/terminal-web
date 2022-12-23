@@ -59,14 +59,14 @@ const TokenList = React.memo(() => {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState(SortByColumn.MARKET_CAP);
     const [sortDescending, setSortDescending] = useState(true);
-    const {network} = useNetworkExchanges();
+    const {networks} = useNetworkExchanges();
     const [tableData, setTableData] = React.useState<TableData>({
       tokens: [],
       tokensCount: 0
     });
     const dataUri = React.useMemo(() => {
       const params = qs.stringify({
-        networks: [network],
+        chains: networks,
         limit: rowsShow,
         offset: rowsShow * (page - 1),
         sortBy,
@@ -75,8 +75,8 @@ const TokenList = React.memo(() => {
       }, {
         addQueryPrefix: true
       });
-      return `${import.meta.env.VITE_BACKEND_URL}/cmc/tokens/${params}`;
-    }, [page, rowsShow, sortBy, sortDescending, search, network]);
+      return `${import.meta.env.VITE_BACKEND_URL}/tokens/${params}`;
+    }, [page, rowsShow, sortBy, sortDescending, search, networks]);
     const {sendMessage, lastMessage} = useCmcSocket();
     const [{data, loading}, getData] = useLazyFetch<{
       tokens: PrototypePair[],
@@ -102,7 +102,8 @@ const TokenList = React.memo(() => {
           marketCap: token.marketCap,
           liquidity: token.liquidity,
           circulatingSupply: token.circulatingSupply,
-          cmcId: token.cmcId
+          cmcId: token.cmcId,
+          platforms: token.platforms
         };
       });
       if (tokens.length) {
@@ -173,7 +174,7 @@ const TokenList = React.memo(() => {
     }, [lastMessage]);
     React.useEffect(() => {
       setPage(1);
-    }, [search, network]);
+    }, [search, networks]);
     React.useEffect(() => {
       getData({url: dataUri}).finally();
       return () => {
@@ -281,7 +282,7 @@ const TokenList = React.memo(() => {
                         return (
                           <TableRowLink key={token.id} to={`/token/${token.slug}`}>
                             <RowNumber>{rowsShow * (page - 1) + 1 + i}</RowNumber>
-                            <Token icons={icons}>{token.symbol}</Token>
+                            <Token icons={icons} platforms={token.platforms}>{token.symbol}</Token>
                             <RowText>{valueOrDash(millify(token.liquidity))}</RowText>
                             <RowText>{valueOrDash(millify(token.volume))}</RowText>
                             {/*<PercentageChange>{token.volume_change_1h}</PercentageChange>*/}

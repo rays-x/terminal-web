@@ -39,9 +39,7 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
     selectedOption: 10
   });*/
   const currentCoinData = React.useContext(CurrentCoinData);
-  const {token} = useParams();
-  const [, cmcId] = token.split('_');
-  const CMC_ID = Number(cmcId);
+  const CMC_ID = Number(currentCoinData.id);
   const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
   const {data: _data, loading: loading} = useFetch<CmcVolume>({
     url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/historical`,

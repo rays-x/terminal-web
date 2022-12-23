@@ -1,6 +1,5 @@
 import React from 'react';
 import {NetworkWalletContext} from './NetworkWalletContext';
-import {useLocation, useNavigate} from 'react-router';
 import BSCWalletIcon from '../../assets/icons/new/BSCWalletIcon.png';
 import EthWalletIcon from '../../assets/icons/new/EthWalletIcon.svg';
 import MATICWalletIcon from '../../assets/icons/new/MATICWalletIcon.svg';
@@ -34,18 +33,13 @@ const data = [
 ];
 
 export function NetworkWalletProvider({children}: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const {pathname} = useLocation();
   const [network, setNetwork] = React.useState<string>();
-  const switchNetwork = (_name?: string, silent = true) => {
+  const switchNetwork = (_name?: string) => {
     const network = data.find(({name}) => name === _name) || data[0];
     setNetwork(network.name);
-    if (!silent && _name && pathname !== '/') {
-      navigate('/');
-    }
   };
   React.useEffect(() => {
-    switchNetwork(undefined, true);
+    switchNetwork(undefined);
   }, []);
 
   return (

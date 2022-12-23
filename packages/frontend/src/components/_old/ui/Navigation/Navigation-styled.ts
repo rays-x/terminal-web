@@ -30,6 +30,7 @@ export const NetworkButton = styled.div<{
   selected?: boolean
   logo?: string
   soon?: boolean
+  beta?: boolean
 }>`
   ${({borderColor = 'rgba(255, 255, 255, 0.32)', selected, logo}) => {
     return selected ? (logo ? css`
@@ -67,11 +68,9 @@ export const NetworkButton = styled.div<{
   border-radius: 12px;
   gap: 7px;
   white-space: nowrap;
-  ${({soon}) => {
-    return soon ? css`
-      cursor: default;
+  ${({soon, beta}) => {
+    const soonOrBetaSharedStyles = css`
       &::after {
-        content: 'Soon';
         padding: 0 8.31px;
         margin-left: 2px;
         font-family: 'Work Sans', sans-serif;
@@ -86,7 +85,21 @@ export const NetworkButton = styled.div<{
         display: flex;
         align-items: center;
       }
+    `
+    return soon || beta ? (soon ? css`
+      cursor: default;
+      &::after {
+        content: 'Soon';
+      }
+      ${soonOrBetaSharedStyles}
     ` : css`
+      &::after {
+        content: 'Beta';
+      }
+
+      cursor: pointer;
+      ${soonOrBetaSharedStyles}
+    `) : css`
       cursor: pointer;
     `;
   }}

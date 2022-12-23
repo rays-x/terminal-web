@@ -10,11 +10,11 @@ import {useNetworkExchanges} from '../../store/networkExchanges';
 
 const Token = React.memo(() => {
   const {chain, token} = useParams();
-  const {switchNetwork} = useNetworkExchanges();
+  // const {switchNetwork} = useNetworkExchanges();
   const [isOpen, changeDisplayMode] = React.useState(false);
-  React.useEffect(() => {
+  /*React.useEffect(() => {
     switchNetwork(chain, true);
-  }, []);
+  }, []);*/
   return (
     <PageLayout>
       <Header/>
