@@ -192,6 +192,7 @@ export interface Holders {
 
 export interface Data {
   id: number;
+  cmc: number;
   name: string;
   symbol: string;
   slug: string;
@@ -239,6 +240,7 @@ export interface CmcDetail {
 }
 
 export type CoinMainPage = {
+  cmc?: number
   circulation_supply?: number;
   daily_volume?: number;
   daily_volume_change?: number;

@@ -17,7 +17,13 @@
 .Pair__icon {
   border-radius: 50%;
 }
+
 .Pair__icons {
   display: flex;
   margin-right: 11px;
+
+}
+
+.Pair__icons img {
+  max-width: inherit;
 }

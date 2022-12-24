@@ -4,7 +4,6 @@ import {CurrentCoin} from './components/CurrentCoin/CurrentCoin';
 import {Statistic} from './components/Statistic/Statistic';
 import {SubPage} from './components/SubPage/SubPage';
 import {Loader} from '../../components/_old/ui/Loader/Loader';
-import {useAdaptiveTriggers} from '../../hooks/useAdaptiveTrigger';
 import {useFetch} from '../../hooks';
 import {CmcDetail, CoinMainPage} from './types';
 import {useParams} from 'react-router';
@@ -21,12 +20,9 @@ export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(un
 export const CoinPage: FC = React.memo(() => {
   const {token: slug} = useParams();
   const [data, setData] = React.useState<CoinMainPage>();
-  const CMC_ID = Number(data?.id);
-  const {data: _data, loading} = useFetch<CmcDetail>({
-    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/detail`,
-    params: {
-      slug: slug
-    },
+  const CMC_ID = data?.cmc;
+  const {data: _data, loading} = useFetch<CmcDetail['data']>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${slug}`,
     withCredentials: false
   });
   const {data: _dataBtc, loading: loadingBtc} = useFetch<CmcDetail>({
@@ -46,10 +42,10 @@ export const CoinPage: FC = React.memo(() => {
   const {sendMessage, lastMessage} = useCmcSocket();
 
   React.useEffect(() => {
-    if (!_data || !_dataBtc || !_dataEth) {
+    if(!_data || !_dataBtc || !_dataEth) {
       return;
     }
-    const {data} = _data;
+    const data = _data;
     const {data: dataBtc} = _dataBtc;
     const {data: dataEth} = _dataEth;
     setData({
@@ -59,7 +55,8 @@ export const CoinPage: FC = React.memo(() => {
       fully_diluted_mc: data.statistics.fullyDilutedMarketCap,
       fully_diluted_mc_change: data.statistics.fullyDilutedMarketCapChangePercentage24h,
       id: String(data.id),
-      image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${data.id}.png`,
+      cmc: Number(data.cmc),
+      image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${data.cmc}.png`,
       rank: String(data.statistics.rank || '') || undefined,
       index: data.symbol,
       link_binance: undefined,
@@ -74,8 +71,8 @@ export const CoinPage: FC = React.memo(() => {
           : undefined
       ),
       name: data.name,
-      platform_binance: get(get(data, 'platforms', []).find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined,
-      platform_ethereum: get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined,
+      platform_binance: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 56), 'address', '').toLowerCase() || undefined,
+      platform_ethereum: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 1), 'address', '').toLowerCase() || undefined,
       price_btc: (1 / dataBtc.statistics.price) * data.statistics.price,
       price_change_1h: data.statistics.priceChangePercentage1h,
       price_change_7d: data.statistics.priceChangePercentage7d,
@@ -95,7 +92,7 @@ export const CoinPage: FC = React.memo(() => {
   }, [_data, _dataBtc, _dataEth]);
 
   React.useEffect(() => {
-    if (!CMC_ID) {
+    if(!CMC_ID) {
       return;
     }
     sendMessage({
@@ -115,24 +112,24 @@ export const CoinPage: FC = React.memo(() => {
   }, [CMC_ID]);
 
   React.useEffect(() => {
-    if (!lastMessage) {
+    if(!lastMessage) {
       return;
     }
     const {id, d} = lastMessage;
-    switch (id) {
+    switch(id) {
       case 'price': {
         const {cr} = d;
-        if (
+        if(
           data?.price_usd === undefined
           || data?.price_change_24h === undefined
         ) {
           return;
         }
         setData(prev => {
-          switch (cr.id) {
+          switch(cr.id) {
             case CMC_ID: {
               Object.keys(cr).forEach(key => {
-                switch (key) {
+                switch(key) {
                   case 'p': {
                     prev['price_usd'] = cr.p || prev['price_usd'];
                     break;
@@ -188,13 +185,12 @@ export const CoinPage: FC = React.memo(() => {
       }
     }
   }, [lastMessage]);
-  const {isMobile} = useAdaptiveTriggers({});
   // console.log(data?.price_usd);
   return (
     <CmcTokenSocketProvider>
       <CurrentCoinData.Provider value={{...data}}>
         {
-          (loading || loadingBtc || loadingEth)
+          (!data || loading || loadingBtc || loadingEth)
             ? (
               <Loader/>
             ) : (

@@ -14,12 +14,11 @@ import Share from '../../../../assets/icons/Share';
 import Bell from '../../../../assets/icons/Bell';
 import Fall from '../../../../assets/icons/fall';
 import Rise from '../../../../assets/icons/rise';
-import {useParams} from 'react-router';
 import {CMC_ID_ETH} from '../../../../constants/coinmarketcap';
 
 export const CurrentCoin = React.memo(() => {
   const currentCoinData = useContext(CurrentCoinData);
-  const CMC_ID = Number(currentCoinData.id);
+  const CMC_ID = Number(currentCoinData?.cmc);
 
   return (
     <Card>

@@ -2,7 +2,6 @@ import React from 'react';
 import s from './Pair.module.scss';
 import {Image} from '../../Image';
 
-// TODO: add default icon
 export function Pair({children, icons}: { children: string; icons: [string, string] }) {
   return (
     <div className={s.Pair}>

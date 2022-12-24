@@ -1,19 +1,8 @@
-import {Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, Req} from '@nestjs/common';
+import {Controller, Get, HttpCode, Param, Query} from '@nestjs/common';
 import {ApiParam, ApiTags} from '@nestjs/swagger';
-import {Request} from 'express';
-import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
 import {
-  NewQueryTokensDto,
-  QueryPairListDto,
-  QueryPairsInfoDto,
-  QueryTokensDto, QueryTransactionsDto,
-  TokensSortOrder,
-  TransactionsResponse
+  NewQueryTokensDto, TokenIdDto, TokenSlugDto, TokenVolumeDto,
 } from '../dto/CoinMarketCapScraper';
-import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
-import {get} from 'lodash';
-import got from 'got';
-import {HttpStatusMessages} from '../messages/http';
 import {TokenService} from '../services/Token';
 
 @ApiTags('token')
@@ -40,10 +29,34 @@ export class TokenController {
       chains,
       ...args
     }));
-    const result = {
+    return {
       tokens,
       tokensCount
     };
-    return result;
+  }
+
+  @Get('token/:slug')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'slug',
+    type: String
+  })
+  async token(
+    @Param() {slug}: TokenSlugDto,
+  ) {
+    return this.service.token(slug);
+  }
+
+  @Get('token/:id/volume')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async volume(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenVolumeDto
+  ) {
+    return this.service.volume(id, args)
   }
 }

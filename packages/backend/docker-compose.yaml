@@ -36,7 +36,9 @@ networks:
 volumes:
   mongo-db:
     name: "ray_mongo-db"
+    external: true
   mongo-db-config:
     name: "ray_mongo-db-config"
   redis:
     name: "ray_redis"
+    external: true

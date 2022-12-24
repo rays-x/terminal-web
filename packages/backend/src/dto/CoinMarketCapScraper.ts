@@ -112,6 +112,30 @@ export class NewQueryTokensDto {
   sortOrder?: TokensSortOrder = TokensSortOrder.desc;
 }
 
+export class TokenIdDto {
+  @IsMongoId()
+  @ApiProperty()
+  id!: Types.ObjectId;
+}
+
+export class TokenSlugDto {
+  @IsString()
+  @ApiProperty()
+  slug!: string;
+}
+
+export class TokenVolumeDto {
+  @IsOptional()
+  @IsNumberString()
+  @ApiPropertyOptional()
+  limit?: string = '100';
+
+  @IsOptional()
+  @IsNumberString()
+  @ApiPropertyOptional()
+  offset?: string = '0';
+}
+
 export class QueryPairsInfoDto {
   @IsString({
     each: true

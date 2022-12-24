@@ -256,7 +256,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
             }
             const result = {
               pair: `${currentCoinData.index} / ${key}`,
-              tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${currentCoinData.id}.png`,
+              tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${currentCoinData.cmc}.png`,
               tokenVersusIcon,
               poolLiquidity: poolLiquidity.reduce((p, n) => Number(p) + Number(n), 0),
               ...data

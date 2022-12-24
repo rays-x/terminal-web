@@ -15,13 +15,14 @@ import {ReturnModelType} from '@typegoose/typegoose';
 import {InjectModel} from 'nestjs-typegoose';
 import TokenTagEntity from '../entities/Token/TokenTag';
 import TokenPlatformEntity from '../entities/Token/TokenPlatforms';
-import {Types} from 'mongoose';
 import {Logger} from '../config/logger/api-logger';
-import {NewQueryTokensDto, TokensSortBy, TokensSortOrder} from '../dto/CoinMarketCapScraper';
+import {NewQueryTokensDto, TokensSortBy, TokensSortOrder, TokenVolumeDto} from '../dto/CoinMarketCapScraper';
 import {CmcToken} from './CoinMarketCapScraper';
-import TokenHistory from '../entities/Token/TokenHistory';
+import TokenHistory, {TokenHistoryEntityDefaultSelect} from '../entities/Token/TokenHistory';
 import {addDays, format, differenceInDays} from 'date-fns';
 import {CoinMarketCapHistoricalResponse} from '../types/CoinMarketCap/CoinMarketCapHistoricalResponse';
+import {BaseDocumentType, Types} from "mongoose";
+import {TokenVolumeItem} from "../types/Token/TokenVolumeItem";
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
 
@@ -52,8 +53,8 @@ export class TokenService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    this.addInfoToCmcTokens().catch();
-    this.history().catch();
+    // this.addInfoToCmcTokens().catch();
+    // this.history().catch();
   }
 
   private async proxyRequest<T>(_url: string = undefined, {
@@ -70,7 +71,7 @@ export class TokenService implements OnModuleInit {
         ...rest,
         resolveBodyOnly: true
       });
-    } catch (e) {
+    } catch(e) {
       console.log('mirror request', get(e, 'message', e));
       const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
         addQueryPrefix: true
@@ -120,7 +121,7 @@ export class TokenService implements OnModuleInit {
     const tokenSlugsNew = tokenSlugs.filter((slug) => tokenExistsSlugs.indexOf(slug) === -1);
     const tokenSlugsNeedUpdate = tokenSlugs.filter((slug) => {
       const found = tokenExists.find(({slug: _}) => _ === slug);
-      if (!found) return false;
+      if(!found) return false;
       return !found?.cmcAdded;
     });
     const tokenSlugsOld = tokenExistsSlugs.filter((slug) => tokenSlugs.indexOf(slug) === -1);
@@ -128,10 +129,10 @@ export class TokenService implements OnModuleInit {
     console.log(`tokenSlugsNeedUpdate:${tokenSlugsNeedUpdate.length}`);
     Logger.debug(`tokenSlugsOld:${tokenSlugsOld.length}`);
     await promiseMap([...new Set([...tokenSlugsNew, ...tokenSlugsNeedUpdate])], async (slug) => {
-      for (let i = 1; i < 6; i++) {
+      for(let i = 1; i < 6; i++) {
         try {
           const data = await this.getTokenData(slug);
-          if (data) {
+          if(data) {
             try {
               await this.repoToken.findOneAndUpdate({slug},
                 {
@@ -217,13 +218,13 @@ export class TokenService implements OnModuleInit {
                 });
               console.log('updated', slug);
               break;
-            } catch (e) {
+            } catch(e) {
               console.error(e);
             }
           } else {
             await awaiter(i * 30 * 1000);
           }
-        } catch (e) {
+        } catch(e) {
           await awaiter(i * 60 * 1000);
         }
       }
@@ -321,42 +322,42 @@ export class TokenService implements OnModuleInit {
       ]
     } : filterShared;
     const [tokens, tokensCount] = await Promise.all([this.repoToken.find(filter)
-      .skip(Number(offset))
-      .limit(Number(limit))
-      .sort((() => {
-        return `${sortOrder === TokensSortOrder.desc ? '-' : ''}${(() => {
-          switch (sortBy) {
-            case TokensSortBy.symbol: {
-              return 'symbol';
-            }
-            case TokensSortBy.volume: {
-              return 'volume';
-            }
-            case TokensSortBy.volumeChangePercentage24h: {
-              return 'volumeChangePercentage24h';
-            }
-            case TokensSortBy.marketCap: {
-              return 'statistics.marketCap';
-            }
-            case TokensSortBy.liquidity: {
-              return 'statistics.fullyDilutedMarketCap';
-            }
-            case TokensSortBy.circulatingSupply: {
-              return 'statistics.circulatingSupply';
-            }
-            case TokensSortBy.price: {
-              return 'statistics.price';
-            }
-            case TokensSortBy.priceChangePercentage1h: {
-              return 'statistics.priceChangePercentage1h';
-            }
-            case TokensSortBy.priceChangePercentage24h: {
-              return 'statistics.priceChangePercentage24h';
-            }
+    .skip(Number(offset))
+    .limit(Number(limit))
+    .sort((() => {
+      return `${sortOrder === TokensSortOrder.desc ? '-' : ''}${(() => {
+        switch(sortBy) {
+          case TokensSortBy.symbol: {
+            return 'symbol';
           }
-        })()}`;
-      })())
-      .select([...TokenEntityDefaultSelect]),
+          case TokensSortBy.volume: {
+            return 'volume';
+          }
+          case TokensSortBy.volumeChangePercentage24h: {
+            return 'volumeChangePercentage24h';
+          }
+          case TokensSortBy.marketCap: {
+            return 'statistics.marketCap';
+          }
+          case TokensSortBy.liquidity: {
+            return 'statistics.fullyDilutedMarketCap';
+          }
+          case TokensSortBy.circulatingSupply: {
+            return 'statistics.circulatingSupply';
+          }
+          case TokensSortBy.price: {
+            return 'statistics.price';
+          }
+          case TokensSortBy.priceChangePercentage1h: {
+            return 'statistics.priceChangePercentage1h';
+          }
+          case TokensSortBy.priceChangePercentage24h: {
+            return 'statistics.priceChangePercentage24h';
+          }
+        }
+      })()}`;
+    })())
+    .select([...TokenEntityDefaultSelect]),
       this.repoToken.count(filter)
     ]);
     return {
@@ -391,7 +392,7 @@ export class TokenService implements OnModuleInit {
     };
   }
 
-  async history() {
+  private async history() {
     const filterShared = {
       $or: [
         {
@@ -496,5 +497,29 @@ export class TokenService implements OnModuleInit {
       console.log('history done', token.cmc, tokens.findIndex(({slug}) => slug === token.slug) + 1, 'of', tokens.length);
     });
     console.log('history finished of:', tokens.length);
+  }
+
+  async token(slug: string): Promise<any> {
+    return this.repoToken.findOne({slug});
+  }
+
+  async volume(token: Types.ObjectId, {limit, offset,}: TokenVolumeDto): Promise<{
+    items: TokenVolumeItem[],
+    count: number
+  }> {
+    const filter = {
+      token
+    }
+    const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit))
+    .sort('-date')
+    .select([...TokenHistoryEntityDefaultSelect]),
+      this.repoTokenHistory.count(filter)
+    ]);
+    return {
+      items,
+      count
+    };
   }
 }

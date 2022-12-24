@@ -23,6 +23,7 @@ import {CurrentCoinData} from '../../../../CoinPage';
 import {useParams} from 'react-router';
 import {format, startOfDay, subDays} from 'date-fns';
 import {get, takeRight} from 'lodash';
+import {TokenVolumeResponse} from "./types";
 /*
 const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -39,28 +40,24 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
     selectedOption: 10
   });*/
   const currentCoinData = React.useContext(CurrentCoinData);
-  const CMC_ID = Number(currentCoinData.id);
   const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
-  const {data: _data, loading: loading} = useFetch<CmcVolume>({
-    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/historical`,
+  const {data: _data, loading: loading} = useFetch<TokenVolumeResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/volume`,
     params: {
-      id: CMC_ID,
-      convertId: CMC_USD_ID,
-      timeStart: startOfDay(subDays(new Date(), 19)).getTime() / 1000,
-      timeEnd: startOfDay(subDays(new Date(), 1)).getTime() / 1000
+      limit: 10000
     },
     withCredentials: false
   });
 
   React.useEffect(() => {
-    if (!_data || !currentCoinData) {
+    if(!_data || !currentCoinData) {
       return;
     }
-    const items = get(_data, 'data.quotes', [])
-      .map(({quote: {timestamp, volume}}: Quote) => ({
-        date: format(new Date(timestamp), 'yyyy-MM-dd'),
-        amount: volume
-      })).concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume});
+    const items = get(_data, 'items', [])
+    .map(({date, volume}) => ({
+      date: format(new Date(date), 'yyyy-MM-dd'),
+      amount: volume
+    }))/*.concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume})*/;
     setData(items);
   }, [currentCoinData, _data]);
 
