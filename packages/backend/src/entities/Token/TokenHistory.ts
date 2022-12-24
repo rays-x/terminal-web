@@ -1,6 +1,6 @@
-import {modelOptions, prop, Ref} from '@typegoose/typegoose';
+import {index, modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import {_BaseEntity} from '../_BaseEntity';
+import {_BaseEntity, _SimpleEntity} from '../_BaseEntity';
 import {Types} from 'mongoose';
 import TokenEntity from './Token';
 
@@ -9,6 +9,7 @@ import TokenEntity from './Token';
   ...defaultModelOptions,
   schemaOptions: {
     ...defaultSchemaOptions,
+    timestamps: false,
     toJSON: {
       ...defaultSchemaOptions.toJSON,
       virtuals: true,
@@ -19,10 +20,17 @@ import TokenEntity from './Token';
         ...rest
       })
     },
-    collection: 'tokenHistory'
+    collection: 'tokenHistory',
+    versionKey: false
   }
 })
-export class TokenHistoryEntity extends _BaseEntity {
+@index(
+  {token: 1},
+  {
+    background: true
+  }
+)
+export class TokenHistoryEntity extends _SimpleEntity {
   @prop({
     required: true,
     ref: () => TokenEntity

@@ -63,7 +63,7 @@ export class TokenService implements OnModuleInit {
     ...rest
   }: OptionsOfJSONResponseBody) {
     try {
-      return got.get<T>(_url, {
+      return await got.get<T>(_url, {
         url,
         pathname,
         searchParams,
@@ -398,21 +398,20 @@ export class TokenService implements OnModuleInit {
       }
     }).select(['id', 'slug', 'cmc', 'cmcAdded']).sort({cmc: 1});
     console.log('history start of:', tokens.length);
-    const tokensChunks = chunk(tokens, 50);
-    await promiseMap(tokensChunks, async tokensChunk => {
-      await Promise.all(tokensChunk.map(async token => {
-        const lastHistoryDate = get(await this.repoTokenHistory.findOne({
-          token: token.id
-        }).sort('-date').select(['date']), 'date', token.cmcAdded);
-        if (lastHistoryDate.getTime() === new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`).getTime()) {
-          return;
-        }
-        const chunksDate = getDateDaysAgoArraysBy100(lastHistoryDate);
-        await Promise.all(chunksDate.map(async dateChunk => {
-          const [timeStart, timeEnd] = [
-            new Date(dateChunk.at(0)).getTime() / 1000,
-            new Date(dateChunk.at(-1)).getTime() / 1000
-          ];
+    await promiseMap(tokens, async token => {
+      const lastHistoryDate = get(await this.repoTokenHistory.findOne({
+        token: token.id
+      }).sort('-date').select(['date']), 'date', token.cmcAdded);
+      if (lastHistoryDate.getTime() === new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`).getTime()) {
+        return;
+      }
+      const chunksDate = getDateDaysAgoArraysBy100(lastHistoryDate);
+      await promiseMap(chunksDate, async dateChunk => {
+        const [timeStart, timeEnd] = [
+          new Date(dateChunk.at(0)).getTime() / 1000,
+          new Date(dateChunk.at(-1)).getTime() / 1000
+        ];
+        for (let i = 1; i < 6; i++) {
           try {
             const data = await this.proxyRequest<CoinMarketCapHistoricalResponse>(`https://api.coinmarketcap.com/data-api/v3/cryptocurrency/historical`, {
               searchParams: {
@@ -428,36 +427,41 @@ export class TokenService implements OnModuleInit {
               responseType: 'json'
             });
             if (data) {
-              data.data.quotes.forEach(quote => {
+              await Promise.all(data.data.quotes.map(async quote => {
                 const date = new Date(`${format(new Date(quote.quote.timestamp), 'yyyy-MM-dd')}T00:00:00.000Z`);
-                this.repoTokenHistory
-                  .findOneAndUpdate(
-                    {
-                      token: token.id,
-                      date: date
-                    },
-                    {
-                      token: token.id,
-                      date: date,
-                      volume: quote.quote.volume,
-                      marketCap: quote.quote.marketCap,
-                      price: quote.quote.close
-                    },
-                    {
-                      upsert: true,
-                      new: true
-                    }
-                  )
-                  .catch(e => console.error(e))
-                ;
-              });
+                try {
+                  await this.repoTokenHistory
+                    .findOneAndUpdate(
+                      {
+                        token: token.id,
+                        date: date
+                      },
+                      {
+                        token: token.id,
+                        date: date,
+                        volume: quote.quote.volume,
+                        marketCap: quote.quote.marketCap,
+                        price: quote.quote.close
+                      },
+                      {
+                        upsert: true,
+                        new: true
+                      }
+                    );
+                } catch (e) {
+                  console.error(e);
+                }
+              }));
             }
+            break;
           } catch (e) {
             console.error(e);
+            await awaiter(i * 60 * 1000);
           }
-        }));
-      }));
-      console.log('history done', tokens.findIndex(({slug}) => slug === tokensChunk.at(-1).slug) + 1, 'of', tokens.length);
+        }
+        // await awaiter(1000);
+      });
+      console.log('history done', tokens.findIndex(({slug}) => slug === token.slug) + 1, 'of', tokens.length);
     });
     console.log('history finished of:', tokens.length);
   }
