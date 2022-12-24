@@ -398,7 +398,7 @@ export class TokenService implements OnModuleInit {
       }
     }).select(['id', 'slug', 'cmc', 'cmcAdded']).sort({cmc: 1});
     console.log('history start of:', tokens.length);
-    const tokensChunks = chunk(tokens, 30);
+    const tokensChunks = chunk(tokens, 50);
     await promiseMap(tokensChunks, async tokensChunk => {
       await Promise.all(tokensChunk.map(async token => {
         const lastHistoryDate = get(await this.repoTokenHistory.findOne({
