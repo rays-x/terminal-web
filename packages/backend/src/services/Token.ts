@@ -392,7 +392,37 @@ export class TokenService implements OnModuleInit {
   }
 
   async history() {
+    const filterShared = {
+      $or: [
+        {
+          volume: {$exists: true, $ne: 0}
+        },
+        {
+          volumeChangePercentage24h: {$exists: true, $ne: 0}
+        },
+        {
+          'statistics.priceChangePercentage1h': {$exists: true, $ne: 0}
+        },
+        {
+          'statistics.priceChangePercentage24h': {$exists: true, $ne: 0}
+        },
+        {
+          'statistics.marketCap': {$exists: true, $ne: 0}
+        },
+        {
+          'statistics.marketCapChangePercentage24h': {$exists: true, $ne: 0}
+        }
+      ],
+      platforms: {
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      }
+    };
     const tokens = await this.repoToken.find({
+      ...filterShared,
       cmcAdded: {
         $exists: true
       }
@@ -426,7 +456,7 @@ export class TokenService implements OnModuleInit {
               },
               responseType: 'json'
             });
-            if (data) {
+            if (data.data) {
               await Promise.all(data.data.quotes.map(async quote => {
                 const date = new Date(`${format(new Date(quote.quote.timestamp), 'yyyy-MM-dd')}T00:00:00.000Z`);
                 try {
@@ -452,6 +482,8 @@ export class TokenService implements OnModuleInit {
                   console.error(e);
                 }
               }));
+            } else {
+              // console.log('!data', token.cmc, data);
             }
             break;
           } catch (e) {
@@ -461,7 +493,7 @@ export class TokenService implements OnModuleInit {
         }
         // await awaiter(1000);
       });
-      console.log('history done', tokens.findIndex(({slug}) => slug === token.slug) + 1, 'of', tokens.length);
+      console.log('history done', token.cmc, tokens.findIndex(({slug}) => slug === token.slug) + 1, 'of', tokens.length);
     });
     console.log('history finished of:', tokens.length);
   }
