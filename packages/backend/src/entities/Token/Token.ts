@@ -1,4 +1,4 @@
-import {index, modelOptions, prop, Ref, plugin} from '@typegoose/typegoose';
+import {index, modelOptions, plugin, prop, Ref} from '@typegoose/typegoose';
 import {_BaseEntity} from '../_BaseEntity';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
 import autopopulate from 'mongoose-autopopulate';
@@ -6,11 +6,11 @@ import TokenTagEntity from './TokenTag';
 import {TokenUrls} from './TokenUrls';
 import {TokenStatistics} from './TokenStatistics';
 import {TokenPlatform} from './TokenPlatforms';
+import {PlatformEntityDefaultPopulateSelect} from '../Platform';
 
 class TokenTag {
   @prop({
-    ref: () => TokenTagEntity,
-    autopopulate: true
+    ref: () => TokenTagEntity
   })
   tag?: Ref<TokenTagEntity>;
 }
@@ -92,6 +92,10 @@ export class TokenEntity extends _BaseEntity {
   selfReportedTags?: string[];
   @prop()
   selfReportedCirculatingSupply?: string;
+
+  get image(): string | undefined {
+    return this.cmc ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${this.cmc}.png` : undefined;
+  }
 }
 
 export const TokenEntityDefaultSelect = [
@@ -106,5 +110,26 @@ export const TokenEntityDefaultSelect = [
   'statistics',
   'platforms',
   'selfReportedCirculatingSupply'
+];
+
+export const TokenEntityDefaultPopulate = [
+  /*{
+    path: 'platforms.platform',
+    select: PlatformEntityDefaultPopulateSelect
+  }*/
+];
+export const TokenEntityPlatformPopulate = {
+  path: 'platforms.platform',
+  select: PlatformEntityDefaultPopulateSelect
+};
+export const TokenEntityDetailPopulate = [
+  TokenEntityPlatformPopulate
+];
+
+export const TokenEntityDefaultPopulateSelect = [
+  'id',
+  'slug',
+  'cmc',
+  'symbol'
 ];
 export default TokenEntity;

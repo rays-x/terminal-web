@@ -124,11 +124,11 @@ export class TokenSlugDto {
   slug!: string;
 }
 
-export class TokenVolumeDto {
+export class TokenPaginationDto {
   @IsOptional()
   @IsNumberString()
   @ApiPropertyOptional()
-  limit?: string = '100';
+  limit?: string = '0';
 
   @IsOptional()
   @IsNumberString()

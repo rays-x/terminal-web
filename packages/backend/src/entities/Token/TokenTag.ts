@@ -17,7 +17,8 @@ import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
         ...rest
       })
     },
-    collection: 'tokenTags'
+    collection: 'tokenTag',
+    versionKey: false
   }
 })
 export class TokenTagEntity extends _BaseEntity {

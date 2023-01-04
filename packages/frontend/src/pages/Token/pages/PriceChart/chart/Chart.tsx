@@ -55,9 +55,9 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
       },
       resolveSymbol: (symbolName, onResolve) => {
         setTimeout(() => onResolve({
-          ticker: pair.poolId,
-          name: `${pair.baseToken.symbol} / ${pair.quoteToken.symbol}`,
-          description: `${pair.baseToken.symbol} / ${pair.quoteToken.symbol} - ${pair.dexerInfo.name}`,
+          ticker: pair.cmc,
+          name: `${pair.base.symbol} / ${pair.quote.symbol}`,
+          description: `${pair.base.symbol} / ${pair.quote.symbol} - ${pair.dex.name}`,
           session: '24x7',
           data_status: 'streaming',
           minmov: 1,
@@ -73,6 +73,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
       },
       getBars(symbolInfo, resolution, periodParams, onResult, onError) {
         const requestParams = {
+          //TODO check for reverse
           'reverse-order': pair.reverseOrder,
           usd: true
         };
@@ -188,7 +189,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         }).catch(onError);
       },
       subscribeBars: (symbolInfo, resolutionIndex, newDataCallback, listenerGuid) => {
-        const name = `dexscan@kline@${pair.platform.id}@${pair.poolId}@${intervals[String(resolutionIndex)]}`;
+        const name = `dexscan@kline@${pair.platform.cmc}@${pair.cmc}@${intervals[String(resolutionIndex)]}`;
         const handler = {
           id: listenerGuid,
           callback: newDataCallback
@@ -201,6 +202,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
             subscribeUID: listenerGuid,
             handlers: [handler],
             isUsd: true,
+            //TODO check for reverse
             reverseOder: pair.reverseOrder
           };
           self.set(name, widget);
@@ -251,7 +253,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         //
       }
     };
-  }, [pair,defaultInterval]);
+  }, [pair.id,defaultInterval]);
   React.useEffect(() => {
     if (!lastMessage) {
       return;
@@ -305,7 +307,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         return;
       }
       new (window['TradingView'] as typeof TradingView).widget({
-        symbol: pair.poolId,
+        symbol: pair.cmc,
         interval: (defaultInterval as unknown as ResolutionString),
         container: 'tv_chart_container',
         datafeed: DataFeeds(),

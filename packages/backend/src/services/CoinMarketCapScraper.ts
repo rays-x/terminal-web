@@ -1,8 +1,8 @@
 import {get} from 'lodash';
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
-import got, {Got} from 'got';
-import {Inject, OnModuleInit} from '@nestjs/common';
+import got from 'got';
+import {Inject} from '@nestjs/common';
 import md5 from 'md5';
 import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
@@ -12,7 +12,6 @@ import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../const
 import {BitQueryService} from './BitQuery';
 import {CovalentService} from './Covalent';
 import {OptionsOfJSONResponseBody} from 'got/dist/source/types';
-import qs from 'qs';
 
 type UniToken = {
   chainId: number;
@@ -43,10 +42,6 @@ export type CmcToken = {
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
 
-const CMC_ID_UNISWAP_V3 = 1348;
-const CMC_ID_UNISWAP_V2 = 1069;
-const CMC_ID_PANCAKE_V2 = 1344;
-
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 export class CoinMarketCapScraperService {
@@ -75,28 +70,48 @@ export class CoinMarketCapScraperService {
   ) {
   }
 
-  async proxyRequest<T>(_url: string = undefined, {
+  private async proxyRequest<T>(_url: string = undefined, {
     url = undefined,
     pathname = undefined,
     searchParams = undefined,
     ...rest
   }: OptionsOfJSONResponseBody) {
     try {
-      return got.get<T>(_url, {
+      return await got.get<T>(_url, {
         url,
         pathname,
         searchParams,
         ...rest,
         resolveBodyOnly: true
       });
-    } catch (e) {
-      const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
+    } catch(e) {
+      Logger.debug(`mirror request ${get(e, 'message', e)} ${{
+        url: _url || url,
+        pathname,
+        searchParams,
+      }}`);
+      /*const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
         addQueryPrefix: true
       })}`;
       const encodeUri = encodeURIComponent(uri);
       return got.get<T>(`https://translate.yandex.ru/translate?url=${encodeUri}`, {
         ...rest,
         followRedirect: true,
+        resolveBodyOnly: true
+      });*/
+      const {host} = new URL(_url || url);
+      const hostReplaced = `${host.replace(/\./g, '-')}.translate.goog`
+      if(_url) {
+        _url = _url.replace(host, hostReplaced)
+      }
+      if(url) {
+        url = _url.replace(host, hostReplaced)
+      }
+      return got.get<T>(_url, {
+        url,
+        pathname,
+        searchParams,
+        ...rest,
         resolveBodyOnly: true
       });
     }
@@ -105,7 +120,7 @@ export class CoinMarketCapScraperService {
   private async getUniTokens(): Promise<typeof this._uniTokens> {
     const cacheKey = 'cmc:getUniswapTokens';
     const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-    if (cache) {
+    if(cache) {
       this._uniTokens = cache;
       return cache;
     }
@@ -122,11 +137,11 @@ export class CoinMarketCapScraperService {
       [k: string]: string[]
     } = Object.fromEntries(
       values
-        .filter(_ => _[addressIndex].length)
-        .map((item) => [
-          item[slugIndex],
-          item[addressIndex].map(_ => _.toLowerCase())
-        ])
+      .filter(_ => _[addressIndex].length)
+      .map((item) => [
+        item[slugIndex],
+        item[addressIndex].map(_ => _.toLowerCase())
+      ])
     );
     const {tokens} = await this.proxyRequest <{
       tokens: Omit<UniToken, 'slug'>[]
@@ -137,7 +152,7 @@ export class CoinMarketCapScraperService {
       let slug = Object.entries(slugs).find(([, addresses]) => {
         return addresses.find(_ => _.includes(address.toLowerCase()));
       })?.shift();
-      switch (slug) {
+      switch(slug) {
         case 'weth': {
           slug = 'ethereum';
           break;
@@ -161,7 +176,7 @@ export class CoinMarketCapScraperService {
   private async getPanTokens(): Promise<typeof this._panTokens> {
     const cacheKey = 'cmc:getPancakeswapTokens';
     const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-    if (cache) {
+    if(cache) {
       this._panTokens = cache;
       return cache;
     }
@@ -176,11 +191,11 @@ export class CoinMarketCapScraperService {
     const addressIndex = fields.indexOf('address');
     const slugs: [string, string[]][] =
       values
-        .filter(_ => _[addressIndex].length)
-        .map((item) => [
-          item[slugIndex],
-          item[addressIndex].map(_ => _.toLowerCase()).join(',')
-        ]);
+      .filter(_ => _[addressIndex].length)
+      .map((item) => [
+        item[slugIndex],
+        item[addressIndex].map(_ => _.toLowerCase()).join(',')
+      ]);
     const body = await got.get('https://api.covalenthq.com/v1/56/xy=k/pancakeswap_v2/tokens/', {
       searchParams: {
         key: 'ckey_65c7c5729a7141889c2cdea0556',
@@ -221,131 +236,9 @@ export class CoinMarketCapScraperService {
     return get(data, 'props.pageProps.info');
   }
 
-  private async addInfoToUniTokens(fromLoop = false) {
-    let step = 1;
-    const tokens = Object.values(await this.getUniTokens());
-    await promiseMap(tokens, async (token: {
-      address: string
-      slug: string
-    }) => {
-      const cacheKey = `cmc:ait:${token.slug}`;
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cache && (!fromLoop || get(cache, 'status') !== 'active')) {
-        return step++;
-      }
-      if (cache
-        && new Date(get(cache, 'latestUpdateTime')).getTime() > (new Date().getTime() - 60 * 60 * 60 * 1000)
-      ) {
-        return step++;
-      }
-      for (let i = 1; i < 6; i++) {
-        try {
-          const data = await this.getTokenData(token.slug);
-          const platform_binance = get(get(data, 'platforms', [])
-            .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
-          const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
-          // console.log('collect1', (platform_binance || platform_ethereum) && IS_PRODUCTION);
-          if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
-            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsTradersDistributionValue(platform_binance, platform_ethereum, true).catch();
-            this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
-          }
-          if (data) {
-            await this.redisClient.set(cacheKey, JSON.stringify(
-              Object.fromEntries(
-                Object.entries(data)
-                  .filter(([key]) =>
-                    !['relatedCoins',
-                      'relatedExchanges',
-                      'wallets',
-                      'holders'
-                    ].includes(key)
-                  )
-              )
-            ), 'PX', 24 * 60 * 60 * 1000);
-            Logger.debug(`cmc:uniInfo, ${step}, ${tokens.length}`);
-            return step++;
-          } else {
-            await awaiter(i * 30 * 1000);
-          }
-        } catch (e) {
-          await awaiter(i * 60 * 1000);
-        }
-      }
-      return step++;
-    });
-    if (this.awaitTime === DEFAULT_AWAIT_TIME) {
-      this.awaitTime = DEFAULT_AWAIT_TIME * 3;
-    }
-    return this.addInfoToUniTokens(true).catch();
-  }
-
-  private async addInfoToPanTokens(fromLoop = false) {
-    let step = 1;
-    const tokens = Object.values(await this.getPanTokens());
-    await promiseMap(tokens, async (token: {
-      address: string
-      slug: string
-    }) => {
-      const cacheKey = `cmc:ait:${token.slug}`;
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cache && (!fromLoop || get(cache, 'status') !== 'active')) {
-        return step++;
-      }
-      if (cache
-        && new Date(get(cache, 'latestUpdateTime')).getTime() > (new Date().getTime() - 60 * 60 * 60 * 1000)
-      ) {
-        return step++;
-      }
-      for (let i = 1; i < 6; i++) {
-        try {
-          const data = await this.getTokenData(token.slug);
-          const platform_binance = get(get(data, 'platforms', [])
-            .find(_ => _.contractChainId === 56), 'contractAddress', '').toLowerCase() || undefined;
-          const platform_ethereum = get(get(data, 'platforms', []).find(_ => _.contractChainId === 1), 'contractAddress', '').toLowerCase() || undefined;
-          // console.log('collect2', token.slug, platform_binance, platform_ethereum, IS_PRODUCTION);
-          if ((platform_binance || platform_ethereum) && IS_PRODUCTION) {
-            this.bitQueryService.statsTransfers(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsSwaps(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsHolders(platform_binance, platform_ethereum, true).catch();
-            this.bitQueryService.statsTradersDistributionValue(platform_binance, platform_ethereum, true).catch();
-            this.covalentService.statsLiquidity(platform_binance, platform_ethereum, true).catch();
-          }
-          if (data) {
-            await this.redisClient.set(cacheKey, JSON.stringify(
-              Object.fromEntries(
-                Object.entries(data)
-                  .filter(([key]) =>
-                    !['relatedCoins',
-                      'relatedExchanges',
-                      'wallets',
-                      'holders'
-                    ].includes(key)
-                  )
-              )
-            ), 'PX', 24 * 60 * 60 * 1000);
-            Logger.debug(`cmc:panInfo, ${step}, ${tokens.length}`);
-            return step++;
-          } else {
-            // await awaiter(i * 30 * 1000);
-          }
-        } catch (e) {
-          await awaiter(i * 60 * 1000);
-        }
-      }
-      return step++;
-    });
-    if (this.awaitTime === DEFAULT_AWAIT_TIME) {
-      this.awaitTime = DEFAULT_AWAIT_TIME * 3;
-    }
-    return this.addInfoToPanTokens(true).catch();
-  }
-
   async tokens(networks: Network[] = [Network.bsc, Network.eth]): Promise<CmcToken[]> {
     const tokens = networks.reduce((tokens, network) => {
-      switch (network) {
+      switch(network) {
         case Network.bsc: {
           return [...tokens, ...Object.values(this._panTokens)];
         }
@@ -356,10 +249,10 @@ export class CoinMarketCapScraperService {
     }, []);
     return (await Promise.all(tokens.map(async token => {
       const data = JSON.parse(await this.redisClient.get(`cmc:ait:${token.slug}`) || 'null');
-      if (!data) {
+      if(!data) {
         return null;
       }
-      if (data.status !== 'active') {
+      if(data.status !== 'active') {
         return;
       }
       return {
@@ -379,7 +272,7 @@ export class CoinMarketCapScraperService {
         cmcId: data.id
       };
     }))).reduce((prev, item) => {
-      if (!item || prev.findIndex(({cmcId}) => item?.cmcId === cmcId) > -1) {
+      if(!item || prev.findIndex(({cmcId}) => item?.cmcId === cmcId) > -1) {
         return prev;
       }
       return [...prev, item];
@@ -392,7 +285,7 @@ export class CoinMarketCapScraperService {
     const cacheKey = `cmc:pairInfo:${platform}:${md5(pairs.join(','))}`;
     const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
     const result = {};
-    if (cache) {
+    if(cache) {
       return cache;
     }
     await Promise.all(pairs.map(async (pair) => {
@@ -410,31 +303,26 @@ export class CoinMarketCapScraperService {
         responseType: 'json'
       });
       const data = get(body, 'data');
-      if (data) {
+      if(data) {
         result[data['address']] = data;
       }
     }));
-    if (pairs.length === Object.keys(result).length) {
+    if(pairs.length === Object.keys(result).length) {
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
     }
     return result;
   }
 
-  async pairsList(dex: ('uniswap' | 'pancakeswap')[], address: string, platform: number): Promise<any> {
-    const cacheKey = `cmc:pairList:${dex.sort((a, b) => {
-      return a.localeCompare(b, undefined, {
-        numeric: true,
-        sensitivity: 'base'
-      });
-    }).join(',')}:${md5(address)}`;
-    if (cacheKey in this.awaiterPairsList) {
+  async pairsList(address: string, platform: number): Promise<any> {
+    const cacheKey = `cmc:pairList:${platform}:${md5(address)}`;
+    if(cacheKey in this.awaiterPairsList) {
       return [];
     }
     const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-    if (cache) {
+    if(cache) {
       return cache;
     }
-    if (!(cacheKey in this.awaiterPairsList)) {
+    if(!(cacheKey in this.awaiterPairsList)) {
       this.awaiterPairsList[cacheKey] = true;
     }
     try {
@@ -451,7 +339,7 @@ export class CoinMarketCapScraperService {
           ? prev
           : await getData({
             ...params,
-            start: params.start === 1 ? 100 : params.start + 100
+            start: params.start + 100
           }, [...prev, ...data]);
       };
       const data = await getData({
@@ -460,37 +348,18 @@ export class CoinMarketCapScraperService {
         limit: 100,
         'platform-id': platform
       }, []);
-      const result = data?.filter((item => dex.findIndex(_ => {
-        return (() => {
-          switch (_) {
-            case 'uniswap': {
-              return [
-                CMC_ID_UNISWAP_V3,
-                CMC_ID_UNISWAP_V2
-              ];
-            }
-            case 'pancakeswap': {
-              return [
-                CMC_ID_PANCAKE_V2
-              ];
-            }
-            default: {
-              return [];
-            }
-          }
-        })().includes(item.dexerInfo.id);
-      }) > -1)).sort((a, b) => {
+      const result = data?.filter((item => item.platform.id === platform)).sort((a, b) => {
         return Number(b.volume24h) - Number(a.volume24h);
       });
-      if (data) {
+      if(data) {
         await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 30 * 24 * 60 * 60 * 1000);
       }
-      if (cacheKey in this.awaiterPairsList) {
+      if(cacheKey in this.awaiterPairsList) {
         delete this.awaiterPairsList[cacheKey];
       }
       return result;
-    } catch (e) {
-      if (cacheKey in this.awaiterPairsList) {
+    } catch(e) {
+      if(cacheKey in this.awaiterPairsList) {
         delete this.awaiterPairsList[cacheKey];
       }
     }
@@ -535,12 +404,12 @@ export class CoinMarketCapScraperService {
     const lastTime = pairsIds.reduce((prev, pairId) => {
       const transactions = pairs[pairId];
       const lastElementTime = Number(get(transactions.at(-1), 'time'));
-      if (isNaN(prev)) {
+      if(isNaN(prev)) {
         return lastElementTime;
       }
       return lastElementTime < prev ? lastElementTime : prev;
     }, NaN);
-    if (isNaN(lastTime)) {
+    if(isNaN(lastTime)) {
       return [];
     }
     return Object.values(pairs).reduce((prev, transactions) => {

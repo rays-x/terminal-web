@@ -12,7 +12,7 @@ import {AsyncApiDocumentBuilder, AsyncApiModule, AsyncServerObject} from 'nestjs
 import {ValidationPipe} from '@nestjs/common';
 
 process.setMaxListeners(0);
-const bootstrap = async () => {
+(async () => {
   // mongoose.set('debug', process.env.NODE_ENV === 'development');
   mongoose.pluralize(null);
   Logger.useLogger(
@@ -42,18 +42,18 @@ const bootstrap = async () => {
     whitelist: true
   }));
   const options = new DocumentBuilder()
-    .setTitle('ray.sx API')
-    .setDescription(
-      `Backend API for <a href="https://backend.ray.sx" target="_blank">https://backend.ray.sx</a>`
-    )
-    .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      in: 'header'
-    }, 'bearer-sid')
-    .setVersion('0.0')
-    .build();
+  .setTitle('ray.sx API')
+  .setDescription(
+    `Backend API for <a href="https://backend.ray.sx" target="_blank">https://backend.ray.sx</a>`
+  )
+  .addBearerAuth({
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    in: 'header'
+  }, 'bearer-sid')
+  .setVersion('0.0')
+  .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('/api/playground/rest', app, document);
   const asyncApiServer: AsyncServerObject = {
@@ -63,11 +63,11 @@ const bootstrap = async () => {
     description: 'Allows you to connect using the websocket protocol to soulmate backend server.'
   };
   const asyncApiOptions = new AsyncApiDocumentBuilder()
-    .setTitle('Soulmate WebSocket API')
-    .setVersion('1.0')
-    .setDefaultContentType('application/json')
-    .addServer('chat-server', asyncApiServer)
-    .build();
+  .setTitle('Soulmate WebSocket API')
+  .setVersion('1.0')
+  .setDefaultContentType('application/json')
+  .addServer('chat-server', asyncApiServer)
+  .build();
   const asyncApiDocument = await AsyncApiModule.createDocument(app, asyncApiOptions);
   await AsyncApiModule.setup('/api/playground/websocket', app, asyncApiDocument);
   await app.listen(parseInt(String(process.env.PORT)) || 2050, '0.0.0.0', async () => {
@@ -75,8 +75,7 @@ const bootstrap = async () => {
     logWelcomeMessage();
   });
   app.enableShutdownHooks();
-};
-bootstrap();
+})();
 
 function logWelcomeMessage() {
   const version = '1.0.0';

@@ -1,10 +1,10 @@
-export interface Tag {
+interface Tag {
   slug: string;
   name: string;
   category: string;
 }
 
-export interface Urls {
+interface Urls {
   website: string[];
   technical_doc: string[];
   explorer: string[];
@@ -17,7 +17,7 @@ export interface Urls {
   twitter: string[];
 }
 
-export interface Statistics {
+interface Statistics {
   price: number;
   priceChangePercentage1h: number;
   priceChangePercentage24h: number;
@@ -62,12 +62,12 @@ export interface Statistics {
   status: string;
 }
 
-export interface Wallet {
+interface Wallet {
   id: number;
   universalLink: string;
 }
 
-export interface Platform {
+interface Platform {
   contractId: number;
   contractAddress: string;
   contractPlatform: string;
@@ -85,7 +85,7 @@ export interface Platform {
   wallets: Wallet[];
 }
 
-export interface RelatedCoin {
+interface RelatedCoin {
   id: number;
   name: string;
   slug: string;
@@ -94,13 +94,13 @@ export interface RelatedCoin {
   priceChangePercentage7d: number;
 }
 
-export interface RelatedExchange {
+interface RelatedExchange {
   id: number;
   name: string;
   slug: string;
 }
 
-export interface Wallet2 {
+interface Wallet2 {
   id: number;
   name: string;
   tier: number;
@@ -118,7 +118,7 @@ export interface Wallet2 {
   multipleChain: boolean;
 }
 
-export interface AuditInfo {
+interface AuditInfo {
   coinId: string;
   auditor: string;
   auditStatus: number;
@@ -127,13 +127,13 @@ export interface AuditInfo {
   reportUrl: string;
 }
 
-export interface HolderList {
+interface HolderList {
   address: string;
   balance: number;
   share: number;
 }
 
-export interface Holders {
+interface Holders {
   holderCount: number;
   holderList: HolderList[];
   topTenHolderRatio: number;

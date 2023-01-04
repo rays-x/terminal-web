@@ -1,7 +1,7 @@
 import {index,modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
 import {_SimpleEntity} from '../_BaseEntity';
-import TokenEntity from './Token';
+import PairEntity from './Pair';
 
 
 @modelOptions({
@@ -18,39 +18,33 @@ import TokenEntity from './Token';
         ...rest
       })
     },
-    collection: 'tokenHistory',
+    collection: 'pairHistory',
     versionKey: false,
     timestamps: false,
   }
 })
 @index(
-  {token: 1},
+  {pair: 1},
   {
     background: true
   }
 )
-export class TokenHistoryEntity extends _SimpleEntity {
+export class PairHistoryEntity extends _SimpleEntity {
   @prop({
     required: true,
-    ref: () => TokenEntity
+    ref: () => PairEntity
   })
-  token!: Ref<TokenEntity>;
-  @prop({required: true})
-  volume!: number;
-  @prop({required: true})
-  marketCap!: number;
-  @prop({required: true})
-  price!: number;
+  pair!: Ref<PairEntity>;
   @prop({required: true})
   date!: Date;
+  @prop({required: true})
+  liquidity!: number;
 }
 
-export default TokenHistoryEntity;
+export default PairHistoryEntity;
 
-export const TokenHistoryEntityDefaultSelect = [
+export const PairHistoryEntityDefaultSelect = [
   'id',
-  'volume',
-  'marketCap',
-  'price',
+  'liquidity',
   'date'
 ];

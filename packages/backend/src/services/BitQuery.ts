@@ -12,7 +12,7 @@ import {CMC_USER_AGENT} from '../constants';
 import {BitQueryStatsTradersDistributionValueQuery} from '../types/BitQuery/BitQueryStatsTradersDistributionValueQuery';
 import {getRange} from '../utils/diff';
 import {BitQueryStatsPairStatisticsQuery} from '../types/BitQuery/BitQueryStatsPairStatisticsQuery';
-import {pre} from '@typegoose/typegoose';
+import {BitQueryBalanceOfPairQuery} from '../types/BitQuery/BitQueryBalanceOfPairQuery';
 
 const since = () => format(addDays(new Date(), -20), 'yyyy-MM-dd');
 const sinceArray = () => Array.from({length: 21}).map((_, i) => format(addDays(new Date(), 0 - i), 'yyyy-MM-dd'));
@@ -205,7 +205,7 @@ export class BitQueryService {
   }): Promise<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']> {
     let result = [];
     let offsetStep = 0;
-    while (offsetStep < 10) {
+    while(offsetStep < 10) {
       try {
         const {
           data: {
@@ -249,11 +249,11 @@ export class BitQueryService {
           responseType: 'json',
           resolveBodyOnly: true
         });
-        if (!tradersDistributionValue.length) {
+        if(!tradersDistributionValue.length) {
           break;
         }
         result = result.concat(tradersDistributionValue);
-      } catch (e) {
+      } catch(e) {
         break;
       }
       offsetStep++;
@@ -269,7 +269,7 @@ export class BitQueryService {
   }): Promise<BitQueryStatsPairStatisticsQuery['data']['stats']['pairStatistics']> {
     let result = [];
     let offsetStep = 0;
-    while (offsetStep < DEEP_OF_STEP) {
+    while(offsetStep < DEEP_OF_STEP) {
       try {
         const {
           data: {
@@ -338,11 +338,11 @@ export class BitQueryService {
           responseType: 'json',
           resolveBodyOnly: true
         });
-        if (!pairStatistics.length) {
+        if(!pairStatistics.length) {
           break;
         }
         result = result.concat(pairStatistics);
-      } catch (e) {
+      } catch(e) {
         break;
       }
       offsetStep++;
@@ -354,16 +354,16 @@ export class BitQueryService {
     const cacheKey = `cmc:statsTransfers:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterStatsTransfersList) {
-        if (cache && !update) {
+      if(cacheKey in this.awaiterStatsTransfersList) {
+        if(cache && !update) {
           return cache;
         }
         return [];
       }
-      if (cache && !update) {
+      if(cache && !update) {
         return cache;
       }
-      if (!(cacheKey in this.awaiterStatsTransfersList)) {
+      if(!(cacheKey in this.awaiterStatsTransfersList)) {
         this.awaiterStatsTransfersList[cacheKey] = true;
       }
       const data: Promise<{
@@ -373,7 +373,7 @@ export class BitQueryService {
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
-        switch (key) {
+        switch(key) {
           case 'btcAddress': {
             return ['btc', token ? await this.getStatsTransfers({
               network: 'bsc',
@@ -390,38 +390,38 @@ export class BitQueryService {
       }))).filter(([, data]) => data));
       const map = {};
       Object.values(data)
-        .reduce((p, n) => [...p, ...n], [])
-        .forEach((item: BitQueryStatsTransfersQuery['data']['stats']['transfers'][0]) => {
-          if (item['total_amount'] > get(map, `${item.date.date}.totalAmount`, 0)) {
-            set(map, `${item.date.date}.medianTransferAmount`, item['median_transfer_amount']);
-            set(map, `${item.date.date}.averageTransferAmount`, item['average_transfer_amount']);
-            set(map, `${item.date.date}.medianTransferAmountUsd`, item['median_transfer_amount_usd']);
-            set(map, `${item.date.date}.averageTransferAmountUsd`, item['average_transfer_amount_usd']);
-          }
-          set(map, `${item.date.date}.totalAmount`,
-            item['total_amount'] + get(map, `${item.date.date}.totalAmount`, 0)
-          );
-          set(map, `${item.date.date}.totalAmountUsd`,
-            item['total_amount_usd'] + get(map, `${item.date.date}.totalAmountUsd`, 0)
-          );
-          set(map, `${item.date.date}.uniqReceivers`,
-            item['uniq_receivers'] + get(map, `${item.date.date}.uniqReceivers`, 0)
-          );
-          set(map, `${item.date.date}.uniqSenders`,
-            item['uniq_senders'] + get(map, `${item.date.date}.uniqSenders`, 0)
-          );
-          set(map, `${item.date.date}.transferCount`,
-            item['transfer_count'] + get(map, `${item.date.date}.transferCount`, 0)
-          );
-        });
+      .reduce((p, n) => [...p, ...n], [])
+      .forEach((item: BitQueryStatsTransfersQuery['data']['stats']['transfers'][0]) => {
+        if(item['total_amount'] > get(map, `${item.date.date}.totalAmount`, 0)) {
+          set(map, `${item.date.date}.medianTransferAmount`, item['median_transfer_amount']);
+          set(map, `${item.date.date}.averageTransferAmount`, item['average_transfer_amount']);
+          set(map, `${item.date.date}.medianTransferAmountUsd`, item['median_transfer_amount_usd']);
+          set(map, `${item.date.date}.averageTransferAmountUsd`, item['average_transfer_amount_usd']);
+        }
+        set(map, `${item.date.date}.totalAmount`,
+          item['total_amount'] + get(map, `${item.date.date}.totalAmount`, 0)
+        );
+        set(map, `${item.date.date}.totalAmountUsd`,
+          item['total_amount_usd'] + get(map, `${item.date.date}.totalAmountUsd`, 0)
+        );
+        set(map, `${item.date.date}.uniqReceivers`,
+          item['uniq_receivers'] + get(map, `${item.date.date}.uniqReceivers`, 0)
+        );
+        set(map, `${item.date.date}.uniqSenders`,
+          item['uniq_senders'] + get(map, `${item.date.date}.uniqSenders`, 0)
+        );
+        set(map, `${item.date.date}.transferCount`,
+          item['transfer_count'] + get(map, `${item.date.date}.transferCount`, 0)
+        );
+      });
       const result = Object.entries(map).map(([date, rest]: [string, any]) => ({date, ...rest}));
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterStatsTransfersList) {
+      if(cacheKey in this.awaiterStatsTransfersList) {
         delete this.awaiterStatsTransfersList[cacheKey];
       }
       return result;
-    } catch (e) {
-      if (cacheKey in this.awaiterStatsTransfersList) {
+    } catch(e) {
+      if(cacheKey in this.awaiterStatsTransfersList) {
         delete this.awaiterStatsTransfersList[cacheKey];
       }
     }
@@ -432,16 +432,16 @@ export class BitQueryService {
     const cacheKey = `cmc:statsSwaps:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterStatsSwapsList) {
-        if (cache && !update) {
+      if(cacheKey in this.awaiterStatsSwapsList) {
+        if(cache && !update) {
           return cache;
         }
         return [];
       }
-      if (cache && !update) {
+      if(cache && !update) {
         return cache;
       }
-      if (!(cacheKey in this.awaiterStatsSwapsList)) {
+      if(!(cacheKey in this.awaiterStatsSwapsList)) {
         this.awaiterStatsSwapsList[cacheKey] = true;
       }
       const data: Promise<{
@@ -451,7 +451,7 @@ export class BitQueryService {
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
-        switch (key) {
+        switch(key) {
           case 'btcAddress': {
             return ['btc', token ? await this.getStatsSwaps({
               network: 'bsc',
@@ -468,23 +468,23 @@ export class BitQueryService {
       }))).filter(([, data]) => data));
       const map = {};
       Object.values(data)
-        .reduce((p, n) => [...p, ...n], [])
-        .forEach((item: BitQueryStatsSwapsQuery['data']['stats']['swaps'][0]) => {
-          set(map, `${item.date.date}.tradeAmountUsd`,
-            item['tradeAmountUsd'] + get(map, `${item.date.date}.tradeAmountUsd`, 0)
-          );
-          set(map, `${item.date.date}.countTxs`,
-            item['countTxs'] + get(map, `${item.date.date}.countTxs`, 0)
-          );
-        });
+      .reduce((p, n) => [...p, ...n], [])
+      .forEach((item: BitQueryStatsSwapsQuery['data']['stats']['swaps'][0]) => {
+        set(map, `${item.date.date}.tradeAmountUsd`,
+          item['tradeAmountUsd'] + get(map, `${item.date.date}.tradeAmountUsd`, 0)
+        );
+        set(map, `${item.date.date}.countTxs`,
+          item['countTxs'] + get(map, `${item.date.date}.countTxs`, 0)
+        );
+      });
       const result = Object.entries(map).map(([date, rest]: [string, any]) => ({date, ...rest}));
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterStatsSwapsList) {
+      if(cacheKey in this.awaiterStatsSwapsList) {
         delete this.awaiterStatsSwapsList[cacheKey];
       }
       return result;
-    } catch (e) {
-      if (cacheKey in this.awaiterStatsSwapsList) {
+    } catch(e) {
+      if(cacheKey in this.awaiterStatsSwapsList) {
         delete this.awaiterStatsSwapsList[cacheKey];
       }
     }
@@ -495,17 +495,17 @@ export class BitQueryService {
     const cacheKey = `cmc:statsHolders:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterStatsHoldersList) {
+      if(cacheKey in this.awaiterStatsHoldersList) {
         // console.log('statsHolders.cacheKey in await');
-        if (cache && !update) {
+        if(cache && !update) {
           return cache;
         }
         return [];
       }
-      if (cache && !update) {
+      if(cache && !update) {
         return cache;
       }
-      if (!(cacheKey in this.awaiterStatsHoldersList)) {
+      if(!(cacheKey in this.awaiterStatsHoldersList)) {
         this.awaiterStatsHoldersList[cacheKey] = true;
       }
       const data: Promise<{
@@ -521,7 +521,7 @@ export class BitQueryService {
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
-        switch (key) {
+        switch(key) {
           case 'btcAddress': {
             return ['btc', token ? await promiseMap(sinceArray(), async (till) => {
               return {
@@ -550,24 +550,24 @@ export class BitQueryService {
       }))).filter(([, data]) => data?.length));
       const map = {};
       Object.values(data)
-        .reduce((p, n) => [...p || [], ...(n || [])], [])
-        .forEach((item: {
-          date: string,
-          count: number
-        }) => {
-          set(map, `${item.date}.count`,
-            item['count'] + get(map, `${item.date}.count`, 0)
-          );
-        });
+      .reduce((p, n) => [...p || [], ...(n || [])], [])
+      .forEach((item: {
+        date: string,
+        count: number
+      }) => {
+        set(map, `${item.date}.count`,
+          item['count'] + get(map, `${item.date}.count`, 0)
+        );
+      });
       const result = Object.entries(map).map(([date, rest]: [string, any]) => ({date, ...rest}));
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterStatsHoldersList) {
+      if(cacheKey in this.awaiterStatsHoldersList) {
         delete this.awaiterStatsHoldersList[cacheKey];
       }
       return result;
-    } catch (e) {
+    } catch(e) {
       // console.log('statsHolders.error', e);
-      if (cacheKey in this.awaiterStatsHoldersList) {
+      if(cacheKey in this.awaiterStatsHoldersList) {
         delete this.awaiterStatsHoldersList[cacheKey];
       }
       return [];
@@ -580,24 +580,24 @@ export class BitQueryService {
     const cacheKey = `cmc:tradersDistributionValue:${md5(`${btcAddress}_${ethAddress}`)}:${since}:${till}`;
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterTradersDistributionValueList) {
+      if(cacheKey in this.awaiterTradersDistributionValueList) {
         // console.log('statsHolders.cacheKey in await');
-        if (cache && !update) {
+        if(cache && !update) {
           return cache;
         }
         return [];
       }
-      if (cache && !update) {
+      if(cache && !update) {
         return cache;
       }
-      if (!(cacheKey in this.awaiterTradersDistributionValueList)) {
+      if(!(cacheKey in this.awaiterTradersDistributionValueList)) {
         this.awaiterTradersDistributionValueList[cacheKey] = true;
       }
       const trades = (await Promise.all(Object.entries({
         btcAddress,
         ethAddress
       }).map(async ([key, token]) => {
-        switch (key) {
+        switch(key) {
           case 'btcAddress': {
             return ['btc', token ? await this.getStatsTradersDistributionValue({
               network: 'bsc',
@@ -632,12 +632,12 @@ export class BitQueryService {
           return tradeAmount <= trade.tradeAmount
             && (lastStep || trade.tradeAmount < get(steps, `${index + 1}.tradeAmount`, 0));
         });
-        if (stepIndex == -1) {
+        if(stepIndex == -1) {
           return userStepsCount;
         }
         [...new Set([trade.maker.address, trade.taker.address])].forEach(user => {
           const cacheUserStep = `${user}_${stepIndex}`;
-          if (userStepsCount.includes(cacheUserStep)) {
+          if(userStepsCount.includes(cacheUserStep)) {
             return;
           }
           steps[stepIndex]['userCount']++;
@@ -648,13 +648,13 @@ export class BitQueryService {
       }, []);
       const result = steps.filter(({swapsCount, userCount}) => swapsCount || userCount);
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterTradersDistributionValueList) {
+      if(cacheKey in this.awaiterTradersDistributionValueList) {
         delete this.awaiterTradersDistributionValueList[cacheKey];
       }
       return result;
-    } catch (e) {
+    } catch(e) {
       // console.log('statsHolders.error', e);
-      if (cacheKey in this.awaiterTradersDistributionValueList) {
+      if(cacheKey in this.awaiterTradersDistributionValueList) {
         delete this.awaiterTradersDistributionValueList[cacheKey];
       }
       return [];
@@ -680,24 +680,24 @@ export class BitQueryService {
     const cacheKey = `cmc:pairStatistics:${md5(`${btcPoolContract.join('_')}_${ethPoolContract.join('_')}`)}:${since}:${till}`;
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterPairStatisticsList) {
+      if(cacheKey in this.awaiterPairStatisticsList) {
         // console.log('statsPairStatistics.cacheKey in await');
-        if (cache && !update) {
+        if(cache && !update) {
           return cache;
         }
         return [];
       }
-      if (cache && !update) {
+      if(cache && !update) {
         return cache;
       }
-      if (!(cacheKey in this.awaiterPairStatisticsList)) {
+      if(!(cacheKey in this.awaiterPairStatisticsList)) {
         this.awaiterPairStatisticsList[cacheKey] = true;
       }
       const trades = (await Promise.all(Object.entries({
         btcContract: btcPoolContract,
         ethContract: ethPoolContract
       }).map(async ([key, contracts]) => {
-        switch (key) {
+        switch(key) {
           case 'btcContract': {
             return ['btc', contracts.length ? await this.getStatsPairStatistics({
               network: 'bsc',
@@ -737,7 +737,7 @@ export class BitQueryService {
           buyersAndSellersCount: [...new Set([...buyersUnique, ...sellersUnique])].length
         };
       })(trades.reduce((prev, trade) => {
-        if (tokenAddresses.includes(trade.buyCurrency.address)) {
+        if(tokenAddresses.includes(trade.buyCurrency.address)) {
           prev.tradesBuyCount++;
           prev.buyers.push(trade.taker.address);
           prev.buyersVolume += trade.buyAmount;
@@ -756,16 +756,63 @@ export class BitQueryService {
         tradesSellCount: 0
       }));
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterPairStatisticsList) {
+      if(cacheKey in this.awaiterPairStatisticsList) {
         delete this.awaiterPairStatisticsList[cacheKey];
       }
       return result;
-    } catch (e) {
+    } catch(e) {
       // console.log('statsPairStatistics.error', e);
-      if (cacheKey in this.awaiterPairStatisticsList) {
+      if(cacheKey in this.awaiterPairStatisticsList) {
         delete this.awaiterPairStatisticsList[cacheKey];
       }
       return null;
     }
+  }
+
+  async getBalancesOfPair(variables: {
+    network: string,
+    date: string,
+    poolAddress: string,
+    baseToken: string,
+    quoteToken: string,
+  }) {
+    try {
+      const response = await got.post<BitQueryBalanceOfPairQuery>('https://explorer.bitquery.io/proxy_graphql', {
+        json: {
+          query: `
+          query liquidity($date: ISO8601DateTime!, $network: EthereumNetwork!, $poolAddress: String!, $baseToken: String!, $quoteToken: String!) {
+          pair: ethereum(network: $network) {
+            liquidity: address(address: {is: $poolAddress}) {
+              address
+              balances(date: {till: $date}, currency: {in: [$baseToken, $quoteToken]}) {
+                value
+                currency {
+                  address
+                  symbol
+                }
+              }
+            }
+          }
+        }
+        `,
+          variables
+        },
+        headers: {
+          'user-agent': CMC_USER_AGENT,
+          'accept-encoding': 'gzip, deflate, br',
+          'Cookie': this.cookie,
+          'X-CSRF-Token': this.token
+        },
+        responseType: 'json',
+        resolveBodyOnly: true
+      });
+      return Object.fromEntries((get(response, 'data.pair.liquidity.0.balances', []) || []).map((_) => [
+        get(_, 'currency.address', '').toLowerCase(),
+        get(_, 'value')
+      ]));
+    } catch(e) {
+      console.error(e);
+    }
+    return null;
   }
 }

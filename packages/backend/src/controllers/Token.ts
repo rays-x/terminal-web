@@ -1,8 +1,6 @@
 import {Controller, Get, HttpCode, Param, Query} from '@nestjs/common';
 import {ApiParam, ApiTags} from '@nestjs/swagger';
-import {
-  NewQueryTokensDto, TokenIdDto, TokenSlugDto, TokenVolumeDto,
-} from '../dto/CoinMarketCapScraper';
+import {NewQueryTokensDto, TokenIdDto, TokenPaginationDto, TokenSlugDto,} from '../dto/CoinMarketCapScraper';
 import {TokenService} from '../services/Token';
 
 @ApiTags('token')
@@ -55,8 +53,21 @@ export class TokenController {
   })
   async volume(
     @Param() {id}: TokenIdDto,
-    @Query() args: TokenVolumeDto
+    @Query() args: TokenPaginationDto
   ) {
     return this.service.volume(id, args)
+  }
+
+  @Get('token/:id/pairs')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async pairs(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.pairs(id, args)
   }
 }

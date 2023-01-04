@@ -1,12 +1,6 @@
 import {modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import {_BaseEntity} from '../_BaseEntity';
-
-export const TokenPlatformEntityDefaultSelect = [
-  'id',
-  'name',
-  'chainId'
-];
+import PlatformEntity from "../Platform";
 
 @modelOptions({
   ...defaultModelOptions,
@@ -15,9 +9,10 @@ export const TokenPlatformEntityDefaultSelect = [
     toJSON: {
       ...defaultSchemaOptions.toJSON,
       virtuals: true,
-      transform: (doc, {_id, tags, ...rest}) => ({
+      transform: (doc, {_id, tags, platform: {cmc, ...platform}, ...rest}) => ({
         id: _id,
-        ...rest
+        ...rest,
+        platform
       })
     }
   }
@@ -26,41 +21,11 @@ export class TokenPlatform {
   id: string;
   @prop({
     required: true,
-    ref: () => TokenPlatformEntity,
-    autopopulate: {
-      select: TokenPlatformEntityDefaultSelect
-    }
+    ref: () => PlatformEntity,
   })
-  platform?: Ref<TokenPlatformEntity>;
-
+  platform?: Ref<PlatformEntity>;
   @prop({
     required: true
   })
   address!: string;
 }
-
-@modelOptions({
-  ...defaultModelOptions,
-  schemaOptions: {
-    ...defaultSchemaOptions,
-    toJSON: {
-      ...defaultSchemaOptions.toJSON,
-      virtuals: true,
-      transform: (doc, {_id, createdAt, updatedAt, ...rest}) => ({
-        id: _id,
-        createdAt,
-        updatedAt,
-        ...rest
-      })
-    },
-    collection: 'tokenPlatforms'
-  }
-})
-export class TokenPlatformEntity extends _BaseEntity {
-  @prop({required: true})
-  name!: string;
-  @prop({required: true})
-  chainId!: number;
-}
-
-export default TokenPlatformEntity;

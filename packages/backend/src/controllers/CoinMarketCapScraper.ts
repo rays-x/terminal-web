@@ -1,5 +1,5 @@
-import {Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, Req} from '@nestjs/common';
-import {ApiParam, ApiTags} from '@nestjs/swagger';
+import {Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Query, Req} from '@nestjs/common';
+import {ApiTags} from '@nestjs/swagger';
 import {Request} from 'express';
 import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
 import {
@@ -42,23 +42,22 @@ export class CoinMarketCapScraperController {
         token.symbol.toLowerCase()
       ].find((_) => _.includes(search.toLowerCase())) : true;
     });
-    const result = {
+    return {
       tokens: tokens
-        .sort((a, b) => {
-          return sortOrder === TokensSortOrder.asc
-            ? String(a[sortBy]).localeCompare(String(b[sortBy]), undefined, {
-              numeric: true,
-              sensitivity: 'base'
-            })
-            : String(b[sortBy]).localeCompare(String(a[sortBy]), undefined, {
-              numeric: true,
-              sensitivity: 'base'
-            });
-        })
-        .slice(Number(offset), Number(limit) + Number(offset)),
+      .sort((a, b) => {
+        return sortOrder === TokensSortOrder.asc
+          ? String(a[sortBy]).localeCompare(String(b[sortBy]), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+          })
+          : String(b[sortBy]).localeCompare(String(a[sortBy]), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+          });
+      })
+      .slice(Number(offset), Number(limit) + Number(offset)),
       tokensCount: tokens.length
     };
-    return result;
   }
 
   @Post('dex/pairs-info')
@@ -82,10 +81,10 @@ export class CoinMarketCapScraperController {
   ) {
     const [ethPairs, btcPairs] = [
       ethAddress
-        ? await this.service.pairsList(['uniswap'], ethAddress, CMC_ID_ETH_PLATFORM)
+        ? await this.service.pairsList(ethAddress, CMC_ID_ETH_PLATFORM)
         : [],
       btcAddress
-        ? await this.service.pairsList(['pancakeswap'], btcAddress, CMC_ID_BTC_PLATFORM)
+        ? await this.service.pairsList(btcAddress, CMC_ID_BTC_PLATFORM)
         : []
     ];
     return {

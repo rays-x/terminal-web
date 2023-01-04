@@ -1,4 +1,4 @@
-import {CmcPairInfo} from './chart/types';
+import {TokenPairsResponse} from '../../../../types/api/TokenPairsResponse';
 
 interface Pair {
   platformId: number;
@@ -30,6 +30,7 @@ export interface CmcSearch {
 }
 
 export interface ChartComponentProps {
-  pair: CmcPairInfo['data'];
+  pair: TokenPairsResponse['items'][0] & { reverseOrder: boolean };
   height?: number;
 }
+

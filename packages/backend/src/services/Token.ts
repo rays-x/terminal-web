@@ -1,4 +1,4 @@
-import {get, chunk} from 'lodash';
+import {chunk, get} from 'lodash';
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
@@ -6,23 +6,38 @@ import {Inject, OnModuleInit} from '@nestjs/common';
 import {awaiter, promiseMap} from '../utils';
 import {CMC_ID_USD_COIN, CMC_USER_AGENT, TOKEN_CHAIN_IDS} from '../constants';
 import {BitQueryService} from './BitQuery';
-import {CovalentService} from './Covalent';
 import {OptionsOfJSONResponseBody} from 'got/dist/source/types';
-import qs from 'qs';
 import {TokenCMCTokenInfoResponse} from '../types/Token/TokenCMCTokenInfoResponse';
-import TokenEntity, {TokenEntityDefaultSelect} from '../entities/Token/Token';
+import TokenEntity, {
+  TokenEntityDefaultPopulate,
+  TokenEntityDefaultSelect,
+  TokenEntityDetailPopulate,
+  TokenEntityPlatformPopulate
+} from '../entities/Token/Token';
 import {ReturnModelType} from '@typegoose/typegoose';
 import {InjectModel} from 'nestjs-typegoose';
 import TokenTagEntity from '../entities/Token/TokenTag';
-import TokenPlatformEntity from '../entities/Token/TokenPlatforms';
+import PlatformEntity from '../entities/Platform';
 import {Logger} from '../config/logger/api-logger';
-import {NewQueryTokensDto, TokensSortBy, TokensSortOrder, TokenVolumeDto} from '../dto/CoinMarketCapScraper';
+import {NewQueryTokensDto, TokenPaginationDto, TokensSortBy, TokensSortOrder} from '../dto/CoinMarketCapScraper';
 import {CmcToken} from './CoinMarketCapScraper';
-import TokenHistory, {TokenHistoryEntityDefaultSelect} from '../entities/Token/TokenHistory';
-import {addDays, format, differenceInDays} from 'date-fns';
+import TokenHistoryEntity, {TokenHistoryEntityDefaultSelect} from '../entities/Token/TokenHistory';
+import {addDays, differenceInDays, format} from 'date-fns';
 import {CoinMarketCapHistoricalResponse} from '../types/CoinMarketCap/CoinMarketCapHistoricalResponse';
-import {BaseDocumentType, Types} from "mongoose";
-import {TokenVolumeItem} from "../types/Token/TokenVolumeItem";
+import {Types} from 'mongoose';
+import {TokenVolumeItem} from '../types/Token/TokenVolumeItem';
+import {CmcPairListResponse} from '../types';
+import PairEntity, {
+  PairEntityBasePopulate,
+  PairEntityDefaultPopulate,
+  PairEntityDefaultSelect,
+  PairEntityQuotePopulate
+} from '../entities/Pair/Pair';
+import DexEntity from '../entities/Dex';
+import {TokenPairItem} from '../types/Token/TokenPairItem';
+import {TokenCMCPlatformsResponse} from '../types/Token/TokenCMCPlatformsResponse';
+import {TokenCMCPlatformDexsResponse} from '../types/Token/TokenCMCPlatformDexsResponse';
+import PairHistoryEntity from '../entities/Pair/PairHistory';
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
 
@@ -40,21 +55,77 @@ const getDateDaysAgoArraysBy100 = (date: Date) => {
 export class TokenService implements OnModuleInit {
 
   awaitTime: number = DEFAULT_AWAIT_TIME;
+  sharedFilter = {
+    slug: {
+      $exists: true
+    },
+    $or: [
+      {
+        volume: {$exists: true, $ne: 0}
+      },
+      {
+        volumeChangePercentage24h: {$exists: true, $ne: 0}
+      },
+      {
+        'statistics.priceChangePercentage1h': {$exists: true, $ne: 0}
+      },
+      {
+        'statistics.priceChangePercentage24h': {$exists: true, $ne: 0}
+      },
+      {
+        'statistics.marketCap': {$exists: true, $ne: 0}
+      },
+      {
+        'statistics.marketCapChangePercentage24h': {$exists: true, $ne: 0}
+      }
+    ],
+    volume: {$exists: true, $ne: 0},
+    platforms: {
+      $elemMatch: {
+        platform: {
+          $in: TOKEN_CHAIN_IDS
+        }
+      },
+      $exists: true, $type: 'array', $ne: []
+    }
+  };
 
   constructor(
     @InjectRedisClient('ray.sx') private readonly redisClient: Redis,
     @InjectModel(TokenEntity) private readonly repoToken: ReturnModelType<typeof TokenEntity>,
     @InjectModel(TokenTagEntity) private readonly repoTokenTag: ReturnModelType<typeof TokenTagEntity>,
-    @InjectModel(TokenPlatformEntity) private readonly repoTokenPlatform: ReturnModelType<typeof TokenPlatformEntity>,
-    @InjectModel(TokenHistory) private readonly repoTokenHistory: ReturnModelType<typeof TokenHistory>,
-    @Inject(BitQueryService) private readonly bitQueryService: BitQueryService,
-    @Inject(CovalentService) private readonly covalentService: CovalentService
+    @InjectModel(PlatformEntity) private readonly repoPlatform: ReturnModelType<typeof PlatformEntity>,
+    @InjectModel(TokenHistoryEntity) private readonly repoTokenHistory: ReturnModelType<typeof TokenHistoryEntity>,
+    @InjectModel(PairEntity) private readonly repoPair: ReturnModelType<typeof PairEntity>,
+    @InjectModel(PairHistoryEntity) private readonly repoPairHistory: ReturnModelType<typeof PairHistoryEntity>,
+    @InjectModel(DexEntity) private readonly repoDex: ReturnModelType<typeof DexEntity>,
+    @Inject(BitQueryService) private readonly bitQueryService: BitQueryService
   ) {
   }
 
   async onModuleInit() {
-    // this.addInfoToCmcTokens().catch();
-    // this.history().catch();
+    /*promiseMap([this._syncTokens, this._syncTokensHistory, this._syncPlatforms, this._syncDexs, this._syncPairs], async (start) => {
+      try {
+        await start(this);
+      } catch(e) {
+        Logger.error(get(e, 'message', e));
+      }
+    });*/
+    /*promiseMap([this._collectLiquidityOfPairs], async (start) => {
+      try {
+        await start(this)
+      } catch(e) {
+        Logger.error(get(e, 'message', e))
+      }
+    })*/
+    // this.addPairsOfCmcToken().catch()
+    promiseMap([this._syncPairsLiquidity], async (start) => {
+      try {
+        await start(this);
+      } catch(e) {
+        Logger.error(get(e, 'message', e));
+      }
+    });
   }
 
   private async proxyRequest<T>(_url: string = undefined, {
@@ -72,8 +143,12 @@ export class TokenService implements OnModuleInit {
         resolveBodyOnly: true
       });
     } catch(e) {
-      console.log('mirror request', get(e, 'message', e));
-      const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
+      Logger.debug(`mirror request ${get(e, 'message', e)} ${{
+        url: _url || url,
+        pathname,
+        searchParams
+      }}`);
+      /*const uri = `${_url || url}${pathname || ''}${qs.stringify(searchParams || {}, {
         addQueryPrefix: true
       })}`;
       const encodeUri = encodeURIComponent(uri);
@@ -81,12 +156,28 @@ export class TokenService implements OnModuleInit {
         ...rest,
         followRedirect: true,
         resolveBodyOnly: true
+      });*/
+      const {host} = new URL(_url || url);
+      const hostReplaced = `${host.replace(/\./g, '-')}.translate.goog`;
+      if(_url) {
+        _url = _url.replace(host, hostReplaced);
+      }
+      if(url) {
+        url = _url.replace(host, hostReplaced);
+      }
+      return got.get<T>(_url, {
+        url,
+        pathname,
+        searchParams,
+        ...rest,
+        resolveBodyOnly: true
       });
     }
   }
 
-  private async getCmcTokens(): Promise<string[]> {
-    const {fields, values} = await this.proxyRequest<{
+  private async __getCmcTokens(self: TokenService): Promise<string[]> {
+    await awaiter(self.awaitTime);
+    const {fields, values} = await self.proxyRequest<{
       fields: string[],
       values: any[][],
     }>('https://s3.coinmarketcap.com/generated/core/crypto/cryptos.json', {
@@ -98,9 +189,9 @@ export class TokenService implements OnModuleInit {
     return actives.map((item) => item[slugIndex]);
   }
 
-  private async getTokenData(slug: string): Promise<TokenCMCTokenInfoResponse> {
-    await awaiter(this.awaitTime);
-    const body = await this.proxyRequest<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
+  private async __getTokenData(self: TokenService, slug: string): Promise<TokenCMCTokenInfoResponse> {
+    await awaiter(self.awaitTime);
+    const body = await self.proxyRequest<string>(`https://coinmarketcap.com/currencies/${slug}/`, {
       headers: {
         'user-agent': CMC_USER_AGENT,
         'accept-encoding': 'gzip, deflate, br'
@@ -111,30 +202,84 @@ export class TokenService implements OnModuleInit {
     return get(data, 'props.pageProps.info');
   }
 
-  private async addInfoToCmcTokens() {
-    const tokenSlugs = await this.getCmcTokens();
-    const tokenExists = (await this.repoToken.find().select(['slug', 'cmcAdded'])).map(({slug, cmcAdded}) => ({
-      slug,
-      cmcAdded
-    }));
-    const tokenExistsSlugs = (await this.repoToken.find().select(['slug'])).map(({slug}) => slug);
-    const tokenSlugsNew = tokenSlugs.filter((slug) => tokenExistsSlugs.indexOf(slug) === -1);
-    const tokenSlugsNeedUpdate = tokenSlugs.filter((slug) => {
-      const found = tokenExists.find(({slug: _}) => _ === slug);
-      if(!found) return false;
-      return !found?.cmcAdded;
+  private async __getPlatformsData(self: TokenService): Promise<TokenCMCPlatformsResponse['data']> {
+    await awaiter(self.awaitTime);
+    const body = await self.proxyRequest<TokenCMCPlatformsResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/platforms`, {
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br'
+      },
+      responseType: 'json'
     });
-    const tokenSlugsOld = tokenExistsSlugs.filter((slug) => tokenSlugs.indexOf(slug) === -1);
-    console.log(`tokenSlugsNew:${tokenSlugsNew.length}`);
-    console.log(`tokenSlugsNeedUpdate:${tokenSlugsNeedUpdate.length}`);
+    return get(body, 'data', []).filter(({visibilityOnDexscan}) => visibilityOnDexscan);
+  }
+
+  private async _syncTokens(self: TokenService) {
+    const tokenSlugs = await self.__getCmcTokens(self);
+    if(!tokenSlugs.length) {
+      return;
+    }
+    const tokenExists = await self.repoToken.find().select(['slug', 'updatedAt']);
+    const tokenSlugsNew = tokenSlugs.filter((slug) => tokenExists.findIndex(({slug: _}) => _ === slug) === -1);
+    const tokenSlugsNeedUpdate = tokenExists.filter(({slug, updatedAt}) => {
+      return tokenSlugs.indexOf(slug) !== -1 && new Date(updatedAt).getTime() < (new Date().getTime() - 1000 * 60 * 60 * 24);
+    }).map(({slug}) => slug);
+    const tokenSlugsOld = tokenExists.filter(({slug}) => tokenSlugs.indexOf(slug) === -1).map(({slug}) => slug);
+    Logger.debug(`tokenSlugsNew:${tokenSlugsNew.length}`);
+    Logger.debug(`tokenSlugsNeedUpdate:${tokenSlugsNeedUpdate.length}`);
     Logger.debug(`tokenSlugsOld:${tokenSlugsOld.length}`);
-    await promiseMap([...new Set([...tokenSlugsNew, ...tokenSlugsNeedUpdate])], async (slug) => {
+    const tokensToDelete = (await self.repoToken.find({
+      slug: {
+        $in: tokenSlugsOld
+      }
+    }).select(['id'])).map(({id}) => id);
+    await Promise.all(tokensToDelete.map(async tokenId => {
+      await self.repoTokenHistory.deleteMany({
+        token: tokenId
+      });
+      await self.repoToken.deleteOne({_id: tokenId});
+      await self.repoPair.deleteMany({
+        $or: [
+          {
+            base: tokenId
+          },
+          {
+            quote: tokenId
+          }
+        ]
+      });
+    }));
+    const tokensToUpsert = [...new Set([...tokenSlugsNew, ...tokenSlugsNeedUpdate])];
+    await promiseMap(tokensToUpsert, async (slug) => {
       for(let i = 1; i < 6; i++) {
         try {
-          const data = await this.getTokenData(slug);
+          const data = await self.__getTokenData(self, slug);
           if(data) {
             try {
-              await this.repoToken.findOneAndUpdate({slug},
+              const platforms = await Promise.all(get(data, 'platforms', []).map(async ({
+                                                                                          contractPlatform: name,
+                                                                                          contractChainId: chainId,
+                                                                                          contractAddress: address,
+                                                                                          // platformCryptoId: cmcCrypto,
+                                                                                          contractPlatformId: cmc
+                                                                                        }) => {
+                const platform = await self.repoPlatform.findOneAndUpdate({
+                  cmc
+                }, {
+                  name,
+                  cmc,
+                  chainId
+                  // cmcCrypto
+                }, {
+                  upsert: true,
+                  new: true
+                });
+                return {
+                  platform: platform.id,
+                  address
+                };
+              }));
+              await self.repoToken.findOneAndUpdate({slug},
                 {
                   cmc: data.id,
                   cmcAdded: new Date(`${format(new Date(data.dateAdded), 'yyyy-MM-dd')}T00:00:00.000Z`),
@@ -148,7 +293,7 @@ export class TokenService implements OnModuleInit {
                                                                              name,
                                                                              category
                                                                            }) => {
-                    const platform = await this.repoTokenTag.findOneAndUpdate({
+                    const tag = await self.repoTokenTag.findOneAndUpdate({
                       slug
                     }, {
                       slug,
@@ -159,7 +304,7 @@ export class TokenService implements OnModuleInit {
                       new: true
                     });
                     return {
-                      tag: platform.id
+                      tag: tag.id
                     };
                   })),
                   urls: {
@@ -190,36 +335,18 @@ export class TokenService implements OnModuleInit {
                     circulatingSupply: get(data, 'statistics.circulatingSupply'),
                     totalSupply: get(data, 'statistics.totalSupply')
                   },
-                  platforms: await Promise.all(get(data, 'platforms', []).map(async ({
-                                                                                       contractPlatform: name,
-                                                                                       contractChainId: chainId,
-                                                                                       contractAddress: address
-                                                                                     }) => {
-                    const platform = await this.repoTokenPlatform.findOneAndUpdate({
-                      name
-                    }, {
-                      name,
-                      chainId
-                    }, {
-                      upsert: true,
-                      new: true
-                    });
-                    return {
-                      platform: platform.id,
-                      address
-                    };
-                  })),
+                  platforms: platforms,
                   selfReportedTags: data.selfReportedTags,
                   selfReportedCirculatingSupply: data.selfReportedCirculatingSupply
                 },
                 {
                   upsert: true,
                   new: true
-                });
-              console.log('updated', slug);
+                }).select(['id']);
+              Logger.debug(`updated ${slug} ${tokensToUpsert.indexOf(slug) + 1} of ${tokensToUpsert.length}`);
               break;
             } catch(e) {
-              console.error(e);
+              Logger.error(e);
             }
           } else {
             await awaiter(i * 30 * 1000);
@@ -231,59 +358,438 @@ export class TokenService implements OnModuleInit {
     });
   }
 
-  async tokens({
-                 chains: _chainIds,
-                 search: _search,
-                 limit,
-                 offset,
-                 sortBy,
-                 sortOrder
-               }: NewQueryTokensDto): Promise<{
+  private async _syncTokensHistory(self: TokenService) {
+    const tokens = await self.repoToken.find({
+      ...self.sharedFilter,
+      cmcAdded: {
+        $exists: true
+      }
+    }).select(['id', 'slug', 'cmc', 'cmcAdded']).sort({cmc: 1});
+    Logger.debug(`history start of:${tokens.length}`);
+    await promiseMap(tokens, async token => {
+      const lastHistoryDate = get(await self.repoTokenHistory.findOne({
+        token: token.id
+      }).sort('-date').select(['date']), 'date', token.cmcAdded);
+      if(lastHistoryDate.getTime() === new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`).getTime()) {
+        return;
+      }
+      const chunksDate = getDateDaysAgoArraysBy100(lastHistoryDate);
+      await promiseMap(chunksDate, async dateChunk => {
+        const [timeStart, timeEnd] = [
+          new Date(dateChunk.at(0)).getTime() / 1000,
+          new Date(dateChunk.at(-1)).getTime() / 1000
+        ];
+        for(let i = 1; i < 6; i++) {
+          try {
+            const data = await self.proxyRequest<CoinMarketCapHistoricalResponse>(`https://api.coinmarketcap.com/data-api/v3/cryptocurrency/historical`, {
+              searchParams: {
+                id: token.cmc,
+                convertId: CMC_ID_USD_COIN,
+                timeStart,
+                timeEnd
+              },
+              headers: {
+                'user-agent': CMC_USER_AGENT,
+                'accept-encoding': 'gzip, deflate, br'
+              },
+              responseType: 'json'
+            });
+            await Promise.all(get(data, 'data.quotes', []).map(async quote => {
+              const date = new Date(`${format(new Date(quote.quote.timestamp), 'yyyy-MM-dd')}T00:00:00.000Z`);
+              try {
+                await self.repoTokenHistory
+                .findOneAndUpdate(
+                  {
+                    token: token.id,
+                    date: date
+                  },
+                  {
+                    token: token.id,
+                    date: date,
+                    volume: quote.quote.volume,
+                    marketCap: quote.quote.marketCap,
+                    price: quote.quote.close
+                  },
+                  {
+                    upsert: true,
+                    new: true
+                  }
+                );
+              } catch(e) {
+                Logger.error(e);
+              }
+            }));
+            break;
+          } catch(e) {
+            Logger.error(e);
+            await awaiter(i * 60 * 1000);
+          }
+        }
+      });
+      Logger.debug(`history done ${token.cmc} ${tokens.findIndex(({slug}) => slug === token.slug) + 1} of ${tokens.length}`);
+    });
+    Logger.debug(`history finished of:${tokens.length}`);
+  }
+
+  private async _syncPlatforms(self: TokenService): Promise<void> {
+    // const platforms = await self.repoPlatform.find().select('cmc');
+    const platformsCmc = await self.__getPlatformsData(self);
+    /*const platformsToDelete = platforms.filter(({cmc}) => platformsCmc.findIndex(({id}) => cmc === id) === -1);
+    await Promise.all(platformsToDelete.map(async platform=>{
+      await self.repoPlatform.findByIdAndUpdate(platform.id,{
+        $unset:{
+          cmcCrypto: true,
+          cmcDexerName: true,
+          explorerUrlFormat: true,
+          dexerTxHashFormat: true,
+        }
+      })
+    }))*/
+    await Promise.all(platformsCmc.map(async platform => {
+      return self.repoPlatform.findOneAndUpdate({
+        cmc: platform.id
+      }, {
+        cmc: platform.id,
+        cmcCrypto: platform.cryptoId,
+        cmcDexerName: platform.dexerPlatformName,
+        name: platform.name,
+        explorerUrlFormat: platform.explorerUrlFormat,
+        dexerTxHashFormat: platform.dexerTxhashFormat
+      }, {
+        upsert: true
+      });
+    }));
+  }
+
+  private async _syncDexs(self: TokenService): Promise<void> {
+    const platforms = await self.repoPlatform.find({
+      cmcDexerName: {
+        $exists: true
+      }
+    }).select('cmc');
+    await promiseMap<PlatformEntity>(platforms, async platform => {
+      const data = await self.proxyRequest<TokenCMCPlatformDexsResponse>('https://api.coinmarketcap.com/dexer/v3/platformpage/platform-dexers', {
+        headers: {
+          'user-agent': CMC_USER_AGENT,
+          'accept-encoding': 'gzip, deflate, br'
+        },
+        searchParams: {
+          'platform-id': platform.cmc
+        },
+        responseType: 'json'
+      });
+      const dexs = get(data, 'data.exchangeList', []);
+      await Promise.all(dexs.map(async dex => {
+        return self.repoDex.findOneAndUpdate({
+          cmc: dex.dexerId
+        }, {
+          cmc: dex.dexerId,
+          name: dex.dexerName,
+          platform: platform.id
+        }, {
+          upsert: true
+        });
+      }));
+    });
+  }
+
+  private async _syncPairs(self: TokenService) {
+    const tokens: { id: string, platforms: { [k: string]: { id: string, address: string } } }[] = (await self.repoToken.find({
+      ...self.sharedFilter,
+      platforms: {
+        ...self.sharedFilter.platforms,
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      },
+      dexVolume: {
+        $gt: 0
+      }
+    })
+    .select(['_id', 'platforms.address'])
+    .populate({
+      ...TokenEntityPlatformPopulate,
+      select: ['_id', 'cmc']
+    }).sort('-statistics.marketCap'))
+    .map(item => ({
+      id: String(item.id),
+      platforms: Object.fromEntries(item.platforms.map(({
+                                                          platform,
+                                                          address
+                                                        }) => [(platform as PlatformEntity).cmc, {
+        address: address.toLowerCase(),
+        id: String(platform.id)
+      }]))
+    }));
+    const dexsObject = Object.fromEntries((await self.repoDex.find().select(['_id', 'cmc'])).map((({
+                                                                                                     _id,
+                                                                                                     cmc
+                                                                                                   }) => [cmc, _id])));
+    const platformsObject = Object.fromEntries((await self.repoPlatform.find().select(['_id', 'cmc'])).map((({
+                                                                                                               _id,
+                                                                                                               cmc
+                                                                                                             }) => [cmc, _id])));
+    await promiseMap(tokens, async token => {
+      const platformId = Object.keys(token.platforms).sort().shift();
+      const cacheKey = `cmc:pairList:${token.id}`;
+      const cache = JSON.parse(await self.redisClient.get(cacheKey) || 'null');
+      if(cache) {
+        return;
+      }
+      let start = 1;
+      let hasNextPage = true;
+      let pairList: CmcPairListResponse['data'] = [];
+      const makeRequest = async (): Promise<boolean> => {
+        await awaiter(self.awaitTime);
+        const {data} = await this.proxyRequest<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br'
+          },
+          searchParams: {
+            'base-address': get(token.platforms, `${platformId}.address`),
+            start,
+            limit: 100,
+            'platform-id': platformId,
+            'sort-field': 'volume24h',
+            desc: true
+          },
+          responseType: 'json'
+        });
+        start = start + 100;
+        pairList = data || [];
+        return Boolean(pairList.length && !pairList.find(item => get(item, 'volume24h', '0') === '0'));
+      };
+      for(let i = 1; i < 6; i++) {
+        try {
+          while(hasNextPage !== false) {
+            hasNextPage = await makeRequest();
+            await Promise.all(pairList.filter(({volume24h}) => volume24h !== '0').map(async (item) => {
+              try {
+                const quoteId = get(tokens.find(({platforms}) => {
+                  return get<any, string>(platforms, `${item.platform.id}.address`) === item.quoteToken.address.toLowerCase();
+                }), 'id');
+                if(!quoteId) {
+                  return;
+                }
+                await this.repoPair.findOneAndUpdate({cmc: item.poolId, base: token.id}, {
+                  cmc: item.poolId,
+                  base: token.id,
+                  quote: quoteId,
+                  dex: get(dexsObject, item.dexerInfo.id),
+                  platform: get(platformsObject, item.platform.id),
+                  address: item.pairContractAddress,
+                  liquidity: item.liquidity,
+                  volume24h: item.volume24h
+                }, {
+                  upsert: true
+                }).select('id');
+              } catch(e) {
+                //skip shit coins found error
+                Logger.error(get(e, 'message', e));
+              }
+            }));
+            Logger.debug(`pair ${tokens.findIndex(_token => _token.id === token.id) + 1} of ${tokens.length}, ${token.id} , offset: ${start}`);
+          }
+          try {
+            await self.redisClient.set(cacheKey, JSON.stringify(true), 'PX', 24 * 60 * 60 * 1000);
+          } catch(e) {
+            //
+          }
+          break;
+        } catch(e) {
+          await awaiter(i * 60 * 1000);
+        }
+      }
+    });
+  }
+
+  private async _syncPairsLiquidity(self: TokenService) {
+    const TokenChainIdStrings = TOKEN_CHAIN_IDS.map(String);
+    const platforms = (await self.repoPlatform.find({
+      _id: {
+        $in: TOKEN_CHAIN_IDS
+      },
+      bqSlug: {
+        $exists: true
+      }
+    }).select('bqSlug')).map(({id, bqSlug}) => ({id, bqSlug}));
+    const tokens: {
+      id: string, platforms: {
+        id: string
+        pairs: {
+          bqSlug: string
+          id: string
+          address: string
+          base: {
+            id: string
+            address: string
+          }
+          quote: {
+            id: string
+            address: string
+          }
+        }[]
+      }[]
+    }[] = await Promise.all((await self.repoToken.find({
+      ...self.sharedFilter,
+      platforms: {
+        ...self.sharedFilter.platforms,
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      },
+      dexVolume: {
+        $gt: 0
+      }
+    })
+    .select(['_id', 'platforms.address'])
+    .populate({
+      ...TokenEntityPlatformPopulate,
+      select: ['_id', 'cmc']
+    }).sort('-statistics.marketCap'))
+    .map(async item => ({
+      id: String(item.id),
+      platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
+                                                                                                                                         platform
+                                                                                                                                       }) => ({
+        id: String(platform.id),
+        pairs: (await self.repoPair.find({
+            $or: [
+              {
+                base: item.id
+              },
+              {
+                quote: item.id
+              }
+            ],
+            platform: platform.id
+          })
+          .select(['base', 'quote', 'address'])
+          .populate([
+            {
+              ...PairEntityBasePopulate,
+              select: ['platforms.platform', 'platforms.address']
+            },
+            {
+              ...PairEntityQuotePopulate,
+              select: ['platforms.platform', 'platforms.address']
+            }
+          ])
+        ).map((pair) => {
+          return ({
+            bqSlug: platforms.find(_platform => _platform.id === String(platform.id))?.bqSlug,
+            id: pair.id,
+            address: pair.address,
+            base: {
+              id: String(pair.base.id),
+              address: ((pair.base as TokenEntity).platforms).find(_platform => String(_platform.platform) === String(platform.id))?.address?.toLowerCase()
+            },
+            quote: {
+              id: String(pair.quote.id),
+              address: ((pair.quote as TokenEntity).platforms).find(_platform => String(_platform.platform) === String(platform.id))?.address?.toLowerCase()
+            }
+          });
+        })
+      })))
+    })));
+    await promiseMap<typeof tokens[0]>(tokens, async token => {
+      await promiseMap<typeof token['platforms'][0]>(token.platforms, async platform => {
+        const cacheKey = `cmc:PairsLiquidity:${platform.id}`;
+        const cache = JSON.parse(await self.redisClient.get(cacheKey) || 'null');
+        if(cache) {
+          return;
+        }
+        await promiseMap(chunk(platform.pairs, 20), async chunkPairs => {
+          await Promise.all(chunkPairs.map(async pair => {
+            const lastHistoryDate = get(await self.repoPairHistory.findOne({
+              pair: pair.id
+            }).sort('-date').select(['date']), 'date', new Date(0));
+            if(lastHistoryDate.getTime() === new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`).getTime()) {
+              return;
+            }
+            const firstHistoryDate = get(await self.repoPairHistory.findOne({
+              pair: pair.id
+            }).sort('date').select(['date']), 'date');
+            let daysOffset = 0;
+            if(firstHistoryDate) {
+              daysOffset = differenceInDays(firstHistoryDate, new Date(`${format(addDays(new Date(), -2), 'yyyy-MM-dd')}T00:00:00.000Z`));
+            }
+            for(let dayStep = -2 + daysOffset; true; dayStep--) {
+              try {
+                const date = new Date(`${format(addDays(new Date(), dayStep), 'yyyy-MM-dd')}T00:00:00.000Z`);
+                const [priceBase, priceQuote] = [get(await self.repoTokenHistory.findOne({
+                  token: pair.base.id,
+                  date
+                }).select('price'), 'price'), get(await self.repoTokenHistory.findOne({
+                  token: pair.quote.id,
+                  date
+                }).select('price'), 'price')];
+                if(!priceBase || !priceQuote) {
+                  break;
+                }
+                const balances = await self.bitQueryService.getBalancesOfPair({
+                  network: pair.bqSlug,
+                  date: date.toISOString(),
+                  poolAddress: pair.address,
+                  baseToken: pair.base.address,
+                  quoteToken: pair.quote.address
+                });
+                if(!Object.keys(balances).length) {
+                  break;
+                }
+                const liquidity = get(balances, pair.base.address, 0) * priceBase + get(balances, pair.quote.address, 0) * priceQuote;
+                await self.repoPairHistory.findOneAndUpdate({
+                  pair: pair.id,
+                  date
+                }, {
+                  pair: pair.id,
+                  date,
+                  liquidity
+                }, {
+                  upsert: true
+                });
+              } catch(e) {
+                Logger.error(get(e, 'message', e));
+                break;
+              }
+              // Logger.debug(`daysOffset ${pair.address} ${dayStep}`);
+            }
+            Logger.debug(`pair ${platform.pairs.findIndex(({id}) => id === pair.id) + 1} of:${platform.pairs.length}`);
+          }));
+        });
+        try {
+          await self.redisClient.set(cacheKey, JSON.stringify(true), 'PX', 24 * 60 * 60 * 1000);
+        } catch(e) {
+          //
+        }
+        Logger.debug(`platforms ${token.platforms.findIndex(({id}) => id === platform.id) + 1} of:${token.platforms.length}`);
+      });
+      Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
+    });
+  }
+
+  public async tokens({
+                        chains: _chainIds,
+                        search: _search,
+                        limit,
+                        offset,
+                        sortBy,
+                        sortOrder
+                      }: NewQueryTokensDto): Promise<{
     tokens: CmcToken[],
     tokensCount: number
   }> {
     const chainIds = _chainIds.length ? _chainIds : TOKEN_CHAIN_IDS;
     const search = _search?.toLowerCase();
     const filterShared = {
-      $or: [
-        {
-          volume: {$exists: true, $ne: 0}
-        },
-        {
-          volumeChangePercentage24h: {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.price': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.priceChangePercentage1h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.priceChangePercentage24h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.priceChangePercentage7d': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.marketCap': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.marketCapChangePercentage24h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.fullyDilutedMarketCap': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.fullyDilutedMarketCapChangePercentage24h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.circulatingSupply': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.totalSupply': {$exists: true, $ne: 0}
-        }
-      ],
+      ...this.sharedFilter,
       platforms: {
+        ...this.sharedFilter.platforms,
         $elemMatch: {
           platform: {
             $in: chainIds
@@ -321,7 +827,7 @@ export class TokenService implements OnModuleInit {
         }
       ]
     } : filterShared;
-    const [tokens, tokensCount] = await Promise.all([this.repoToken.find(filter)
+    const [tokens, tokensCount] = await Promise.all([this.repoToken.find(filter).populate(TokenEntityDefaultPopulate)
     .skip(Number(offset))
     .limit(Number(limit))
     .sort((() => {
@@ -357,7 +863,7 @@ export class TokenService implements OnModuleInit {
         }
       })()}`;
     })())
-    .select([...TokenEntityDefaultSelect]),
+    .select(TokenEntityDefaultSelect),
       this.repoToken.count(filter)
     ]);
     return {
@@ -380,7 +886,7 @@ export class TokenService implements OnModuleInit {
           {
             id,
             address,
-            platform: {id: platformId}
+            platform: platformId
           }
         ) => ({
           id,
@@ -392,130 +898,55 @@ export class TokenService implements OnModuleInit {
     };
   }
 
-  private async history() {
-    const filterShared = {
-      $or: [
-        {
-          volume: {$exists: true, $ne: 0}
-        },
-        {
-          volumeChangePercentage24h: {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.priceChangePercentage1h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.priceChangePercentage24h': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.marketCap': {$exists: true, $ne: 0}
-        },
-        {
-          'statistics.marketCapChangePercentage24h': {$exists: true, $ne: 0}
-        }
-      ],
-      platforms: {
-        $elemMatch: {
-          platform: {
-            $in: TOKEN_CHAIN_IDS
-          }
-        }
-      }
-    };
-    const tokens = await this.repoToken.find({
-      ...filterShared,
-      cmcAdded: {
-        $exists: true
-      }
-    }).select(['id', 'slug', 'cmc', 'cmcAdded']).sort({cmc: 1});
-    console.log('history start of:', tokens.length);
-    await promiseMap(tokens, async token => {
-      const lastHistoryDate = get(await this.repoTokenHistory.findOne({
-        token: token.id
-      }).sort('-date').select(['date']), 'date', token.cmcAdded);
-      if (lastHistoryDate.getTime() === new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`).getTime()) {
-        return;
-      }
-      const chunksDate = getDateDaysAgoArraysBy100(lastHistoryDate);
-      await promiseMap(chunksDate, async dateChunk => {
-        const [timeStart, timeEnd] = [
-          new Date(dateChunk.at(0)).getTime() / 1000,
-          new Date(dateChunk.at(-1)).getTime() / 1000
-        ];
-        for (let i = 1; i < 6; i++) {
-          try {
-            const data = await this.proxyRequest<CoinMarketCapHistoricalResponse>(`https://api.coinmarketcap.com/data-api/v3/cryptocurrency/historical`, {
-              searchParams: {
-                id: token.cmc,
-                convertId: CMC_ID_USD_COIN,
-                timeStart,
-                timeEnd
-              },
-              headers: {
-                'user-agent': CMC_USER_AGENT,
-                'accept-encoding': 'gzip, deflate, br'
-              },
-              responseType: 'json'
-            });
-            if (data.data) {
-              await Promise.all(data.data.quotes.map(async quote => {
-                const date = new Date(`${format(new Date(quote.quote.timestamp), 'yyyy-MM-dd')}T00:00:00.000Z`);
-                try {
-                  await this.repoTokenHistory
-                    .findOneAndUpdate(
-                      {
-                        token: token.id,
-                        date: date
-                      },
-                      {
-                        token: token.id,
-                        date: date,
-                        volume: quote.quote.volume,
-                        marketCap: quote.quote.marketCap,
-                        price: quote.quote.close
-                      },
-                      {
-                        upsert: true,
-                        new: true
-                      }
-                    );
-                } catch (e) {
-                  console.error(e);
-                }
-              }));
-            } else {
-              // console.log('!data', token.cmc, data);
-            }
-            break;
-          } catch (e) {
-            console.error(e);
-            await awaiter(i * 60 * 1000);
-          }
-        }
-        // await awaiter(1000);
-      });
-      console.log('history done', token.cmc, tokens.findIndex(({slug}) => slug === token.slug) + 1, 'of', tokens.length);
-    });
-    console.log('history finished of:', tokens.length);
+  public async token(slug: string): Promise<any> {
+    return this.repoToken.findOne({slug}).select(TokenEntityDefaultSelect).populate(TokenEntityDetailPopulate);
   }
 
-  async token(slug: string): Promise<any> {
-    return this.repoToken.findOne({slug});
-  }
-
-  async volume(token: Types.ObjectId, {limit, offset,}: TokenVolumeDto): Promise<{
+  public async volume(token: Types.ObjectId, {limit, offset}: TokenPaginationDto): Promise<{
     items: TokenVolumeItem[],
     count: number
   }> {
     const filter = {
       token
-    }
+    };
     const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
     .skip(Number(offset))
-    .limit(Number(limit))
+    .limit(Number(limit) || Infinity)
     .sort('-date')
     .select([...TokenHistoryEntityDefaultSelect]),
       this.repoTokenHistory.count(filter)
+    ]);
+    return {
+      items,
+      count
+    };
+  }
+
+  public async pairs(token: Types.ObjectId, {limit, offset}: TokenPaginationDto): Promise<{
+    items: TokenPairItem[],
+    count: number
+  }> {
+    const filter = {
+      $or: [
+        {
+          base: token
+        },
+        {
+          quote: token
+        }
+      ],
+      platform: {
+        $in: TOKEN_CHAIN_IDS
+      }
+    };
+    const [items, count] = await Promise.all([this.repoPair.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit) || Infinity)
+    .select(PairEntityDefaultSelect)
+    .populate(PairEntityDefaultPopulate)
+    .sort('-volume24h')
+    .collation({locale: 'en_US', numericOrdering: true}),
+      this.repoPair.count(filter)
     ]);
     return {
       items,
