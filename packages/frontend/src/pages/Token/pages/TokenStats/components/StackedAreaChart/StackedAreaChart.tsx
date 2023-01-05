@@ -1,30 +1,16 @@
-import React, {useContext, useMemo} from 'react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend
-} from 'recharts';
+import React, {useMemo} from 'react';
+import {Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {throttle} from 'lodash-es';
-import {useParams} from 'react-router';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
 
-import {
-  chooseNumeralFormat,
-  formatNumeral,
-  NUMERAL_FORMAT_FLOAT
-} from '../../../../../../utils/numbers';
+import {chooseNumeralFormat, formatNumeral, NUMERAL_FORMAT_FLOAT} from '../../../../../../utils/numbers';
 import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {EMDASH} from '../../../../../../utils/data/utf';
 import {StackedAreaChartStyled} from './StackedAreaChart-styled';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsTransfersResponse} from '../../../../types';
-import {takeRight} from 'lodash';
+import {useFetch} from '../../../../../../hooks';
+import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
+import {avgBuy} from '../../../../../../utils/avg';
 
 function getLineDefaults(fillColor, strokeColor) {
   return {
@@ -44,29 +30,18 @@ function getLineDefaults(fillColor, strokeColor) {
 
 export const StackedAreaChart = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
+  const {data, loading} = useFetch<TokenTransfersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
     withCredentials: false
   });
 
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    getLazyStatsTransfers({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
   const coinIndex = currentCoinData?.index?.toUpperCase();
 
   const chartData = useMemo(() => {
-    if (!data) {
+    if(!data) {
       return [];
     }
-    return takeRight(data.map(item => ({
+    return data.items.map(item => ({
       date: item.date,
       averageTransferAmount: item.averageTransferAmount,
       medianTransferAmount: item.medianTransferAmount,
@@ -74,28 +49,21 @@ export const StackedAreaChart = React.memo(() => {
       averageTransferAmountUsd: item.averageTransferAmountUsd,
       medianTransferAmountUsd: item.medianTransferAmountUsd,
       totalAmountUsd: item.totalAmountUsd
-    })).map(dateMapF).reverse(), 15);
+    })).map(dateMapF).reverse();
   }, [data]);
 
-  const fields = chartData.reduce((prev, next) => {
-    prev['totalAmount'] = next['totalAmount'] + prev['totalAmount'];
-    prev['medianTransferAmount'] = next['medianTransferAmount'] + prev['medianTransferAmount'];
-    prev['averageTransferAmount'] = next['averageTransferAmount'] + prev['averageTransferAmount'];
-    return prev;
-  }, {
-    totalAmount: 0,
-    medianTransferAmount: 0,
-    averageTransferAmount: 0
-  });
-
   const headerValues = useMemo(() => {
+    if(!data?.items) {
+      return [];
+    }
+    const totalAmount = data.items.reduce((prev, next) => prev + next['totalAmount'], 0);
     return [
       {
         title: 'Total Amount:',
         value: formatNumeral(
-          fields?.totalAmount,
+          totalAmount,
           chooseNumeralFormat({
-            value: fields?.total_amount,
+            value: totalAmount,
             maxLength: 7,
             hasDigits: false
           })
@@ -104,19 +72,25 @@ export const StackedAreaChart = React.memo(() => {
       {
         title: 'Median Transfer Amount:',
         value: formatNumeral(
-          fields?.medianTransferAmount,
+          avgBuy(data.items.map(({medianTransferAmount, transferCount}) => ({
+            qty: transferCount,
+            price: medianTransferAmount
+          }))),
           NUMERAL_FORMAT_FLOAT
         )
       },
       {
         title: 'Average Transfer Amount:',
         value: formatNumeral(
-          fields?.averageTransferAmount,
+          avgBuy(data.items.map(({averageTransferAmount, transferCount}) => ({
+            qty: transferCount,
+            price: averageTransferAmount
+          }))),
           NUMERAL_FORMAT_FLOAT
         )
       }
     ];
-  }, [fields]);
+  }, [data]);
 
   return (
     <StackedAreaChartStyled.Component>

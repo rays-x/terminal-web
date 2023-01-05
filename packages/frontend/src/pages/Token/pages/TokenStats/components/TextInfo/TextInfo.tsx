@@ -1,40 +1,31 @@
 import React from 'react';
 import {TextInfoStyled} from './TextInfo-styled';
-import {StatsTransfersResponse} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {get, take, takeRight} from 'lodash';
+import {get} from 'lodash';
 import {differenceInDays, format} from 'date-fns';
+import {useFetch} from '../../../../../../hooks';
+import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
 
 export const TextInfo = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
+
+  const {data, loading} = useFetch<TokenTransfersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
     withCredentials: false
   });
 
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    getLazyStatsTransfers({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
-
-
   const dateTransferFirst = React.useMemo(() => {
-    if (!currentCoinData?.dateLaunched) {
+    if(!currentCoinData?.dateLaunched) {
       return;
     }
     return format(currentCoinData.dateLaunched, 'yyyy-MM-dd');
   }, [currentCoinData?.dateLaunched]);
-  const dateTransferLast = get(take(data, 1), '0.date');
+  const dateTransferLast = React.useMemo(() => {
+    const date = get(data, 'items.0.date');
+    return date ? format(new Date(date), 'yyyy-MM-dd') : undefined;
+  }, [data]);
   const dateTransferDays = React.useMemo(() => {
-    if (!dateTransferLast || !dateTransferFirst) {
+    if(!dateTransferLast || !dateTransferFirst) {
       return;
     }
     return differenceInDays(new Date(dateTransferLast), new Date(dateTransferFirst));

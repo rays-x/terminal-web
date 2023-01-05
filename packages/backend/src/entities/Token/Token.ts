@@ -61,6 +61,8 @@ export class TokenEntity extends _BaseEntity {
   category?: string;
   @prop()
   description?: string;
+  @prop()
+  dateLaunched?: Date;
   @prop({
     default: [],
     type: () => TokenTag
@@ -104,6 +106,7 @@ export const TokenEntityDefaultSelect = [
   'cmc',
   'name',
   'symbol',
+  'dateLaunched',
   'urls',
   'volume',
   'volumeChangePercentage24h',

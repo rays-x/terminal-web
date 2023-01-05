@@ -58,6 +58,32 @@ export class TokenController {
     return this.service.volume(id, args)
   }
 
+  @Get('token/:id/liquidity')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async liquidity(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.liquidity(id, args)
+  }
+
+  @Get('token/:id/transfers')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async transfers(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.transfers(id, args)
+  }
+
   @Get('token/:id/pairs')
   @HttpCode(200)
   @ApiParam({

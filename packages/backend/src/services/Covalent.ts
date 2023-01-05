@@ -4,6 +4,7 @@ import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
 import md5 from 'md5';
 import {CovalentStatsLiquidityQuery} from '../types/Covalent/CovalentStatsTransfersQuery';
+import {REDIS_TAG} from '../constants';
 
 export class CovalentService {
 
@@ -12,7 +13,7 @@ export class CovalentService {
   } = {};
 
   constructor(
-    @InjectRedisClient('ray.sx') private readonly redisClient: Redis
+    @InjectRedisClient(REDIS_TAG) private readonly redisClient: Redis
   ) {
   }
 

@@ -7,6 +7,7 @@ import {RedisModule} from 'nestjs-ioredis-tags';
 import {ScheduleModule} from '@nestjs/schedule';
 import {OraqModule} from '@stigma.io/nestjs-oraq';
 import {MailchimpModule} from '@mindik/mailchimp-nestjs';
+import {REDIS_TAG} from './constants';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import {MailchimpModule} from '@mindik/mailchimp-nestjs';
     MailchimpModule.forRoot(`${process.env.MAILCHIMP_TRANSACTIONAL_API_KEY}`),
     RedisModule.forRoot([
       {
-        name: 'ray.sx',
+        name: REDIS_TAG,
         host: process.env.REDIS_HOST || 'localhost',
         port: 6379,
         password: ''

@@ -1,7 +1,8 @@
-import {index,modelOptions, prop, Ref} from '@typegoose/typegoose';
-import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import {_SimpleEntity} from '../_BaseEntity';
-import TokenEntity from './Token';
+import {index, modelOptions, prop, Ref} from '@typegoose/typegoose';
+import {defaultModelOptions, defaultSchemaOptions} from '../../../mongoose.config';
+import {_SimpleEntity} from '../../_BaseEntity';
+import TokenEntity from '../Token';
+import {TokenHistoryTransfers} from './TokenHistoryTransfers';
 
 
 @modelOptions({
@@ -20,7 +21,7 @@ import TokenEntity from './Token';
     },
     collection: 'tokenHistory',
     versionKey: false,
-    timestamps: false,
+    timestamps: false
   }
 })
 @index(
@@ -43,6 +44,11 @@ export class TokenHistoryEntity extends _SimpleEntity {
   price!: number;
   @prop({required: true})
   date!: Date;
+  @prop({
+    _id: false,
+    type: () => TokenHistoryTransfers
+  })
+  transfers?: TokenHistoryTransfers;
 }
 
 export default TokenHistoryEntity;
@@ -53,4 +59,10 @@ export const TokenHistoryEntityDefaultSelect = [
   'marketCap',
   'price',
   'date'
+];
+
+export const TokenHistoryEntityTransfersSelect = [
+  'id',
+  'date',
+  'transfers'
 ];

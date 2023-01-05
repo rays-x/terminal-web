@@ -1,47 +1,32 @@
 import React, {useMemo} from 'react';
-import {AreaChart, Area, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
+import {Area, AreaChart, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
 
-import {
-  chooseNumeralFormat,
-  formatNumeral
-} from '../../../../../../utils/numbers';
+import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
 import {TinyAreaChartStyled} from './TinyAreaChart-styled';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsTransfersResponse} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {takeRight} from 'lodash';
 import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
+import {useFetch} from '../../../../../../hooks';
+import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
 
 export const TinyAreaChart = () => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data, loading}, getLazyStatsTransfers] = useLazyFetch<StatsTransfersResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/transfers`,
+
+  const {data, loading} = useFetch<TokenTransfersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
     withCredentials: false
   });
 
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    getLazyStatsTransfers({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
-
   const chartData = useMemo(() => {
-    if (!data) {
+    if(!data) {
       return [];
     }
-    return takeRight(data.map(item => ({
+    return data.items.map(item => ({
       date: item.date,
       transferCount: item.transferCount,
       uniqReceivers: item.uniqReceivers,
       uniqSenders: item.uniqSenders
-    })).map(dateMapF).reverse(), 15);
+    })).map(dateMapF).reverse();
   }, [data]);
 
   const fields = chartData.reduce((prev, next) => {

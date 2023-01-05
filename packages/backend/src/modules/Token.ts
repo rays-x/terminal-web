@@ -5,7 +5,7 @@ import {TokenController} from '../controllers/Token';
 import {TokenService} from '../services/Token';
 import TokenTagEntity from '../entities/Token/TokenTag';
 import PlatformEntity from '../entities/Platform';
-import TokenHistoryEntity from '../entities/Token/TokenHistory';
+import TokenHistoryEntity from '../entities/Token/History/TokenHistory';
 import PairEntity from '../entities/Pair/Pair';
 import DexEntity from '../entities/Dex';
 import {BitQueryModule} from './BitQuery';

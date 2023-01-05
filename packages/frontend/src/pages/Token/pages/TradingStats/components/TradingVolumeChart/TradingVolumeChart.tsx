@@ -1,29 +1,19 @@
 import React from 'react';
-import {AreaChart, Area, ResponsiveContainer, Tooltip} from 'recharts';
+import {Area, AreaChart, ResponsiveContainer, Tooltip} from 'recharts';
 import {getLineDefaults} from '../../TradingStats';
 import {Axes} from '../Axes/Axes';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Gradients} from '../Gradients/Gradients';
-import {
-  chooseNumeralFormat,
-  formatNumeral
-} from '../../../../../../utils/numbers';
-import {
-  SubChartValue
-} from '../../../../components/SubChart/SubChartValue/SubChartValue';
+import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
+import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
-import {
-  dateMapF,
-  getValueChange
-} from '../../../../../../presets/helpers/charts';
+import {dateMapF, getValueChange} from '../../../../../../presets/helpers/charts';
 import {TradingVolumeChartStyled} from './TradingVolumeChart-styled';
 import {useFetch} from '../../../../../../hooks';
-import {CmcVolume, Quote} from '../../../../types';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {useParams} from 'react-router';
-import {format, startOfDay, subDays} from 'date-fns';
+import {format} from 'date-fns';
 import {get, takeRight} from 'lodash';
-import {TokenVolumeResponse} from "./types";
+import {TokenVolumeResponse} from './types';
 /*
 const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -43,9 +33,6 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
   const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
   const {data: _data, loading: loading} = useFetch<TokenVolumeResponse>({
     url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/volume`,
-    params: {
-      limit: 10000
-    },
     withCredentials: false
   });
 
@@ -62,7 +49,7 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
   }, [currentCoinData, _data]);
 
   const chartData = React.useMemo(() => {
-    return data?.map(dateMapF) ?? [];
+    return data.reverse().map(dateMapF);
   }, [data]);
 
   const totalValue = React.useMemo(() => {

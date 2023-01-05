@@ -11,44 +11,60 @@ import {get} from 'lodash';
 import {useCmcSocket} from '../../store/cmcSocket';
 import {JsonPrimitive} from 'react-use-websocket/dist/lib/types';
 import {toFixedToken} from '../../utils/diff';
-import {CMC_ID_BTC, CMC_ID_ETH} from '../../constants/coinmarketcap';
 import {CmcTokenSocketProvider} from '../../store/cmcTokenSocket';
+import {useLazyFetch} from '../../hooks/useFetch';
 
 
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
 
 export const CoinPage: FC = React.memo(() => {
   const {token: slug} = useParams();
-  const [data, setData] = React.useState<CoinMainPage>();
-  const CMC_ID = data?.cmc;
-  const {data: _data, loading} = useFetch<CmcDetail['data']>({
+  const [token, setToken] = React.useState<CoinMainPage>();
+  const {data: data} = useFetch<CmcDetail['data']>({
     url: `${import.meta.env.VITE_BACKEND_URL}/token/${slug}`,
     withCredentials: false
   });
-  const {data: _dataBtc, loading: loadingBtc} = useFetch<CmcDetail>({
-    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/detail`,
-    params: {
-      id: CMC_ID_BTC
-    },
+  const [{data: dataBtc}, getBtc] = useLazyFetch<CmcDetail['data']>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/bitcoin`,
     withCredentials: false
   });
-  const {data: _dataEth, loading: loadingEth} = useFetch<CmcDetail>({
-    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/data-api/v3/cryptocurrency/detail`,
-    params: {
-      id: CMC_ID_ETH
-    },
+  const [{data: dataEth}, getEth] = useLazyFetch<CmcDetail['data']>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/ethereum`,
     withCredentials: false
   });
   const {sendMessage, lastMessage} = useCmcSocket();
-
   React.useEffect(() => {
-    if(!_data || !_dataBtc || !_dataEth) {
+    if(slug !== 'bitcoin') {
+      getBtc().catch();
+    }
+    if(slug !== 'ethereum') {
+      getEth().catch();
+    }
+  }, [slug]);
+  React.useEffect(() => {
+    console.log(slug !== 'bitcoin', slug !== 'ethereum');
+    if(!data || (
+      slug !== 'bitcoin'
+        ? !dataBtc
+        : false
+    ) || (
+      slug !== 'ethereum'
+        ? !dataEth
+        : false
+    )) {
       return;
     }
-    const data = _data;
-    const {data: dataBtc} = _dataBtc;
-    const {data: dataEth} = _dataEth;
-    setData({
+
+    console.log('data', !data || (
+      slug !== 'bitcoin'
+        ? !dataBtc
+        : false
+    ) || (
+      slug !== 'ethereum'
+        ? !dataEth
+        : false
+    ), data);
+    setToken({
       circulation_supply: data.statistics.circulatingSupply || toFixedToken(data.selfReportedCirculatingSupply, 5),
       daily_volume: data.volume,
       daily_volume_change: data.volumeChangePercentage24h,
@@ -73,14 +89,14 @@ export const CoinPage: FC = React.memo(() => {
       name: data.name,
       platform_binance: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 56), 'address', '').toLowerCase() || undefined,
       platform_ethereum: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 1), 'address', '').toLowerCase() || undefined,
-      price_btc: (1 / dataBtc.statistics.price) * data.statistics.price,
+      price_btc: dataBtc ? (1 / dataBtc.statistics.price) * data.statistics.price : undefined,
       price_change_1h: data.statistics.priceChangePercentage1h,
       price_change_7d: data.statistics.priceChangePercentage7d,
       price_change_24h: data.statistics.priceChangePercentage24h,
-      price_change_btc: data.statistics.priceChangePercentage24h - dataBtc.statistics.priceChangePercentage24h,
-      price_change_eth: data.statistics.priceChangePercentage24h - dataEth.statistics.priceChangePercentage24h,
+      price_change_btc: dataBtc ? data.statistics.priceChangePercentage24h - dataBtc.statistics.priceChangePercentage24h : undefined,
+      price_change_eth: dataEth ? data.statistics.priceChangePercentage24h - dataEth.statistics.priceChangePercentage24h : undefined,
       price_change_usd: data.statistics.priceChangePercentage24h,
-      price_eth: (1 / dataEth.statistics.price) * data.statistics.price,
+      price_eth: dataEth ? (1 / dataEth.statistics.price) * data.statistics.price : undefined,
       price_usd: data.statistics.price,
       total_supply: data.statistics.totalSupply,
       dateLaunched: data.dateLaunched ? new Date(data.dateLaunched) : (
@@ -89,17 +105,17 @@ export const CoinPage: FC = React.memo(() => {
           : undefined
       )
     });
-  }, [_data, _dataBtc, _dataEth]);
+  }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if(!CMC_ID) {
+    if(!data?.cmc || !dataBtc?.cmc || !dataEth?.cmc) {
       return;
     }
     sendMessage({
       method: 'subscribe',
       id: 'price',
       data: {
-        cryptoIds: [...new Set([CMC_ID, CMC_ID_BTC, CMC_ID_ETH])] as unknown as JsonPrimitive,
+        cryptoIds: [...new Set([data.cmc, dataBtc.cmc, dataEth.cmc])] as unknown as JsonPrimitive,
         index: 'detail'
       }
     });
@@ -109,7 +125,7 @@ export const CoinPage: FC = React.memo(() => {
         id: 'unsubscribePrice'
       });
     };
-  }, [CMC_ID]);
+  }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
     if(!lastMessage) {
@@ -120,14 +136,14 @@ export const CoinPage: FC = React.memo(() => {
       case 'price': {
         const {cr} = d;
         if(
-          data?.price_usd === undefined
-          || data?.price_change_24h === undefined
+          token?.price_usd === undefined
+          || token?.price_change_24h === undefined
         ) {
           return;
         }
-        setData(prev => {
+        setToken(prev => {
           switch(cr.id) {
-            case CMC_ID: {
+            case data?.cmc: {
               Object.keys(cr).forEach(key => {
                 switch(key) {
                   case 'p': {
@@ -166,13 +182,13 @@ export const CoinPage: FC = React.memo(() => {
               });
               break;
             }
-            case CMC_ID_BTC: {
+            case dataBtc?.cmc: {
               const priceBtc = get(cr, 'p', NaN);
               prev['price_btc'] = (1 / priceBtc) * prev.price_usd;
               prev['price_change_btc'] = prev.price_change_24h - cr.p24h;
               break;
             }
-            case CMC_ID_ETH: {
+            case dataEth?.cmc: {
               const priceEth = get(cr, 'p', NaN);
               prev['price_eth'] = (1 / priceEth) * prev.price_usd;
               prev['price_change_eth'] = prev.price_change_24h - cr.p24h;
@@ -188,9 +204,9 @@ export const CoinPage: FC = React.memo(() => {
   // console.log(data?.price_usd);
   return (
     <CmcTokenSocketProvider>
-      <CurrentCoinData.Provider value={{...data}}>
+      <CurrentCoinData.Provider value={{...token}}>
         {
-          (!data || loading || loadingBtc || loadingEth)
+          !token
             ? (
               <Loader/>
             ) : (

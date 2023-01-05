@@ -8,7 +8,7 @@ import {Logger} from '../config/logger/api-logger';
 import {awaiter, promiseMap} from '../utils';
 import {Network, TransactionsResponse} from '../dto/CoinMarketCapScraper';
 import {CmcPairListResponse} from '../types';
-import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT} from '../constants';
+import {CMC_ID_BTC_PLATFORM, CMC_ID_ETH_PLATFORM, CMC_USER_AGENT, REDIS_TAG} from '../constants';
 import {BitQueryService} from './BitQuery';
 import {CovalentService} from './Covalent';
 import {OptionsOfJSONResponseBody} from 'got/dist/source/types';
@@ -64,7 +64,7 @@ export class CoinMarketCapScraperService {
   } = {};
 
   constructor(
-    @InjectRedisClient('ray.sx') private readonly redisClient: Redis,
+    @InjectRedisClient(REDIS_TAG) private readonly redisClient: Redis,
     @Inject(BitQueryService) private readonly bitQueryService: BitQueryService,
     @Inject(CovalentService) private readonly covalentService: CovalentService
   ) {

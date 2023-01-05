@@ -4,11 +4,14 @@ import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
 import md5 from 'md5';
 import {addDays, format} from 'date-fns';
-import {BitQueryStatsTransfersQuery} from '../types/BitQuery/BitQueryStatsTransfersQuery';
+import {
+  BitQueryStatsTransfersNewQuery,
+  BitQueryStatsTransfersQuery
+} from '../types/BitQuery/BitQueryStatsTransfersQuery';
 import {BitQueryStatsSwapsQuery} from '../types/BitQuery/BitQueryStatsSwapsQuery';
 import {BitQueryStatsHoldersQuery} from '../types/BitQuery/BitQueryStatsHoldersQuery';
 import {promiseMap} from '../utils';
-import {CMC_USER_AGENT} from '../constants';
+import {CMC_USER_AGENT, REDIS_TAG} from '../constants';
 import {BitQueryStatsTradersDistributionValueQuery} from '../types/BitQuery/BitQueryStatsTradersDistributionValueQuery';
 import {getRange} from '../utils/diff';
 import {BitQueryStatsPairStatisticsQuery} from '../types/BitQuery/BitQueryStatsPairStatisticsQuery';
@@ -47,15 +50,16 @@ export class BitQueryService {
   token: string;
 
   constructor(
-    @InjectRedisClient('ray.sx') private readonly redisClient: Redis
+    @InjectRedisClient(REDIS_TAG) private readonly redisClient: Redis
   ) {
     this.cookie = '_explorer_session=4yYmFNlXf5q5TDjTin4xPrXyePxBUkQEK%2B%2FdYf7BXatzbczijLoPeXsYnXmoZznqbF5lR%2BGShh61QnrqjCAtHkhQF2HUa8g9xTIP%2B1WEaUWjR9Ji1kUW48QKL86BCTuJBzozLcjksPexQqYQN9PymBHWVBzh%2FDkDfeXSn%2F5tsTJ6DZ5AYenUDcHRwpzCPzrs38j88O%2FX0cE3krIKfwMKVNpgv5bYqwE5fV5AzhlFdrI0tltWONK7nZLJaAxXtLxQ%2BdGTHttvpUNOp%2FrrlfV5MOWWPgWV7oQ06gudbs5fG79dz9nXthlWIETNNO6FB9FoAvkGHOxziE0ZdK1eeP0le%2F8%3D--XHqGDaPmOgSBQ%2F2a--HwvPr1erEbmpJu%2FS%2F2RGgw%3D%3D';
     this.token = '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ==';
   }
 
   private async getStatsTransfers(variables: {
-    network: 'ethereum' | 'bsc',
-    token: string
+    network: string,
+    token: string,
+    since?: string
   }) {
     const {
       data: {
@@ -95,10 +99,64 @@ export class BitQueryService {
           }
         }
         `,
-        variables: {
-          ...variables,
-          since: since()
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return transfers;
+  }
+
+  private async getStatsTransfersNew(variables: {
+    network: string,
+    token: string,
+    since?: string
+  }) {
+    const {
+      data: {
+        stats: {
+          transfers
         }
+      }
+    } = await got.post<BitQueryStatsTransfersNewQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query (
+          $network: EthereumNetwork!,
+          $token: String!,
+          $since: ISO8601DateTime,
+          $till: ISO8601DateTime
+        ) {
+          stats: ethereum(network: $network) {
+            transfers(
+            options: {desc: "date.date"},
+            currency: {is: $token},
+            amount: {gt: 0},
+            date: {since: $since, till: $till}
+            ) {
+              date {
+                date: date
+              }
+              totalAmount: amount
+              totalAmountUsd: amount(in: USD)
+              medianTransferAmount: amount(calculate: median)
+              medianTransferAmountUsd: amount(calculate: median, in: USD)
+              averageTransferAmount: amount(calculate: average)
+              averageTransferAmountUsd: amount(calculate: average, in: USD)
+              uniqReceivers: count(uniq: receivers)
+              uniqSenders: count(uniq: senders)
+              transferCount: count
+            }
+          }
+        }
+        `,
+        variables: variables
       },
       headers: {
         'user-agent': CMC_USER_AGENT,
@@ -377,13 +435,15 @@ export class BitQueryService {
           case 'btcAddress': {
             return ['btc', token ? await this.getStatsTransfers({
               network: 'bsc',
-              token
+              token,
+              since: since()
             }) : undefined];
           }
           case 'ethAddress': {
             return ['eth', token ? await this.getStatsTransfers({
               network: 'ethereum',
-              token
+              token,
+              since: since()
             }) : undefined];
           }
         }
@@ -426,6 +486,64 @@ export class BitQueryService {
       }
     }
     return [];
+  }
+
+  async statsTransfersNew(values: { address: string, network: string }[]): Promise<{
+    date: string,
+    medianTransferAmount: number
+    averageTransferAmount: number
+    medianTransferAmountUsd: number
+    averageTransferAmountUsd: number
+    totalAmount: number
+    totalAmountUsd: number
+    uniqReceivers: number
+    uniqSenders: number
+    transferCount: number
+  }[]> {
+    const data: (Omit<BitQueryStatsTransfersNewQuery['data']['stats']['transfers'][0], 'date'>
+      & { date: string })[] = (await Promise.all(values.map(async ({
+                                                                     address,
+                                                                     network
+                                                                   }) => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      return (await this.getStatsTransfersNew({
+        network,
+        token: address
+      }))
+      .filter(({date: {date}}) => date !== today)
+      .map(({date, ..._}) => ({
+        date: date.date,
+        ..._
+      }));
+    }))).flatMap(_ => _);
+    return Object.entries(data.reduce<{
+      [k: string]:
+        (Omit<BitQueryStatsTransfersNewQuery['data']['stats']['transfers'][0], 'date'>
+          & { date: string })
+    }>((prev, item) => {
+      if(item['totalAmount'] > get(prev, `${item.date}.totalAmount`, 0)) {
+        set(prev, `${item.date}.medianTransferAmount`, item['medianTransferAmount']);
+        set(prev, `${item.date}.averageTransferAmount`, item['averageTransferAmount']);
+        set(prev, `${item.date}.medianTransferAmountUsd`, item['medianTransferAmountUsd']);
+        set(prev, `${item.date}.averageTransferAmountUsd`, item['averageTransferAmountUsd']);
+      }
+      set(prev, `${item.date}.totalAmount`,
+        item['totalAmount'] + get<any, string>(prev, `${item.date}.totalAmount`, 0)
+      );
+      set(prev, `${item.date}.totalAmountUsd`,
+        item['totalAmountUsd'] + get<any, string>(prev, `${item.date}.totalAmountUsd`, 0)
+      );
+      set(prev, `${item.date}.uniqReceivers`,
+        item['uniqReceivers'] + get<any, string>(prev, `${item.date}.uniqReceivers`, 0)
+      );
+      set(prev, `${item.date}.uniqSenders`,
+        item['uniqSenders'] + get<any, string>(prev, `${item.date}.uniqSenders`, 0)
+      );
+      set(prev, `${item.date}.transferCount`,
+        item['transferCount'] + get<any, string>(prev, `${item.date}.transferCount`, 0)
+      );
+      return prev;
+    }, {})).map(([date, rest]: [string, any]) => ({date, ...rest}));
   }
 
   async statsSwaps(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {

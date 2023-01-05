@@ -21,6 +21,9 @@ import {CurrentCoinData} from '../../../../CoinPage';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
 import {StatsHoldersResponse, StatsLiquidityResponse} from '../../../../types';
 import {get, take, takeRight} from 'lodash';
+import {useFetch} from '../../../../../../hooks';
+import {TokenVolumeResponse} from '../TradingVolumeChart/types';
+import {format} from 'date-fns';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 
 /*
@@ -39,30 +42,32 @@ export const LiquidityChart: React.FC = () => {
     selectedOption: 10
   });*/
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data}, getLiquidityInfo] = useLazyFetch<StatsLiquidityResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/cov/stats/liquidity`,
+  const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
+  const {data: _data, loading: loading} = useFetch<StatsLiquidityResponse[]>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/liquidity`,
     withCredentials: false
   });
 
   React.useEffect(() => {
-    if (!currentCoinData?.id) {
+    if(!_data || !currentCoinData) {
       return;
     }
-    getLiquidityInfo({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
+    const items = get(_data, 'items', [])
+    .map(({date, liquidity}) => ({
+      date: format(new Date(date), 'yyyy-MM-dd'),
+      amount: liquidity
+    }))/*.concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume})*/;
+    setData(items);
+  }, [currentCoinData, _data]);
 
   const chartData = useMemo<typeof data>(() => {
-    return takeRight(data, 20).map(dateMapF) ?? [];
+    return data.reverse().map(dateMapF);
   }, [data]);
 
   const totalValue = React.useMemo(() => {
     return get(takeRight(chartData, 1), '0.amount', 0);
   }, [chartData]);
+
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
