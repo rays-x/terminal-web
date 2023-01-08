@@ -3,6 +3,9 @@ import {defaultModelOptions, defaultSchemaOptions} from '../../../mongoose.confi
 import {_SimpleEntity} from '../../_BaseEntity';
 import TokenEntity from '../Token';
 import {TokenHistoryTransfers} from './TokenHistoryTransfers';
+import {TokenHistorySwaps} from './TokenHistorySwaps';
+import {TokenHistoryHolders} from './TokenHistoryHolders';
+import {TokenHistoryTraders} from './TokenHistoryTraders';
 
 
 @modelOptions({
@@ -49,12 +52,27 @@ export class TokenHistoryEntity extends _SimpleEntity {
     type: () => TokenHistoryTransfers
   })
   transfers?: TokenHistoryTransfers;
+  @prop({
+    _id: false,
+    type: () => TokenHistorySwaps
+  })
+  swaps?: TokenHistorySwaps;
+  @prop({
+    _id: false,
+    type: () => TokenHistoryHolders
+  })
+  holders?: TokenHistoryHolders;
+  @prop({
+    _id: false,
+    type: () => TokenHistoryTraders
+  })
+  traders?: TokenHistoryTraders[];
 }
 
 export default TokenHistoryEntity;
 
 export const TokenHistoryEntityDefaultSelect = [
-  'id',
+  '_id',
   'volume',
   'marketCap',
   'price',
@@ -62,7 +80,25 @@ export const TokenHistoryEntityDefaultSelect = [
 ];
 
 export const TokenHistoryEntityTransfersSelect = [
-  'id',
+  '_id',
   'date',
   'transfers'
+];
+
+export const TokenHistoryEntitySwapsSelect = [
+  '_id',
+  'date',
+  'swaps'
+];
+
+export const TokenHistoryEntityHoldersSelect = [
+  '_id',
+  'date',
+  'holders'
+];
+
+export const TokenHistoryEntityTradersSelect = [
+  '_id',
+  'date',
+  'traders'
 ];

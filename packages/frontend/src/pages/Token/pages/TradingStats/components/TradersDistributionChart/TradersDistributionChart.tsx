@@ -41,7 +41,7 @@ export const TradersDistributionChart: React.FC = React.memo(() => {
   const [activeBarId, setActiveBarId] = React.useState<number | null>(null);
 
   const chartData = React.useMemo(() => {
-    return (data || []).map((item) => ({
+    return (data || []).reverse().map((item) => ({
       userCount: item.userCount,
       tradeAmount: formatNumeral(toFixedToken(item.tradeAmount, 8), NUMERAL_FORMAT_NUM)
     }));

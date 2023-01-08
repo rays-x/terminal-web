@@ -170,6 +170,88 @@ export class BitQueryService {
     return transfers;
   }
 
+  private async getStatsSwapsNew(variables: {
+    network: string,
+    token: string,
+  }) {
+    const {
+      data: {
+        stats: {
+          swaps
+        }
+      }
+    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            swaps: dexTrades(
+              baseCurrency: {is: $token}
+              options: {desc: "date.date"}
+              date: {since: $since, till: null}
+            ) {
+              date {
+                date
+              }
+              tradeAmountUsd: tradeAmount(in: USD)
+              countTxs: count(uniq: txs)
+            }
+          }
+        }
+        `,
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return swaps;
+  }
+
+  private async getStatsHoldersNew(variables: {
+    network: string,
+    token: string,
+    till: string
+  }): Promise<number> {
+    const {
+      data: {
+        stats: {
+          holders
+        }
+      }
+    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            holders: transfers(
+              currency: {is: $token}
+              date: {till: $till}
+            ) {
+              count(uniq: receivers, amount: {gt: 0})
+            }
+          }
+        }
+        `,
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return get(holders, '0.count', 0);
+  }
+
   private async getStatsSwaps(variables: {
     network: 'ethereum' | 'bsc',
     token: string
@@ -317,6 +399,102 @@ export class BitQueryService {
       offsetStep++;
     }
     return result;
+  }
+
+  async getStatsTradersDistributionValueNew(variables: {
+    network: string,
+    address: string,
+    since: string
+    till: string
+  }): Promise<void> {
+    const cacheKey = `tdv:${md5(JSON.stringify(variables))}`;
+    for(let offsetStep = 0; offsetStep < 1250; offsetStep++) {
+      try {
+        try {
+          const cache = JSON.parse(await this.redisClient.get(`${cacheKey}:${offsetStep + 1}`) || 'null');
+          if(cache) {
+            return;
+          }
+        } catch(e) {
+          console.log(e);
+        }
+        const {
+          data: {
+            stats: {
+              tradersDistributionValue
+            }
+          }
+        } = await got.post<BitQueryStatsTradersDistributionValueQuery>('https://explorer.bitquery.io/proxy_graphql', {
+          json: {
+            query: `
+            query ($network: EthereumNetwork!, $token: String!, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
+              stats: ethereum(network: $network) {
+                tradersDistributionValue: dexTrades(
+                  options: {limit: $limit, offset: $offset}
+                  baseCurrency: {is: $token}
+                  date: {since: $since, till: $till}
+                  tradeAmountUsd: {gt: 0}
+                ) {
+                  maker {
+                    address
+                  }
+                  taker {
+                    address
+                  }
+                  tradeAmount(in: USD)
+                }
+              }
+            }
+            `,
+            variables: {
+              network: variables.network,
+              token: variables.address.trim().toLowerCase(),
+              since: variables.since,
+              till: variables.till,
+              offset: 25000 * offsetStep
+            }
+          },
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br',
+            'Cookie': this.cookie,
+            'X-CSRF-Token': this.token
+          },
+          responseType: 'json',
+          resolveBodyOnly: true
+        });
+        await this.redisClient.set(cacheKey, JSON.stringify(offsetStep + 1), 'PX', 72 * 60 * 60 * 1000);
+        const minAmount: number = Math.min(...tradersDistributionValue.map((t) => t.tradeAmount)) || 0;
+        const maxAmount: number = Math.max(...tradersDistributionValue.map((t) => t.tradeAmount)) || 0;
+        try {
+          await this.redisClient.set(`${cacheKey}:${offsetStep + 1}`, JSON.stringify(tradersDistributionValue), 'PX', 72 * 60 * 60 * 1000);
+        } catch(e) {
+          console.log(e);
+        }
+        try {
+          const prevMin = JSON.parse(await this.redisClient.get(`${cacheKey}:min`) || 'null');
+          await this.redisClient.set(`${cacheKey}:min`, JSON.stringify(
+            prevMin ? (minAmount < prevMin ? minAmount : prevMin) : minAmount
+          ), 'PX', 72 * 60 * 60 * 1000);
+        } catch(e) {
+          console.log(e);
+        }
+        try {
+          const prevMax = JSON.parse(await this.redisClient.get(`${cacheKey}:max`) || 'null');
+          await this.redisClient.set(`${cacheKey}:max`, JSON.stringify(
+            prevMax ? (maxAmount > prevMax ? maxAmount : prevMax) : maxAmount
+          ), 'PX', 72 * 60 * 60 * 1000);
+        } catch(e) {
+          console.log(e);
+        }
+        if(!tradersDistributionValue.length || tradersDistributionValue.length < 25000) {
+          break;
+        }
+      } catch(e) {
+        console.log(e, variables);
+        break;
+      }
+    }
   }
 
   private async getStatsPairStatistics(variables: {
@@ -546,6 +724,56 @@ export class BitQueryService {
     }, {})).map(([date, rest]: [string, any]) => ({date, ...rest}));
   }
 
+  async statsSwapsNew(values: { address: string, network: string }[]): Promise<{
+    date: string,
+    tradeAmountUsd: number
+    countTxs: number
+  }[]> {
+    const data: (Omit<BitQueryStatsSwapsQuery['data']['stats']['swaps'][0], 'date'>
+      & { date: string })[] = (await Promise.all(values.map(async ({
+                                                                     address,
+                                                                     network
+                                                                   }) => {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      return (await this.getStatsSwapsNew({
+        network,
+        token: address
+      }))
+      .filter(({date: {date}}) => date !== today)
+      .map(({date, ..._}) => ({
+        date: date.date,
+        ..._
+      }));
+    }))).flatMap(_ => _);
+    return Object.entries(data.reduce<{
+      [k: string]:
+        (Omit<BitQueryStatsSwapsQuery['data']['stats']['swaps'][0], 'date'>
+          & { date: string })
+    }>((prev, item) => {
+      set(prev, `${item.date}.tradeAmountUsd`,
+        item['tradeAmountUsd'] + get<any, string>(prev, `${item.date}.tradeAmountUsd`, 0)
+      );
+      set(prev, `${item.date}.countTxs`,
+        item['countTxs'] + get<any, string>(prev, `${item.date}.countTxs`, 0)
+      );
+      return prev;
+    }, {})).map(([date, rest]: [string, any]) => ({date, ...rest}));
+  }
+
+  async statsHoldersNew(values: { address: string, network: string }[], date: string): Promise<number> {
+    const data: number[] = await Promise.all(values.map(async ({
+                                                                 address,
+                                                                 network
+                                                               }) => {
+      return await this.getStatsHoldersNew({
+        network,
+        token: address,
+        till: date
+      });
+    }));
+    return data.reduce((p, n) => p + n, 0);
+  }
+
   async statsSwaps(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
     const cacheKey = `cmc:statsSwaps:${md5(`${btcAddress}_${ethAddress}`)}`;
     try {
@@ -699,10 +927,6 @@ export class BitQueryService {
     try {
       const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
       if(cacheKey in this.awaiterTradersDistributionValueList) {
-        // console.log('statsHolders.cacheKey in await');
-        if(cache && !update) {
-          return cache;
-        }
         return [];
       }
       if(cache && !update) {
@@ -739,7 +963,7 @@ export class BitQueryService {
       const amounts = trades.map((t) => t.tradeAmount);
       const minAmount: number = Math.min(...amounts);
       const maxAmount: number = Math.max(...amounts);
-      const steps = getRange(minAmount, maxAmount, 25).map(tradeAmount => ({
+      const steps = getRange(minAmount, maxAmount, 175000).map(tradeAmount => ({
         tradeAmount,
         userCount: 0,
         swapsCount: 0
@@ -764,7 +988,55 @@ export class BitQueryService {
         steps[stepIndex]['swapsCount']++;
         return userStepsCount;
       }, []);
-      const result = steps.filter(({swapsCount, userCount}) => swapsCount || userCount);
+      const result = steps
+      .filter(({swapsCount, userCount}) => swapsCount || userCount)
+      .reduce((prev, {tradeAmount, userCount, swapsCount}) => {
+        const prevElement = prev.at(-1);
+        const prevUserCount = get<any[], string, number>(prevElement, 'userCount', 0);
+        const prevSwapsCount = get<any[], string, number>(prevElement, 'swapsCount', 0);
+        if(
+          swapsCount === 1
+          && prevSwapsCount === 1
+        ) {
+          return [...prev.filter((_, i) => i !== prev.length - 1), {
+            tradeAmount,
+            userCount: prevUserCount + userCount,
+            swapsCount: prevSwapsCount + swapsCount
+          }];
+        }
+        return [...prev, {
+          tradeAmount,
+          userCount,
+          swapsCount
+        }];
+      }, [])
+      .reverse()
+      .reduce((prev, {tradeAmount, userCount, swapsCount}) => {
+        const prevElement = prev.at(-1);
+        const prevTradeAmount = get<any[], string, number>(prevElement, 'tradeAmount', 0);
+        const prevUserCount = get<any[], string, number>(prevElement, 'userCount', 0);
+        const prevSwapsCount = get<any[], string, number>(prevElement, 'swapsCount', 0);
+        if(
+          prevUserCount >= userCount
+          || prevSwapsCount >= swapsCount
+        ) {
+          return [...prev.filter((_, i) => i !== prev.length - 1), {
+            tradeAmount: prevTradeAmount,
+            userCount: prevUserCount + userCount,
+            swapsCount: prevSwapsCount + swapsCount
+          }, {
+            tradeAmount,
+            userCount: prevUserCount + userCount,
+            swapsCount: prevSwapsCount + swapsCount
+          }];
+        }
+        return [...prev, {
+          tradeAmount,
+          userCount,
+          swapsCount
+        }];
+      }, [])
+      .reverse();
       await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
       if(cacheKey in this.awaiterTradersDistributionValueList) {
         delete this.awaiterTradersDistributionValueList[cacheKey];

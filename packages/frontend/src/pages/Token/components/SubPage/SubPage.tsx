@@ -77,19 +77,19 @@ export const SubPage: FC = React.memo(() => {
         ))}
       </CoinPageStyled.SubPagesButtons>
       <>
-        {/*<Element name={SubPages.PriceChart}>
+        <Element name={SubPages.PriceChart}>
           <PriceChart/>
-        </Element>*/}
+        </Element>
         {/*<Element name={SubPages.Transactions}>
           <Transactions/>
         </Element>*/}
         <Element name={SubPages.TokenStats}>
           <TokenStats/>
         </Element>
-        {/*<Element name={SubPages.TradingStats}>
+        <Element name={SubPages.TradingStats}>
           <TradingStats/>
         </Element>
-        <Element name={SubPages.TradingPairStatistics}>
+        {/*<Element name={SubPages.TradingPairStatistics}>
           <TradingPairStatistics/>
         </Element>*/}
       </>

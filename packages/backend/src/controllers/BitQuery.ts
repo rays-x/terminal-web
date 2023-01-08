@@ -52,7 +52,7 @@ export class BitQueryController {
       btcAddress
     }: QueryStatsTransferDto
   ) {
-    return this.service.statsTradersDistributionValue(btcAddress, ethAddress);
+    return this.service.statsTradersDistributionValue(btcAddress, ethAddress, false);
   }
 
   @Post('stats/pair-statistics')

@@ -1,22 +1,22 @@
 import {prop} from '@typegoose/typegoose';
 
 export class TokenHistoryTransfers {
-  @prop({})
+  @prop()
   totalAmount?: number;
-  @prop({})
+  @prop()
   totalAmountUsd?: number;
-  @prop({})
+  @prop()
   medianTransferAmount?: number;
-  @prop({})
+  @prop()
   medianTransferAmountUsd?: number;
-  @prop({})
+  @prop()
   averageTransferAmount?: number;
-  @prop({})
+  @prop()
   averageTransferAmountUsd?: number;
-  @prop({})
+  @prop()
   uniqReceivers?: number;
-  @prop({})
+  @prop()
   uniqSenders?: number;
-  @prop({})
+  @prop()
   transferCount?: number;
 }

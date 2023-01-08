@@ -23,6 +23,8 @@ import {CurrentCoinData} from '../../../../CoinPage';
 import {useLazyFetch} from '../../../../../../hooks/useFetch';
 import {StatsHoldersResponse} from '../../../../types';
 import {get, takeRight} from 'lodash';
+import {useFetch} from '../../../../../../hooks';
+import {TokenHoldersResponse} from '../../../../../../types/api/TokenHoldersResponse';
 
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -40,28 +42,16 @@ export const HoldersChart: React.FC = React.memo(() => {
 });*/
   const currentCoinData = React.useContext(CurrentCoinData);
 
-  const [{data}, getHoldersInfo] = useLazyFetch<StatsHoldersResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/holders`,
+  const {data, loading} = useFetch<TokenHoldersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/holders`,
     withCredentials: false
   });
 
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    getHoldersInfo({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
-
   const chartData = React.useMemo(() => {
-    return data?.map(dateMapF).reverse() ?? [];
+    return data?.items.map(dateMapF).reverse() ?? [];
   }, [data]);
 
-  const totalValue = get(data, '0.count', 0);
+  const totalValue = get(data, 'items.0.count', 0);
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({

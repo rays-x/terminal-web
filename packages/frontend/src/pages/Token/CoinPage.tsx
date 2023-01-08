@@ -42,7 +42,6 @@ export const CoinPage: FC = React.memo(() => {
     }
   }, [slug]);
   React.useEffect(() => {
-    console.log(slug !== 'bitcoin', slug !== 'ethereum');
     if(!data || (
       slug !== 'bitcoin'
         ? !dataBtc
@@ -54,16 +53,6 @@ export const CoinPage: FC = React.memo(() => {
     )) {
       return;
     }
-
-    console.log('data', !data || (
-      slug !== 'bitcoin'
-        ? !dataBtc
-        : false
-    ) || (
-      slug !== 'ethereum'
-        ? !dataEth
-        : false
-    ), data);
     setToken({
       circulation_supply: data.statistics.circulatingSupply || toFixedToken(data.selfReportedCirculatingSupply, 5),
       daily_volume: data.volume,
@@ -108,14 +97,22 @@ export const CoinPage: FC = React.memo(() => {
   }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if(!data?.cmc || !dataBtc?.cmc || !dataEth?.cmc) {
+    if(!data || (
+      slug !== 'bitcoin'
+        ? !dataBtc
+        : false
+    ) || (
+      slug !== 'ethereum'
+        ? !dataEth
+        : false
+    )) {
       return;
     }
     sendMessage({
       method: 'subscribe',
       id: 'price',
       data: {
-        cryptoIds: [...new Set([data.cmc, dataBtc.cmc, dataEth.cmc])] as unknown as JsonPrimitive,
+        cryptoIds: [...new Set([data.cmc, dataBtc?.cmc, dataEth?.cmc].filter(Boolean))] as unknown as JsonPrimitive,
         index: 'detail'
       }
     });

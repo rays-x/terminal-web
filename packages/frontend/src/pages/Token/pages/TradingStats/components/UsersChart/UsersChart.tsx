@@ -1,33 +1,22 @@
 import {throttle} from 'lodash-es';
 import React, {useMemo} from 'react';
-import {
-  Area,
-  AreaChart,
-  Legend,
-  ResponsiveContainer,
-  Tooltip
-} from 'recharts';
+import {Area, AreaChart, Legend, ResponsiveContainer, Tooltip} from 'recharts';
 import {getLineDefaults} from '../../TradingStats';
 import {Axes} from '../Axes/Axes';
-import {
-  CustomTooltip
-} from '../CustomTooltip/CustomTooltip';
+import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Gradients} from '../Gradients/Gradients';
 import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
-import {
-  chooseNumeralFormat,
-  formatNumeral
-} from '../../../../../../utils/numbers';
+import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {SubChartHeaderVariant} from '../../../../components/SubChart/SubChartHeader/SubChartHeader-styled';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
 import {UsersChartStyled} from './UsersChart-styled';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsHoldersResponse} from '../../../../types';
 import {get} from 'lodash';
-import {addDays, format} from 'date-fns';
+import {addDays} from 'date-fns';
+import {useFetch} from '../../../../../../hooks';
+import {TokenHoldersResponse} from '../../../../../../types/api/TokenHoldersResponse';
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
@@ -43,29 +32,18 @@ export const UsersChart: React.FC = React.memo(() => {
   selectedOption: 10
 });*/
   const currentCoinData = React.useContext(CurrentCoinData);
-  const [{data}, getHoldersInfo] = useLazyFetch<StatsHoldersResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/bq/stats/holders`,
+  const {data, loading} = useFetch<TokenHoldersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/holders`,
     withCredentials: false
   });
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    getHoldersInfo({
-      params: {
-        btcAddress: currentCoinData.platform_binance,
-        ethAddress: currentCoinData.platform_ethereum
-      }
-    }).catch();
-  }, [currentCoinData?.id]);
 
   const chartData = useMemo(() => {
-    const oldUsers = data?.reverse() ?? [];
+    const oldUsers = data?.items.reverse() ?? [];
     const newUsers = oldUsers.reduce((prev, {
       date,
       count
     }) => {
-      const prevDate = format(addDays(new Date(date), -1), 'yyyy-MM-dd');
+      const prevDate = addDays(new Date(date), -1).toISOString();
       const foundPrevOldUsers = oldUsers.find(({date}) => date === prevDate);
       const replaceCount = foundPrevOldUsers ? count - foundPrevOldUsers.count : 0;
       return [...prev, {date, count: replaceCount}];
@@ -78,7 +56,7 @@ export const UsersChart: React.FC = React.memo(() => {
   }, [data]);
 
   const totalValue = React.useMemo(() => {
-    const users = data?.reverse() ?? [];
+    const users = data?.items.reverse() ?? [];
     return get(users, '0.count', 0);
   }, [data]);
   const value = formatNumeral(

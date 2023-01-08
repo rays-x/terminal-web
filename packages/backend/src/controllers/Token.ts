@@ -84,6 +84,45 @@ export class TokenController {
     return this.service.transfers(id, args)
   }
 
+  @Get('token/:id/swaps')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async swaps(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.swaps(id, args)
+  }
+
+  @Get('token/:id/holders')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async holders(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.holders(id, args)
+  }
+
+  @Get('token/:id/traders')
+  @HttpCode(200)
+  @ApiParam({
+    name: 'id',
+    type: String
+  })
+  async traders(
+    @Param() {id}: TokenIdDto,
+    @Query() args: TokenPaginationDto
+  ) {
+    return this.service.traders(id, args)
+  }
+
   @Get('token/:id/pairs')
   @HttpCode(200)
   @ApiParam({

@@ -21,7 +21,12 @@ import PlatformEntity from '../entities/Platform';
 import {Logger} from '../config/logger/api-logger';
 import {NewQueryTokensDto, TokenPaginationDto, TokensSortBy, TokensSortOrder} from '../dto/CoinMarketCapScraper';
 import {CmcToken} from './CoinMarketCapScraper';
-import TokenHistoryEntity from '../entities/Token/History/TokenHistory';
+import TokenHistoryEntity, {
+  TokenHistoryEntityHoldersSelect,
+  TokenHistoryEntitySwapsSelect,
+  TokenHistoryEntityTradersSelect,
+  TokenHistoryEntityTransfersSelect
+} from '../entities/Token/History/TokenHistory';
 import {addDays, differenceInDays, format} from 'date-fns';
 import {CoinMarketCapHistoricalResponse} from '../types/CoinMarketCap/CoinMarketCapHistoricalResponse';
 import {Types} from 'mongoose';
@@ -41,6 +46,11 @@ import PairHistoryEntity, {PairHistoryEntityDefaultSelect} from '../entities/Pai
 import {PairLiquidityItem} from '../types/Token/PairLiquidityItem';
 import {HttpStatusMessages} from '../messages/http';
 import {TokenTransfersItem} from '../types/Token/TokenTransfersItem';
+import {TokenSwapsItem} from '../types/Token/TokenSwapsItem';
+import {TokenHoldersItem} from '../types/Token/TokenHoldersItem';
+import md5 from 'md5';
+import {getRange} from '../utils/diff';
+import {TokenTradersItem} from '../types/Token/TokenTradersItem';
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
 
@@ -109,7 +119,9 @@ export class TokenService implements OnModuleInit {
   async onModuleInit() {
     promiseMap([
       /*this._syncTokens, this._syncTokensHistory, this._syncPlatforms, this._syncDexs*/
-      this._syncTokenTransfers
+      // this._syncTokenTransfers
+      // this._syncTokenHolders
+      this._syncTradersVolume
     ], async (start) => {
       try {
         await start(this);
@@ -826,11 +838,6 @@ export class TokenService implements OnModuleInit {
       })))
     })));
     await promiseMap<typeof tokens[0]>(tokens, async token => {
-      const cacheKey = `token:stt:${token.id}`;
-      const cache = JSON.parse(await self.redisClient.get(cacheKey) || 'null');
-      if(cache) {
-        // return;
-      }
       try {
         const data = await self.bitQueryService.statsTransfersNew(token.platforms.map(({
                                                                                          address,
@@ -850,14 +857,352 @@ export class TokenService implements OnModuleInit {
       } catch(e) {
         return console.error(e);
       }
-      try {
-        await self.redisClient.set(cacheKey, JSON.stringify(true), 'PX', 24 * 60 * 60 * 1000);
-      } catch(e) {
-        //
-      }
       Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
     });
     Logger.debug(`_syncTokenTransfers done`);
+  }
+
+  private async _syncTokenSwaps(self: TokenService) {
+    Logger.debug(`_syncTokenSwaps start`);
+    const TokenChainIdStrings = TOKEN_CHAIN_IDS.map(String);
+    const platforms = (await self.repoPlatform.find({
+      _id: {
+        $in: TOKEN_CHAIN_IDS
+      },
+      bqSlug: {
+        $exists: true
+      }
+    }).select('bqSlug')).map(({id, bqSlug}) => ({id, bqSlug}));
+    const tokens: {
+      id: string,
+      platforms: {
+        address: string
+        bqSlug: string
+      }[]
+    }[] = await Promise.all((await self.repoToken.find({
+      ...self.sharedFilter,
+      platforms: {
+        ...self.sharedFilter.platforms,
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      },
+      dexVolume: {
+        $gt: 0
+      }
+    })
+    .select(['_id', 'platforms.address'])
+    .populate({
+      ...TokenEntityPlatformPopulate,
+      select: ['_id', 'cmc']
+    }).sort('-statistics.marketCap'))
+    .map(async item => ({
+      id: String(item.id),
+      platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
+                                                                                                                                         platform,
+                                                                                                                                         address
+                                                                                                                                       }) => ({
+        address,
+        bqSlug: platforms.find(_platform => _platform.id === String(platform.id))?.bqSlug
+      })))
+    })));
+    await promiseMap<typeof tokens[0]>(tokens, async token => {
+      try {
+        const data = await self.bitQueryService.statsSwapsNew(token.platforms.map(({
+                                                                                     address,
+                                                                                     bqSlug: network
+                                                                                   }) => ({
+          address,
+          network
+        })));
+        await Promise.all(data.map(async ({date, ...swaps}) => {
+          await self.repoTokenHistory.findOneAndUpdate({
+            token: token.id,
+            date: new Date(date)
+          }, {
+            swaps
+          });
+        }));
+      } catch(e) {
+        return console.error(e);
+      }
+      Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
+    });
+    Logger.debug(`_syncTokenSwaps done`);
+  }
+
+  private async _syncTokenHolders(self: TokenService) {
+    Logger.debug(`_syncTokenHolders start`);
+    const TokenChainIdStrings = TOKEN_CHAIN_IDS.map(String);
+    const platforms = (await self.repoPlatform.find({
+      _id: {
+        $in: TOKEN_CHAIN_IDS
+      },
+      bqSlug: {
+        $exists: true
+      }
+    }).select('bqSlug')).map(({id, bqSlug}) => ({id, bqSlug}));
+    const tokens: {
+      id: string,
+      platforms: {
+        address: string
+        bqSlug: string
+      }[]
+    }[] = await Promise.all((await self.repoToken.find({
+      ...self.sharedFilter,
+      platforms: {
+        ...self.sharedFilter.platforms,
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      }
+    })
+    .select(['_id', 'platforms.address'])
+    .populate({
+      ...TokenEntityPlatformPopulate,
+      select: ['_id', 'cmc']
+    }).sort('-statistics.marketCap'))
+    .map(async item => ({
+      id: String(item.id),
+      platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
+                                                                                                                                         platform,
+                                                                                                                                         address
+                                                                                                                                       }) => ({
+        address,
+        bqSlug: platforms.find(_platform => _platform.id === String(platform.id))?.bqSlug
+      })))
+    })));
+    const tokensChunks = chunk([tokens[0]], 15);
+    await promiseMap<typeof tokensChunks[0]>([tokensChunks[0]], async _tokens => {
+      await Promise.all(_tokens.map(async token => {
+        try {
+          const dates = await self.repoTokenHistory.find({
+            token: token.id,
+            holders: {
+              $exists: false
+            }
+          }).select('date');
+          await promiseMap<typeof dates[0]>(dates, async ({date}) => {
+            const count = await self.bitQueryService.statsHoldersNew(token.platforms.map(({
+                                                                                            address,
+                                                                                            bqSlug: network
+                                                                                          }) => ({
+              address,
+              network
+            })), date.toISOString());
+            await self.repoTokenHistory.findOneAndUpdate({
+              token: token.id,
+              date: date
+            }, {
+              holders: {
+                count
+              }
+            });
+          });
+          Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
+        } catch(e) {
+          console.error(e);
+        }
+      }));
+    });
+    Logger.debug(`_syncTokenHolders done`);
+  }
+
+  private async _syncTradersVolume(self: TokenService) {
+    Logger.debug(`_syncTdv start`);
+    const TokenChainIdStrings = TOKEN_CHAIN_IDS.map(String);
+    const platforms = (await self.repoPlatform.find({
+      _id: {
+        $in: TOKEN_CHAIN_IDS
+      },
+      bqSlug: {
+        $exists: true
+      }
+    }).select('bqSlug')).map(({id, bqSlug}) => ({id, bqSlug}));
+    const tokens: {
+      id: string,
+      platforms: {
+        address: string
+        bqSlug: string
+      }[]
+    }[] = await Promise.all((await self.repoToken.find({
+      ...self.sharedFilter,
+      platforms: {
+        ...self.sharedFilter.platforms,
+        $elemMatch: {
+          platform: {
+            $in: TOKEN_CHAIN_IDS
+          }
+        }
+      },
+      dexVolume: {
+        $gt: 0
+      }
+    })
+    .select(['_id', 'platforms.address'])
+    .populate({
+      ...TokenEntityPlatformPopulate,
+      select: ['_id', 'cmc']
+    }).sort('-statistics.marketCap'))
+    .map(async item => ({
+      id: String(item.id),
+      platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
+                                                                                                                                         platform,
+                                                                                                                                         address
+                                                                                                                                       }) => ({
+        address,
+        bqSlug: platforms.find(_platform => _platform.id === String(platform.id))?.bqSlug
+      })))
+    })));
+    const tokensChunks = chunk(tokens, 15);
+    await promiseMap<typeof tokensChunks[0]>(tokensChunks, async _tokens => {
+      await Promise.all(_tokens.map(async token => {
+        try {
+          const since = `${format(addDays(new Date(), -4), 'yyyy-MM-dd')}T00:00:00.000Z`;
+          const till = `${format(addDays(new Date(), -3), 'yyyy-MM-dd')}T00:00:00.000Z`;
+          if(await self.repoTokenHistory.countDocuments({
+            token: token.id,
+            date: since,
+            traders: {
+              $exists: true
+            }
+          })) {
+            return;
+          }
+          const chains = token.platforms.map(({
+                                                address,
+                                                bqSlug: network
+                                              }) => ({
+            address,
+            network,
+            since,
+            till
+          }));
+          await promiseMap<typeof chains[0]>(chains, async (variables) => {
+            try {
+              await self.bitQueryService.getStatsTradersDistributionValueNew(variables);
+            } catch(e) {
+              return console.error(e);
+            }
+          });
+          const [minAmount, maxAmount] = (await Promise.all(chains.map(async variables => {
+            const cacheKey = `tdv:${md5(JSON.stringify(variables))}`;
+            const min: number = JSON.parse(await self.redisClient.get(`${cacheKey}:min`) || '0');
+            const max: number = JSON.parse(await self.redisClient.get(`${cacheKey}:max`) || '0');
+            await self.redisClient.del(`${cacheKey}:min`);
+            await self.redisClient.del(`${cacheKey}:max`);
+            return [min, max];
+          }))).reduce((prev, [min, max]) => {
+            const prevMin = prev.at(0);
+            const prevMax = prev.at(1);
+            return [
+              prevMin ? (
+                min < prevMin ? min : prevMin
+              ) : min,
+              prevMax ? (
+                max > prevMax ? max : prevMax
+              ) : max
+            ];
+          }, [0, 0]);
+          const steps = getRange(minAmount, maxAmount, 175000).map(tradeAmount => ({
+            tradeAmount,
+            userCount: 0,
+            swapsCount: 0
+          }));
+          await promiseMap<typeof chains[0]>(chains, async (variables) => {
+            const userStepsCount: string[] = [];
+            const cacheKey = `tdv:${md5(JSON.stringify(variables))}`;
+            const stepOffsets = JSON.parse(await self.redisClient.get(cacheKey) || '0');
+            await self.redisClient.del(cacheKey);
+            await promiseMap(Array.from({length: stepOffsets}).map((_, i) => `${cacheKey}:${i + 1}`), async (cacheKey) => {
+              JSON.parse(await self.redisClient.get(cacheKey) || '[]').forEach(trade => {
+                const stepIndex = steps.findIndex(({tradeAmount}, index) => {
+                  const lastStep = index + 1 === steps.length;
+                  return tradeAmount <= trade.tradeAmount
+                    && (lastStep || trade.tradeAmount < get(steps, `${index + 1}.tradeAmount`, 0));
+                });
+                if(stepIndex == -1) {
+                  return;
+                }
+                [...new Set([trade.maker.address, trade.taker.address])].forEach(user => {
+                  const cacheUserStep = `${user}_${stepIndex}`;
+                  if(userStepsCount.includes(cacheUserStep)) {
+                    return;
+                  }
+                  steps[stepIndex]['userCount']++;
+                  userStepsCount.push(cacheUserStep);
+                });
+                steps[stepIndex]['swapsCount']++;
+              });
+              await self.redisClient.del(cacheKey);
+            });
+          });
+          const traders = steps
+          .filter(({swapsCount, userCount}) => swapsCount || userCount)
+          .reduce((prev, {tradeAmount, userCount, swapsCount}) => {
+            const prevElement = prev.at(-1);
+            const prevUserCount = get<any[], string, number>(prevElement, 'userCount', 0);
+            const prevSwapsCount = get<any[], string, number>(prevElement, 'swapsCount', 0);
+            if(
+              swapsCount === 1
+              && prevSwapsCount === 1
+            ) {
+              return [...prev.filter((_, i) => i !== prev.length - 1), {
+                tradeAmount,
+                userCount: prevUserCount + userCount,
+                swapsCount: prevSwapsCount + swapsCount
+              }];
+            }
+            return [...prev, {
+              tradeAmount,
+              userCount,
+              swapsCount
+            }];
+          }, [])
+          .reverse()
+          .reduce((prev, {tradeAmount, userCount, swapsCount}) => {
+            const prevElement = prev.at(-1);
+            const prevTradeAmount = get<any[], string, number>(prevElement, 'tradeAmount', 0);
+            const prevUserCount = get<any[], string, number>(prevElement, 'userCount', 0);
+            const prevSwapsCount = get<any[], string, number>(prevElement, 'swapsCount', 0);
+            if(
+              prevUserCount >= userCount
+              || prevSwapsCount >= swapsCount
+            ) {
+              return [...prev.filter((_, i) => i !== prev.length - 1), {
+                tradeAmount: prevTradeAmount,
+                userCount: prevUserCount + userCount,
+                swapsCount: prevSwapsCount + swapsCount
+              }, {
+                tradeAmount,
+                userCount: prevUserCount + userCount,
+                swapsCount: prevSwapsCount + swapsCount
+              }];
+            }
+            return [...prev, {
+              tradeAmount,
+              userCount,
+              swapsCount
+            }];
+          }, [])
+          .reverse();
+          await self.repoTokenHistory.findOneAndUpdate({
+            token: token.id,
+            date: new Date(since)
+          }, {
+            traders
+          });
+          Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
+        } catch(e) {
+          console.error(e);
+        }
+      }));
+    });
+    Logger.debug(`_syncTdv done`);
   }
 
   public async tokens({
@@ -986,10 +1331,7 @@ export class TokenService implements OnModuleInit {
   }
 
   public async token(slug: string): Promise<any> {
-    const {
-      cmcAdded,
-      ...token
-    } = (
+    const token = (
       await this.repoToken
       .findOne({slug})
       .select([...TokenEntityDefaultSelect, 'cmcAdded'])
@@ -998,9 +1340,10 @@ export class TokenService implements OnModuleInit {
     if(!token) {
       throw new HttpException(HttpStatusMessages.NOT_FOUND, HttpStatus.NOT_FOUND);
     }
+    const {cmcAdded, ...result} = token;
     return {
-      ...token,
-      dateLaunched: token.dateLaunched || cmcAdded
+      ...result,
+      dateLaunched: result.dateLaunched || cmcAdded
     };
   }
 
@@ -1050,7 +1393,7 @@ export class TokenService implements OnModuleInit {
     .skip(Number(offset))
     .limit(Number(limit) || Infinity)
     .sort('-date')
-    .select(['_id', 'date', 'transfers']),
+    .select(TokenHistoryEntityTransfersSelect),
       this.repoTokenHistory.count(filter)
     ]);
     const result = {
@@ -1060,6 +1403,120 @@ export class TokenService implements OnModuleInit {
           id,
           date,
           ...transfers
+        };
+      }),
+      count
+    };
+    await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+    return result;
+  }
+
+  public async swaps(token: Types.ObjectId, {limit, offset}: TokenPaginationDto): Promise<{
+    items: TokenSwapsItem[],
+    count: number
+  }> {
+    const cacheKey = `token:swaps:${token}`;
+    const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+    if(cache) {
+      return cache;
+    }
+    const filter = {
+      token,
+      swaps: {
+        $exists: true
+      }
+    };
+    const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit) || Infinity)
+    .sort('-date')
+    .select(TokenHistoryEntitySwapsSelect),
+      this.repoTokenHistory.count(filter)
+    ]);
+    const result = {
+      items: items.map((item) => {
+        const {id, date, swaps} = item.toJSON();
+        return {
+          id,
+          date,
+          ...swaps
+        };
+      }),
+      count
+    };
+    await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+    return result;
+  }
+
+  public async holders(token: Types.ObjectId, {limit, offset}: TokenPaginationDto): Promise<{
+    items: TokenHoldersItem[],
+    count: number
+  }> {
+    const cacheKey = `token:holders:${token}`;
+    const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+    if(cache) {
+      return cache;
+    }
+    const filter = {
+      token,
+      holders: {
+        $exists: true
+      },
+      'holders.count': {
+        $gt: 0
+      }
+    };
+    const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit) || Infinity)
+    .sort('-date')
+    .select(TokenHistoryEntityHoldersSelect),
+      this.repoTokenHistory.count(filter)
+    ]);
+    const result = {
+      items: items.map((item) => {
+        const {id, date, holders} = item.toJSON();
+        return {
+          id,
+          date,
+          ...holders
+        };
+      }),
+      count
+    };
+    await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+    return result;
+  }
+
+  public async traders(token: Types.ObjectId, {limit, offset}: TokenPaginationDto): Promise<{
+    items: TokenTradersItem[],
+    count: number
+  }> {
+    const cacheKey = `token:traders:${token}`;
+    const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+    if(cache) {
+      return cache;
+    }
+    const filter = {
+      token,
+      traders: {
+        $exists: true
+      }
+    };
+    const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit) || Infinity)
+    .sort('-date')
+    .select(TokenHistoryEntityTradersSelect),
+      this.repoTokenHistory.count(filter)
+    ]);
+    const result = {
+      items: items.map((item) => {
+        const {id, date, traders} = item.toJSON();
+        return {
+          id,
+          date,
+          items: traders
         };
       }),
       count
