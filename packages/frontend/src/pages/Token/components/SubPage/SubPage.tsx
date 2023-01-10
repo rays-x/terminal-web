@@ -80,9 +80,9 @@ export const SubPage: FC = React.memo(() => {
         <Element name={SubPages.PriceChart}>
           <PriceChart/>
         </Element>
-        {/*<Element name={SubPages.Transactions}>
+        <Element name={SubPages.Transactions}>
           <Transactions/>
-        </Element>*/}
+        </Element>
         <Element name={SubPages.TokenStats}>
           <TokenStats/>
         </Element>

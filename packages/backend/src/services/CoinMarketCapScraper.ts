@@ -77,6 +77,13 @@ export class CoinMarketCapScraperService {
     ...rest
   }: OptionsOfJSONResponseBody) {
     try {
+      console.log(_url, {
+        url,
+        pathname,
+        searchParams,
+        ...rest,
+        resolveBodyOnly: true
+      })
       return await got.get<T>(_url, {
         url,
         pathname,

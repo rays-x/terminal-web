@@ -23,6 +23,7 @@ export function Token({children, icons, platforms}: {
       .filter((_, i) => i === 0)
       .map(platform => (
         <span
+          key={platform.id}
           className={s.Token__platform}
           style={{
             backgroundColor: platform.tableBackground,

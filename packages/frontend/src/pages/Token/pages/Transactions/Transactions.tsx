@@ -11,123 +11,47 @@ import {HeaderVariant} from '../../../../components/_old/ui/Header/types';
 import {sample, take} from 'lodash';
 import millify from 'millify';
 import {toFixedToken} from '../../../../utils/diff';
-import {TransactionsPairsResponse, TransactionsResponse, TransactionType} from '../../types';
-import UniswapIcon from '../../../../assets/icons/dex/uniswap.png';
-import PancakeIcon from '../../../../assets/icons/dex/pancake.png';
-import {useLazyFetch} from '../../../../hooks/useFetch';
+import {TransactionType} from '../../types';
 import {useCmcTokenSocket} from '../../../../store/cmcTokenSocket';
 import {JsonValue} from 'react-use-websocket/src/lib/types';
-import {CmcSearch} from '../PriceChart/types';
-import {CmcPairInfo} from '../PriceChart/chart/types';
+import {useFetch} from '../../../../hooks';
+import {TokenTransactionsResponse} from '../../../../types/api/TokenTransactionsResponse';
+import {TokenPairsResponse} from '../../../../types/api/TokenPairsResponse';
 
 const TRANSACTIONS_PAIRS_SLICE = 10;
 
 export const Transactions: React.FC = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
   const {sendMessage, lastMessage} = useCmcTokenSocket();
-  const [, getPairsInfo] = useLazyFetch<{
-    [k: string]: CmcPairInfo['data']
-  }>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-info`,
-    withCredentials: false,
-    method: 'POST'
-  });
-  const [, getSearch] = useLazyFetch<CmcSearch>({
-    url: `${import.meta.env.VITE_BACKEND_PROXY_URL}/dexer/v3/dexer/search/main-site`,
+
+  const {data: pairs} = useFetch<TokenPairsResponse>({
+    baseURL: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData.id}/pairs`,
     withCredentials: false
   });
-  const [, getTransactionPairs] = useLazyFetch<TransactionsPairsResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/pairs-list`,
-    withCredentials: false
-  });
-  const [dataTransactionPairs, setDataTransactionPairs] = React.useState<TransactionsPairsResponse>();
-  const [{data: dataTransactions}, getTransactions] = useLazyFetch<TransactionsResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/cmc/dex/transactions`,
-    method: 'POST',
+  const {data: dataTransactions, loading} = useFetch<TokenTransactionsResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transactions`,
     withCredentials: false
   });
   const [dataMapTransactions, setDataMapTransactions] = React.useState<TransactionType[]>([]);
-  React.useEffect(() => {
-    if (!currentCoinData?.id) {
-      return;
-    }
-    (async () => {
-      const [main, eth, btc] = (await Promise.all([
-        getTransactionPairs({
-          params: {
-            ethAddress: currentCoinData.platform_ethereum,
-            btcAddress: currentCoinData.platform_binance
-          }
-        }).then(({data}) => data),
-        currentCoinData.platform_ethereum
-          ? getSearch({
-            params: {
-              keyword: currentCoinData.platform_ethereum,
-              all: true
-            }
-          }).then(({data: {data: {pairs}}}) => {
-            return getPairsInfo({
-              data: {
-                platform: 'Ethereum',
-                pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
-              }
-            }).then(({data}) => Object.values(data));
-          })
-          : Promise.resolve([]),
-        currentCoinData.platform_binance
-          ? getSearch({
-            params: {
-              keyword: currentCoinData.platform_binance,
-              all: true
-            }
-          }).then(({data: {data: {pairs}}}) => {
-            return getPairsInfo({
-              data: {
-                platform: 'BSC',
-                pairs: pairs.map(pair => pair.pairContractAddress.toLowerCase())
-              }
-            }).then(({data}) => Object.values(data));
-          })
-          : Promise.resolve([])
-      ]));
-      eth.forEach(pair => {
-        if (main.ethPairs.findIndex(_pair => _pair.poolId === pair.poolId) > -1) {
-          return;
-        }
-        main['ethPairs'].push(pair);
-      });
-      btc.forEach(pair => {
-        if (main.btcPairs.findIndex(_pair => _pair.poolId === pair.poolId) > -1) {
-          return;
-        }
-        main['btcPairs'].push(pair);
-      });
-      setDataTransactionPairs(main);
-    })();
-  }, [currentCoinData?.id]);
-  React.useEffect(() => {
-    if (!dataTransactionPairs) {
-      return;
-    }
-    getTransactions({
-      data: {
-        ethPairs: take(dataTransactionPairs.ethPairs, TRANSACTIONS_PAIRS_SLICE)
-          .map(pair => {
-            return `${pair.poolId}_${Boolean(pair.reverseOrder)}`;
-          }),
-        btcPairs: take(dataTransactionPairs.btcPairs, TRANSACTIONS_PAIRS_SLICE)
-          .map(pair => {
-            return `${pair.poolId}_${Boolean(pair.reverseOrder)}`;
-          })
-      }
-    }).catch();
-  }, [dataTransactionPairs]);
+
+  const getPairsWsFormat = React.useCallback(() => {
+    return Object.fromEntries(pairs?.items.map(pair => [pair.cmc, pair]));
+  }, [pairs]);
 
   React.useEffect(() => {
-    if (!dataTransactions) {
+    if(!dataTransactions || !pairs?.items) {
       return;
     }
-    setDataMapTransactions(take(dataTransactions, 300).map(transaction => {
+    const pairsFormat = Object.fromEntries(pairs?.items.map(pair => [pair.id, pair]));
+    setDataMapTransactions(Object.entries(dataTransactions).reduce((prev, [pair, transactions]) => {
+      return [
+        ...prev,
+        ...transactions.map(transaction => ({
+          ...transaction,
+          pair
+        }))
+      ];
+    }, []).map(transaction => {
       return {
         id: transaction.txn,//string
         date: new Date(Number(transaction.time) * 1000),//Date
@@ -143,52 +67,42 @@ export const Transactions: React.FC = React.memo(() => {
         }),//?string
         tokenValue1: '',//string
         maker: '',//string
-        exchange: transaction.exchange,//'uniswap' | 'pancakeswap'
-        tx: transaction.txn//string
+        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/64x64/${pairsFormat[transaction.pair]?.dex?.cmc}.png`,
+        tx: pairsFormat[transaction.pair]?.platform.dexerTxHashFormat?.replace('%s', transaction.txn)
       };
     }).sort((a, b) => b.date.getTime() - a.date.getTime()));
   }, [dataTransactions]);
   React.useEffect(() => {
-    if (!dataTransactionPairs) {
+    if(!pairs) {
       return;
     }
-    const ethPairs = take(dataTransactionPairs.ethPairs, TRANSACTIONS_PAIRS_SLICE);
-    const btcPairs = take(dataTransactionPairs.btcPairs, TRANSACTIONS_PAIRS_SLICE);
-    const pairsMergedParams = [
-      ...ethPairs.map(pair => {
-        const reverse = `${pair.quoteToken.address.toLowerCase() === currentCoinData.platform_ethereum}`;
-        return `dexscan@transaction@${pair.platform.id}@${pair.poolId}@${reverse}`;
-      }),
-      ...btcPairs.map(pair => {
-        const reverse = `${pair.quoteToken.address.toLowerCase() === currentCoinData.platform_binance}`;
-        return `dexscan@transaction@${pair.platform.id}@${pair.poolId}@${reverse}`;
-      })
-    ];
-    pairsMergedParams.forEach((pairParams) => {
-      sendMessage({
-        method: 'SUBSCRIPTION',
-        params: [pairParams as unknown as JsonValue]
-      });
+    const pairsWs = take(pairs?.items,10).map(pair => {
+      const reverse = pair.base.id !== currentCoinData.id;
+      return `dexscan@transaction@${pair.platform.cmc}@${pair.cmc}@${reverse}`;
+    });
+    sendMessage({
+      method: 'SUBSCRIPTION',
+      params: pairsWs.map(_ => _ as unknown as JsonValue)//[pairParams as unknown as JsonValue]
     });
     return () => {
-      pairsMergedParams.forEach((pairParams) => {
-        sendMessage({
-          method: 'UNSUBSCRIPTION',
-          params: [pairParams as unknown as JsonValue]
-        });
+      sendMessage({
+        method: 'UNSUBSCRIPTION',
+        params: pairsWs.map(_ => _ as unknown as JsonValue)
       });
     };
-  }, [dataTransactionPairs]);
+  }, [pairs]);
   React.useEffect(() => {
-    if (!lastMessage) {
+    if(!lastMessage) {
       return;
     }
     const vars = lastMessage;
-    if (!vars.d
+    if(!vars.d
       || !String(vars.c).includes('transaction')) {
       return;
     }
-    const [, , platformId] = String(vars.c).split('@');
+    const pairsWsFormat = getPairsWsFormat();
+    const [, , , pairCmc] = String(vars.c).split('@');
+    const pair = pairsWsFormat[pairCmc];
     const data = JSON.parse(vars.d);
     const items: TransactionType[] = data.map(transaction => {
       return {
@@ -206,8 +120,8 @@ export const Transactions: React.FC = React.memo(() => {
         }),//?string
         tokenValue1: '',//string
         maker: '',//string
-        exchange: platformId === '1' ? 'uniswap' : 'pancakeswap',//'uniswap' | 'pancakeswap'
-        tx: transaction.txn//string
+        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/64x64/${pair?.dex?.cmc}.png`,
+        tx: pair?.platform.dexerTxHashFormat?.replace('%s', transaction.txn)
       };
     });
     setDataMapTransactions((prev) => [
@@ -267,22 +181,18 @@ export const Transactions: React.FC = React.memo(() => {
   }, [coinIndex]);
 
   const transactions = dataMapTransactions
-    .map(_ => {
-      return {
-        date: _.date,
-        side: _.type,
-        price_usd: _.tokenValue0Price,
-        amount: _.tokenValue0,
-        total_usd: _.totalValue,
-        // maker: _.maker,
-        exchange_image: _.exchange === 'uniswap' ? UniswapIcon : PancakeIcon,
-        explorer_link: `${
-          _.exchange === 'uniswap'
-            ? 'https://etherscan.io/tx/'
-            : 'https://bscscan.com/tx/'
-        }${_.tx}`
-      };
-    });
+  .map(_ => {
+    return {
+      date: _.date,
+      side: _.type,
+      price_usd: _.tokenValue0Price,
+      amount: _.tokenValue0,
+      total_usd: _.totalValue,
+      // maker: _.maker,
+      exchange_image: _.exchange,
+      explorer_link: _.tx
+    };
+  });
 
   return (
     <TableStyled.Offset>

@@ -118,6 +118,12 @@ export class TokenIdDto {
   id!: Types.ObjectId;
 }
 
+export class TokenIdStringDto {
+  @IsMongoId()
+  @ApiProperty()
+  id!: string;
+}
+
 export class TokenSlugDto {
   @IsString()
   @ApiProperty()

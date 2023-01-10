@@ -276,13 +276,13 @@ export type CoinMainPage = {
 export type TransactionType = {
   id: string
   date: Date
-  type: 'sell' | 'buy' | 'Add' | 'Remove'
+  type: 'sell' | 'buy' | 'Add' | 'Remove' | string
   totalValue: string
   tokenValue0?: string
   tokenValue0Price?: string
   tokenValue1: string
   maker: string
-  exchange: 'uniswap' | 'pancakeswap'
+  exchange?: string
   tx: string
 }
 

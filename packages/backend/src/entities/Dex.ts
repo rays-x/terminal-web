@@ -47,7 +47,7 @@ export const DexEntityDefaultSelect = [
 ];
 export const DexEntityDefaultPopulateSelect = [
   'id',
-  // 'cmc',
+  'cmc',
   'name',
 ];
 

@@ -30,7 +30,7 @@ const fetchFn=<T>(props: FetchRequestConfig): Promise<FetchResponse<T>> => {
 };
 export const useFetch=<T>({onFailure,onSuccess,...props}: ApiAction<T>) => {
   const [state,dispatch]=React.useReducer(
-    (state,{data,error}: ReduceProps<T>) => ({loading:false,data,error}),
+    (state: any, {data,error}: ReduceProps<T>) => ({loading:false,data,error}),
     {
       data:undefined,
       error:undefined,

@@ -32,10 +32,10 @@ export const TradesVolumeChart: React.FC = React.memo(() => {
   const [activeBarId, setActiveBarId] = useState<number | null>(null);
 
   const chartData = React.useMemo(() => {
-    return data?.items.shift()?.items.reverse().map((item) => ({
+    return (data?.items.shift()?.items || []).reverse().map((item) => ({
       swapsCount: item.swapsCount,
       tradeAmount: formatNumeral(toFixedToken(item.tradeAmount, 8), NUMERAL_FORMAT_NUM)
-    })) || [];
+    }));
   }, [data]);
 
   const handleBarChartMouseMove = throttle(

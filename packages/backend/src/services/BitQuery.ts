@@ -116,7 +116,8 @@ export class BitQueryService {
   private async getStatsTransfersNew(variables: {
     network: string,
     token: string,
-    since?: string
+    since?: string,
+    till?: string,
   }) {
     const {
       data: {
@@ -156,7 +157,7 @@ export class BitQueryService {
           }
         }
         `,
-        variables: variables
+        variables
       },
       headers: {
         'user-agent': CMC_USER_AGENT,
@@ -666,7 +667,7 @@ export class BitQueryService {
     return [];
   }
 
-  async statsTransfersNew(values: { address: string, network: string }[]): Promise<{
+  async statsTransfersNew(values: { address: string, network: string }[], variables: { since: string, till: string }): Promise<{
     date: string,
     medianTransferAmount: number
     averageTransferAmount: number
@@ -686,7 +687,8 @@ export class BitQueryService {
       const today = format(new Date(), 'yyyy-MM-dd');
       return (await this.getStatsTransfersNew({
         network,
-        token: address
+        token: address,
+        ...variables
       }))
       .filter(({date: {date}}) => date !== today)
       .map(({date, ..._}) => ({

@@ -9,12 +9,14 @@ interface Base {
 interface Dex {
   id: string;
   name: string;
+  cmc: number;
 }
 
 interface Platform {
   id: string;
   chainId: number;
   cmc: number;
+  dexerTxHashFormat?: string
 }
 
 interface Quote {

@@ -98,16 +98,19 @@ export const PairEntityQuotePopulate = {
     path: 'quote',
     select: TokenEntityDefaultPopulateSelect
   };
+export const PairEntityDexPopulate = {
+  path: 'dex',
+  select: DexEntityDefaultPopulateSelect
+};
+export const PairEntityPlatformPopulate = {
+  path: 'platform',
+  select: PlatformEntityDefaultPopulateSelect
+};
+
 export const PairEntityDefaultPopulate = [
   PairEntityBasePopulate,
   PairEntityQuotePopulate,
-  {
-    path: 'dex',
-    select: DexEntityDefaultPopulateSelect
-  },
-  {
-    path: 'platform',
-    select: PlatformEntityDefaultPopulateSelect
-  }
+  PairEntityDexPopulate,
+  PairEntityPlatformPopulate
 ];
 export default PairEntity;

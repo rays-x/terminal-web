@@ -2,39 +2,34 @@ import React, {useContext} from 'react';
 import {PriceChartStyled} from './PriceChert-styled';
 import {ChartComponent} from './chart/Chart';
 import {ChartCoinsButton} from '../../../../components/_old/ui/Buttons/ChartCoinsButton/ChartCoinsButton';
-import {useLazyFetch} from '../../../../hooks/useFetch';
 import {CurrentCoinData} from '../../CoinPage';
 import {TokenPairsResponse} from '../../../../types/api/TokenPairsResponse';
+import {useFetch} from '../../../../hooks';
 
 export const PriceChart: React.FC = React.memo(() => {
   const currentCoinData = useContext(CurrentCoinData);
   const [pairs, setPairs] = React.useState<Array<TokenPairsResponse['items'][0] & { reverseOrder: boolean }>>([]);
   const [pairSelected, setPairSelected] = React.useState<number>(0);
-  const [, getPairs] = useLazyFetch<TokenPairsResponse>({
-    baseURL: `${import.meta.env.VITE_BACKEND_URL}/token`,
+  const {data} = useFetch<TokenPairsResponse>({
+    baseURL: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData.id}/pairs`,
     withCredentials: false
   });
   React.useEffect(() => {
-    if(!currentCoinData.id) {
+    if(!data) {
       return;
     }
-    getPairs({
-      url: `/${currentCoinData.id}/pairs`
-    }).then(({data: {items: pairs}}) => {
-      setPairs(pairs.map(pair => {
-        return pair.base.id === currentCoinData.id ? {
-          ...pair,
-          reverseOrder: false
-        } : {
-          ...pair,
-          base: pair.quote,
-          quote: pair.base,
-          reverseOrder: true
-        };
-      }));
-    });
-  }, [currentCoinData.id]);
-
+    setPairs(data?.items.map(pair => {
+      return pair.base.id === currentCoinData.id ? {
+        ...pair,
+        reverseOrder: false
+      } : {
+        ...pair,
+        base: pair.quote,
+        quote: pair.base,
+        reverseOrder: true
+      };
+    }));
+  }, [data]);
   return (
     <>
       {

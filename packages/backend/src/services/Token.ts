@@ -1,4 +1,4 @@
-import {chunk, get, set} from 'lodash';
+import {chunk, get, set, take} from 'lodash';
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import got from 'got';
@@ -17,9 +17,15 @@ import TokenEntity, {
 import {ReturnModelType} from '@typegoose/typegoose';
 import {InjectModel} from 'nestjs-typegoose';
 import TokenTagEntity from '../entities/Token/TokenTag';
-import PlatformEntity from '../entities/Platform';
+import PlatformEntity, {PlatformEntityDefaultPopulateSelect} from '../entities/Platform';
 import {Logger} from '../config/logger/api-logger';
-import {NewQueryTokensDto, TokenPaginationDto, TokensSortBy, TokensSortOrder} from '../dto/CoinMarketCapScraper';
+import {
+  NewQueryTokensDto,
+  TokenPaginationDto,
+  TokensSortBy,
+  TokensSortOrder,
+  TransactionsResponse
+} from '../dto/CoinMarketCapScraper';
 import {CmcToken} from './CoinMarketCapScraper';
 import TokenHistoryEntity, {
   TokenHistoryEntityHoldersSelect,
@@ -34,8 +40,9 @@ import {TokenVolumeItem} from '../types/Token/TokenVolumeItem';
 import {CmcPairListResponse} from '../types';
 import PairEntity, {
   PairEntityBasePopulate,
-  PairEntityDefaultPopulate,
   PairEntityDefaultSelect,
+  PairEntityDexPopulate,
+  PairEntityPlatformPopulate,
   PairEntityQuotePopulate
 } from '../entities/Pair/Pair';
 import DexEntity from '../entities/Dex';
@@ -118,9 +125,15 @@ export class TokenService implements OnModuleInit {
 
   async onModuleInit() {
     promiseMap([
-      /*this._syncTokens, this._syncTokensHistory, this._syncPlatforms, this._syncDexs*/
-      // this._syncTokenTransfers
-      // this._syncTokenHolders
+      // this._syncTokens,
+      // this._syncTokensHistory,
+      // this._syncPlatforms,
+      // this._syncDexs,
+      // this._syncPairs
+      this._syncPairsLiquidity,
+      this._syncTokenTransfers,
+      this._syncTokenSwaps,
+      this._syncTokenHolders,
       this._syncTradersVolume
     ], async (start) => {
       try {
@@ -255,13 +268,16 @@ export class TokenService implements OnModuleInit {
       if(!repoPairsToDelete.length) {
         return;
       }
+      console.log('repoPairsToDelete', repoPairsToDelete);
       await self.repoPairHistory.deleteMany({
         pair: {
           $in: repoPairsToDelete
         }
       });
       await self.repoPair.deleteMany({
-        $in: repoPairsToDelete
+        _id: {
+          $in: repoPairsToDelete
+        }
       });
     }));
     const tokensToUpsert = [...new Set([...tokenSlugsNew, ...tokenSlugsNeedUpdate])];
@@ -428,8 +444,7 @@ export class TokenService implements OnModuleInit {
                     price: quote.quote.close
                   },
                   {
-                    upsert: true,
-                    new: true
+                    upsert: true
                   }
                 );
               } catch(e) {
@@ -553,7 +568,7 @@ export class TokenService implements OnModuleInit {
       let pairList: CmcPairListResponse['data'] = [];
       const makeRequest = async (): Promise<boolean> => {
         await awaiter(self.awaitTime);
-        const {data} = await this.proxyRequest<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
+        const {data} = await self.proxyRequest<CmcPairListResponse>(`https://api.coinmarketcap.com/dexer/v3/dexer/pair-list`, {
           headers: {
             'user-agent': CMC_USER_AGENT,
             'accept-encoding': 'gzip, deflate, br'
@@ -584,7 +599,7 @@ export class TokenService implements OnModuleInit {
                 if(!quoteId) {
                   return;
                 }
-                await this.repoPair.findOneAndUpdate({cmc: item.poolId, base: token.id}, {
+                await self.repoPair.findOneAndUpdate({cmc: item.poolId, base: token.id}, {
                   cmc: item.poolId,
                   base: token.id,
                   quote: quoteId,
@@ -610,6 +625,7 @@ export class TokenService implements OnModuleInit {
           }
           break;
         } catch(e) {
+          console.error(e);
           await awaiter(i * 60 * 1000);
         }
       }
@@ -658,7 +674,7 @@ export class TokenService implements OnModuleInit {
       dexVolume: {
         $gt: 0
       }
-    })
+    }).limit(100)
     .select(['_id', 'platforms.address'])
     .populate({
       ...TokenEntityPlatformPopulate,
@@ -710,13 +726,8 @@ export class TokenService implements OnModuleInit {
       })))
     })));
     await promiseMap<typeof tokens[0]>(tokens, async token => {
-      const cacheKey = `cmc:pairsLiquidity:${token.id}`;
-      const cache = JSON.parse(await self.redisClient.get(cacheKey) || 'null');
-      if(cache) {
-        return;
-      }
       await promiseMap<typeof token['platforms'][0]>(token.platforms, async platform => {
-        await promiseMap(chunk(platform.pairs, 20), async chunkPairs => {
+        await promiseMap(chunk(platform.pairs, 80), async chunkPairs => {
           await Promise.all(chunkPairs.map(async pair => {
             const lastHistoryDate = get(await self.repoPairHistory.findOne({
               pair: pair.id
@@ -728,64 +739,73 @@ export class TokenService implements OnModuleInit {
               pair: pair.id
             }).sort('date').select(['date']), 'date');
             let daysOffset = 0;
+            let daysOffsetNew = 0;
             if(firstHistoryDate) {
-              daysOffset = differenceInDays(firstHistoryDate, new Date(`${format(addDays(new Date(), -2), 'yyyy-MM-dd')}T00:00:00.000Z`));
+              daysOffset = differenceInDays(firstHistoryDate, new Date(`${format(lastHistoryDate, 'yyyy-MM-dd')}T00:00:00.000Z`));
             }
-            for(let dayStep = -2 + daysOffset; true; dayStep--) {
-              try {
-                const date = new Date(`${format(addDays(new Date(), dayStep), 'yyyy-MM-dd')}T00:00:00.000Z`);
-                const [priceBase, priceQuote] = [get(await self.repoTokenHistory.findOne({
-                  token: pair.base.id,
-                  date
-                }).select('price'), 'price'), get(await self.repoTokenHistory.findOne({
-                  token: pair.quote.id,
-                  date
-                }).select('price'), 'price')];
-                if(!priceBase || !priceQuote) {
-                  break;
-                }
-                const balances = await self.bitQueryService.getBalancesOfPair({
-                  network: pair.bqSlug,
-                  date: date.toISOString(),
-                  poolAddress: pair.address,
-                  baseToken: pair.base.address,
-                  quoteToken: pair.quote.address
-                });
-                if(!Object.keys(balances || {}).length) {
-                  if(daysOffset !== 0 && dayStep === -2 + daysOffset) {
-                    dayStep = -1;
-                    continue;
-                  } else {
+            if(lastHistoryDate.getTime() !== new Date(0).getTime()) {
+              daysOffsetNew = differenceInDays(new Date(`${format(addDays(new Date(), -1), 'yyyy-MM-dd')}T00:00:00.000Z`), lastHistoryDate);
+            }
+            await Promise.all([daysOffset, daysOffsetNew].filter((_, i) => i > 0 ? _ !== 0 : true).map(async (offset, index) => {
+              for(let dayStep = -2 + (index > 0 ? (offset > 0 ? 2 : offset) : offset); true; dayStep--) {
+                try {
+                  const date = new Date(`${format(addDays(new Date(), dayStep), 'yyyy-MM-dd')}T00:00:00.000Z`);
+                  if(index > 0) {
+                    if(await self.repoPairHistory.countDocuments({
+                      token: token.id,
+                      date
+                    })) {
+                      break;
+                    }
+                  }
+                  const [priceBase, priceQuote] = [get(await self.repoTokenHistory.findOne({
+                    token: pair.base.id,
+                    date
+                  }).select('price'), 'price'), get(await self.repoTokenHistory.findOne({
+                    token: pair.quote.id,
+                    date
+                  }).select('price'), 'price')];
+                  if(!priceBase || !priceQuote) {
                     break;
                   }
+                  const balances = await self.bitQueryService.getBalancesOfPair({
+                    network: pair.bqSlug,
+                    date: date.toISOString(),
+                    poolAddress: pair.address,
+                    baseToken: pair.base.address,
+                    quoteToken: pair.quote.address
+                  });
+                  if(!Object.keys(balances || {}).length) {
+                    if(daysOffset !== 0 && dayStep === -2 + daysOffset) {
+                      dayStep = -1;
+                      continue;
+                    } else {
+                      break;
+                    }
+                  }
+                  const liquidity = get(balances, pair.base.address, 0) * priceBase + get(balances, pair.quote.address, 0) * priceQuote;
+                  await self.repoPairHistory.findOneAndUpdate({
+                    pair: pair.id,
+                    date
+                  }, {
+                    pair: pair.id,
+                    date,
+                    liquidity
+                  }, {
+                    upsert: true
+                  });
+                } catch(e) {
+                  Logger.error(get(e, 'message', e));
+                  break;
                 }
-                const liquidity = get(balances, pair.base.address, 0) * priceBase + get(balances, pair.quote.address, 0) * priceQuote;
-                await self.repoPairHistory.findOneAndUpdate({
-                  pair: pair.id,
-                  date
-                }, {
-                  pair: pair.id,
-                  date,
-                  liquidity
-                }, {
-                  upsert: true
-                });
-              } catch(e) {
-                Logger.error(get(e, 'message', e));
-                break;
+                // Logger.debug(`daysOffset ${pair.address} ${dayStep}`);
               }
-              // Logger.debug(`daysOffset ${pair.address} ${dayStep}`);
-            }
+            }));
             Logger.debug(`pair ${platform.pairs.findIndex(({id}) => id === pair.id) + 1} of:${platform.pairs.length}`);
           }));
         });
         Logger.debug(`platforms ${token.platforms.findIndex(({id}) => id === platform.id) + 1} of:${token.platforms.length}`);
       });
-      try {
-        await self.redisClient.set(cacheKey, JSON.stringify(true), 'PX', 24 * 60 * 60 * 1000);
-      } catch(e) {
-        //
-      }
       Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
     });
     Logger.debug(`_syncPairsLiquidity done`);
@@ -826,7 +846,11 @@ export class TokenService implements OnModuleInit {
     .populate({
       ...TokenEntityPlatformPopulate,
       select: ['_id', 'cmc']
-    }).sort('-statistics.marketCap'))
+    })
+    .sort('-statistics.marketCap')
+      .limit(100)
+    )
+
     .map(async item => ({
       id: String(item.id),
       platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
@@ -838,24 +862,63 @@ export class TokenService implements OnModuleInit {
       })))
     })));
     await promiseMap<typeof tokens[0]>(tokens, async token => {
-      try {
-        const data = await self.bitQueryService.statsTransfersNew(token.platforms.map(({
-                                                                                         address,
-                                                                                         bqSlug: network
-                                                                                       }) => ({
-          address,
-          network
-        })));
-        await Promise.all(data.map(async ({date, ...transfers}) => {
+      const needUpdate = await self.repoTokenHistory.find({
+        token: token.id,
+        transfers: {
+          $exists: false
+        }
+      }).select('date').sort('-date');
+      const needUpdateChunks = chunk(needUpdate, 100);
+      const updated = [];
+      const errors = [];
+      await promiseMap<typeof needUpdateChunks[0]>(needUpdateChunks, async chunk => {
+        const [since, till] = [chunk.at(-1)?.date, chunk.at(0)?.date];
+        try {
+          const data = await self.bitQueryService.statsTransfersNew(token.platforms.map(({
+                                                                                           address,
+                                                                                           bqSlug: network
+                                                                                         }) => ({
+            address,
+            network
+          })), {
+            since: since.toISOString(),
+            till: till.toISOString()
+          });
+          await Promise.all(data.map(async ({date, ...transfers}) => {
+            updated.push(new Date(date).toISOString());
+            await self.repoTokenHistory.findOneAndUpdate({
+              token: token.id,
+              date: new Date(date)
+            }, {
+              transfers
+            });
+          }));
+        } catch(e) {
+          errors.push(1);
+          return console.error(e, token.platforms.map(({
+                                                         address,
+                                                         bqSlug: network
+                                                       }) => ({
+            address,
+            network
+          })), {
+            since: since.toISOString(),
+            till: till.toISOString()
+          });
+        }
+      });
+      if(!errors.length) {
+        await Promise.all(needUpdate.map(async ({date}) => {
+          if(updated.includes(date.toISOString())) {
+            return;
+          }
           await self.repoTokenHistory.findOneAndUpdate({
             token: token.id,
-            date: new Date(date)
+            date
           }, {
-            transfers
+            transfers: {}
           });
         }));
-      } catch(e) {
-        return console.error(e);
       }
       Logger.debug(`tokens ${tokens.findIndex(({id}) => id === token.id) + 1} of:${tokens.length}`);
     });
@@ -897,7 +960,10 @@ export class TokenService implements OnModuleInit {
     .populate({
       ...TokenEntityPlatformPopulate,
       select: ['_id', 'cmc']
-    }).sort('-statistics.marketCap'))
+    })
+    .sort('-statistics.marketCap')
+      .limit(100)
+    )
     .map(async item => ({
       id: String(item.id),
       platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
@@ -965,7 +1031,9 @@ export class TokenService implements OnModuleInit {
     .populate({
       ...TokenEntityPlatformPopulate,
       select: ['_id', 'cmc']
-    }).sort('-statistics.marketCap'))
+    }).sort('-statistics.marketCap')
+      .limit(100)
+    )
     .map(async item => ({
       id: String(item.id),
       platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
@@ -1047,7 +1115,10 @@ export class TokenService implements OnModuleInit {
     .populate({
       ...TokenEntityPlatformPopulate,
       select: ['_id', 'cmc']
-    }).sort('-statistics.marketCap'))
+    })
+      .sort('-statistics.marketCap')
+      .limit(100)
+    )
     .map(async item => ({
       id: String(item.id),
       platforms: await Promise.all(item.platforms.filter(({platform}) => TokenChainIdStrings.includes(String(platform.id))).map(async ({
@@ -1386,7 +1457,9 @@ export class TokenService implements OnModuleInit {
     const filter = {
       token,
       transfers: {
-        $exists: true
+        $exists: true,
+        $type: 'object',
+        $ne: {}
       }
     };
     const [items, count] = await Promise.all([this.repoTokenHistory.find(filter)
@@ -1592,7 +1665,15 @@ export class TokenService implements OnModuleInit {
     .skip(Number(offset))
     .limit(Number(limit) || Infinity)
     .select(PairEntityDefaultSelect)
-    .populate(PairEntityDefaultPopulate)
+    .populate([
+      PairEntityBasePopulate,
+      PairEntityQuotePopulate,
+      PairEntityDexPopulate,
+      {
+        path: PairEntityPlatformPopulate.path,
+        select: [...PlatformEntityDefaultPopulateSelect, 'dexerTxHashFormat']
+      }
+    ])
     .sort('-volume24h')
     .collation({locale: 'en_US', numericOrdering: true}),
       this.repoPair.count(filter)
@@ -1601,5 +1682,60 @@ export class TokenService implements OnModuleInit {
       items,
       count
     };
+  }
+
+  public async transactions(token: string, {limit, offset}: TokenPaginationDto): Promise<any> {
+    const filter = {
+      $or: [
+        {
+          base: token
+        },
+        {
+          quote: token
+        }
+      ],
+      platform: {
+        $in: TOKEN_CHAIN_IDS
+      }
+    };
+    const pairs: {
+      id: string,
+      cmc: string,
+      platform: number,
+      reverseOrder: boolean
+    }[] = (await this.repoPair.find(filter)
+    .skip(Number(offset))
+    .limit(Number(limit) || Infinity)
+    .select(['base', 'cmc'])
+    .populate({
+      path: PairEntityPlatformPopulate.path,
+      select: 'cmc'
+    })
+    .sort('-volume24h')
+    .collation({locale: 'en_US', numericOrdering: true})).map(_pair => {
+      const {base, platform, ...pair} = _pair.toJSON();
+      return {
+        ...pair,
+        platform: get(platform, 'cmc'),
+        reverseOrder: String(base) !== token
+      };
+    });
+    return Object.fromEntries(await Promise.all(take(pairs, 10).map(async ({id, cmc, platform, reverseOrder}) => {
+      const {
+        data: {transactions}
+      } = await this.proxyRequest<TransactionsResponse>(undefined, {
+        headers: {
+          'user-agent': CMC_USER_AGENT,
+          'accept-encoding': 'gzip, deflate, br'
+        },
+        url: 'https://api.coinmarketcap.com',
+        pathname: `/kline/v3/k-line/transactions/${platform}/${cmc}`,
+        searchParams: {
+          'reverse-order': reverseOrder
+        },
+        responseType: 'json'
+      });
+      return [id, transactions];
+    })));
   }
 }
