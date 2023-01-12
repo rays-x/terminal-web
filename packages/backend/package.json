@@ -10,7 +10,7 @@
   "scripts": {
     "copyfiles": "copyfiles -u 1 src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json,csv} dist/",
     "pre:debug": "yarn copyfiles && yarn build:server",
-    "start": "docker compose up -d --build --remove-orphans && dotenv ts-node-dev --transpile-only --exit-child -- src/index.ts",
+    "start": "dotenv ts-node-dev --transpile-only --exit-child -- src/index.ts",
     "build:payload": "dotenv payload build",
     "build:server": "tsc",
     "build": "rm -rf dist build && yarn copyfiles && yarn build:server",
