@@ -1,8 +1,9 @@
 import styled, { css } from 'styled-components';
-import { colors, radius, spacing } from '../../../../presets/base';
-import { mixins } from '../../../../presets/mixins';
+import {mixins} from '../../../../presets/mixins';
+import {colors, radius, spacing} from '../../../../presets/base';
 
-const Component = styled.div`
+const Container = styled.div`
+  width: 100%;
   ${mixins.isMobile(css`
     flex-direction: column;
     gap: 20px;
@@ -10,11 +11,13 @@ const Component = styled.div`
 
   display: flex;
   justify-content: space-between;
+  align-items: center;
   background: ${colors.background['card']};
   border-radius: ${radius[20]};
   padding: ${spacing[24]};
 `;
 
-export const CardStyled = {
-  Component
+
+export const SwapStyled = {
+  Container,
 };

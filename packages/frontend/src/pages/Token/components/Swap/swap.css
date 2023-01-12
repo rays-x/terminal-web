@@ -1,0 +1,214 @@
+
+
+.sale__exchange {
+    position: relative;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.sale__exchange-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 -5px;
+}
+
+.sale__exchange-item {
+    padding: 0 5px;
+    margin-bottom: 10px;
+}
+
+.sale__exchange-text {
+    color: #fff;
+    font: 500 12px/1.2 "Work Sans", sans-serif;
+}
+
+.sale__exchange-title {
+    color: #8e91a5;
+}
+
+.sale__field {
+    margin-bottom: 17px;
+    background: #0f1017;
+    border-radius: 12px;
+    padding: 20px 18px;
+}
+
+.sale__field-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 -5px;
+}
+
+.sale__field-select {
+    padding: 0 5px;
+    flex: 0 0 auto;
+}
+
+.sale__input-wrapper {
+    padding: 0 5px;
+}
+
+.sale__input {
+    display: block;
+    border: 0;
+    text-align: right;
+    background: none;
+    color: #fff;
+    font: 700 18px/1.2 "Work Sans", sans-serif;
+    padding: 0;
+    outline: none;
+    width: 100%;
+}
+
+.sale__arrow-wrapper {
+    position: absolute;
+    top: 47px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1f2a;
+    border-radius: 50%;
+    padding: 11px;
+    width: 54px;
+    height: 54px;
+}
+
+.sale__arrow {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(95.5deg, #27e65c 0.5%, #587bff 50.22%, #b518ff 97.9%);
+    border-radius: 50%;
+}
+
+.sale__arrow:before {
+    content: "";
+    display: block;
+    width: 2px;
+    height: 15px;
+    background: #fff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.sale__arrow:after {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.sale__rax {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    font: 700 18px/1 "Work Sans", sans-serif;
+}
+
+.sale__rax-img {
+    flex: 0 0 auto;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 7px;
+}
+
+.sale__btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    background: linear-gradient(95.5deg, #27e65c 0.5%, #587bff 50.22%, #b518ff 97.9%);
+    border-radius: 15px;
+    color: #fff;
+    font: 700 16px/1.2 "Work Sans", sans-serif;
+    padding: 15px;
+    margin-bottom: 14px;
+}
+
+.sale__btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sale__agreement {
+    display: flex;
+    justify-content: center;
+}
+
+.sale__checkbox {
+    display: block;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.sale__checkbox-input {
+    display: none;
+}
+
+.sale__checkbox-span {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: relative;
+    background: #0f1017;
+    margin-top: -3px;
+    border: 1px solid #9C34FF;
+}
+
+.sale__checkbox-span:before {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 6px;
+    top: 3px;
+    width: 7px;
+    height: 10px;
+    border-right: 3px solid #35C68C;
+    border-bottom: 3px solid #35C68C;
+    transform: rotate(45deg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.sale__checkbox-input:checked + .sale__checkbox-span:before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sale__btn-description {
+    color: #fff;
+    font: 400 10px/1.5 "Work Sans", sans-serif;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sale__wallets {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 0 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 -7px;
+}
+
+.sale__wallets-item {
+    padding: 0 7px;
+    margin-bottom: 20px;
+}

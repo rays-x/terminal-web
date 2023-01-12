@@ -2,7 +2,6 @@ import React, {createContext, FC} from 'react';
 import {CoinPageStyled} from './Coin-styled';
 import {CurrentCoin} from './components/CurrentCoin/CurrentCoin';
 import {Statistic} from './components/Statistic/Statistic';
-import {SubPage} from './components/SubPage/SubPage';
 import {Loader} from '../../components/_old/ui/Loader/Loader';
 import {useFetch} from '../../hooks';
 import {CmcDetail, CoinMainPage} from './types';
@@ -13,11 +12,14 @@ import {JsonPrimitive} from 'react-use-websocket/dist/lib/types';
 import {toFixedToken} from '../../utils/diff';
 import {CmcTokenSocketProvider} from '../../store/cmcTokenSocket';
 import {useLazyFetch} from '../../hooks/useFetch';
+import {useAdaptiveTriggers} from '../../hooks/useAdaptiveTrigger';
+import Swap from './components/Swap/Swap';
 
 
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
 
 export const CoinPage: FC = React.memo(() => {
+  const {isMobile} = useAdaptiveTriggers();
   const {token: slug} = useParams();
   const [token, setToken] = React.useState<CoinMainPage>();
   const {data: data} = useFetch<CmcDetail['data']>({
@@ -213,7 +215,7 @@ export const CoinPage: FC = React.memo(() => {
                     <CurrentCoin/>
                     <Statistic/>
                   </CoinPageStyled.VerticalGroup>
-                  {/*{!isMobile && <Card/>}*/}
+                  {!isMobile && <Swap/>}
                 </CoinPageStyled.Group>
                 {/*<SubPage/>*/}
               </>

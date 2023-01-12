@@ -37,7 +37,7 @@ export const useAdaptiveTriggers = ({
   onMediumEnter,
   onLargeEnter,
   onExtraLargeEnter
-}: UseAdaptiveTriggersProps) => {
+}: UseAdaptiveTriggersProps={}) => {
   const [width, setWidth] = useState<Adaptive>(Adaptive.xl);
   useLayoutEffect(() => {
     const handleResize = () => {
@@ -51,7 +51,7 @@ export const useAdaptiveTriggers = ({
         }
         return setWidth(Adaptive.xs);
       }
-      if (window?.innerWidth < 1024) {
+      if (window?.innerWidth < 1120) {
         onSmallEnter?.();
         return setWidth(Adaptive.s);
       }
@@ -81,9 +81,7 @@ export const useAdaptiveTriggers = ({
   ]);
   return {
     width,
-    isDesktop:
-      width !== Adaptive.s && width !== Adaptive.xs && width !== Adaptive.xxs,
-    isMobile: width === Adaptive.xs || width === Adaptive.xxs,
-    isTablet: width === Adaptive.s
+    isDesktop: width !== Adaptive.s && width !== Adaptive.xs && width !== Adaptive.xxs,
+    isMobile: width === Adaptive.xs || width === Adaptive.xxs || width === Adaptive.s,
   };
 };

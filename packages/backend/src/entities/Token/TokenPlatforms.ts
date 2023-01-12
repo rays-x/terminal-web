@@ -28,4 +28,8 @@ export class TokenPlatform {
     required: true
   })
   address!: string;
+  @prop({
+    required: true
+  })
+  decimals!: number;
 }

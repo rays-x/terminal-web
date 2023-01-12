@@ -7,7 +7,7 @@ export const Component = styled.div`
   padding: 32px;
 
   display: grid;
-  grid-template-columns: repeat(auto-fit, 182px);
+  grid-template-columns: repeat(auto-fit, 170px);
   justify-content: space-between;
   gap: ${spacing[20]};
 `;

@@ -6,11 +6,20 @@ import {mixins} from '../../presets/mixins';
 export const Component = styled.div``;
 
 export const Group = styled.div`
-  /*@media (min-width: 768px) {
+  @media (min-width: 1120px) {
     display: grid;
-    grid-template-columns: 2.7fr 1fr;
+    grid-template-columns: 2fr 1fr;
     grid-template-areas: '. .';
-  }*/
+  }
+
+
+  @media (min-width: 1240px) {
+    grid-template-columns: 2.25fr 1fr;
+  }
+  
+  @media (min-width: 1560px) {
+    grid-template-columns: 2.5fr 1fr;
+  }
 
   ${mixins.isMobile(css`
     display: flex;
@@ -134,6 +143,7 @@ export const CoinAddress = styled.div`
 
     color: white;
   }
+  max-width: 192px;
 `;
 
 export const CoinStatsGroup = styled.div`
@@ -141,6 +151,10 @@ export const CoinStatsGroup = styled.div`
 
   gap: ${gap[24]};
   margin: 0 auto;
+  ${mixins.isMobile(css`
+    margin: 0;
+  `)};
+  
 `;
 
 export const CurrentCoinScore = styled.div`
@@ -188,6 +202,9 @@ export const CoinStatsTitleLabel = styled.div<CoinStatsTitleChangeProps>`
                   : css`
                     color: #ff2640;
                   `}
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 240px;
 `;
 
 export const CoinStatsTitleChange = styled.div<CoinStatsTitleChangeProps>`

@@ -130,11 +130,11 @@ export class TokenService implements OnModuleInit {
       // this._syncPlatforms,
       // this._syncDexs,
       // this._syncPairs
-      this._syncPairsLiquidity,
+      /*this._syncPairsLiquidity,
       this._syncTokenTransfers,
       this._syncTokenSwaps,
       this._syncTokenHolders,
-      this._syncTradersVolume
+      this._syncTradersVolume*/
     ], async (start) => {
       try {
         await start(this);
@@ -292,7 +292,8 @@ export class TokenService implements OnModuleInit {
                                                                                           contractChainId: chainId,
                                                                                           contractAddress: address,
                                                                                           // platformCryptoId: cmcCrypto,
-                                                                                          contractPlatformId: cmc
+                                                                                          contractPlatformId: cmc,
+                                                                                          contractDecimals: decimals
                                                                                         }) => {
                 const platform = await self.repoPlatform.findOneAndUpdate({
                   cmc
@@ -307,7 +308,8 @@ export class TokenService implements OnModuleInit {
                 });
                 return {
                   platform: platform.id,
-                  address
+                  address,
+                  decimals
                 };
               }));
               await self.repoToken.findOneAndUpdate({slug},
@@ -829,25 +831,25 @@ export class TokenService implements OnModuleInit {
         bqSlug: string
       }[]
     }[] = await Promise.all((await self.repoToken.find({
-      ...self.sharedFilter,
-      platforms: {
-        ...self.sharedFilter.platforms,
-        $elemMatch: {
-          platform: {
-            $in: TOKEN_CHAIN_IDS
+        ...self.sharedFilter,
+        platforms: {
+          ...self.sharedFilter.platforms,
+          $elemMatch: {
+            platform: {
+              $in: TOKEN_CHAIN_IDS
+            }
           }
+        },
+        dexVolume: {
+          $gt: 0
         }
-      },
-      dexVolume: {
-        $gt: 0
-      }
-    })
-    .select(['_id', 'platforms.address'])
-    .populate({
-      ...TokenEntityPlatformPopulate,
-      select: ['_id', 'cmc']
-    })
-    .sort('-statistics.marketCap')
+      })
+      .select(['_id', 'platforms.address'])
+      .populate({
+        ...TokenEntityPlatformPopulate,
+        select: ['_id', 'cmc']
+      })
+      .sort('-statistics.marketCap')
       .limit(100)
     )
 
@@ -943,25 +945,25 @@ export class TokenService implements OnModuleInit {
         bqSlug: string
       }[]
     }[] = await Promise.all((await self.repoToken.find({
-      ...self.sharedFilter,
-      platforms: {
-        ...self.sharedFilter.platforms,
-        $elemMatch: {
-          platform: {
-            $in: TOKEN_CHAIN_IDS
+        ...self.sharedFilter,
+        platforms: {
+          ...self.sharedFilter.platforms,
+          $elemMatch: {
+            platform: {
+              $in: TOKEN_CHAIN_IDS
+            }
           }
+        },
+        dexVolume: {
+          $gt: 0
         }
-      },
-      dexVolume: {
-        $gt: 0
-      }
-    })
-    .select(['_id', 'platforms.address'])
-    .populate({
-      ...TokenEntityPlatformPopulate,
-      select: ['_id', 'cmc']
-    })
-    .sort('-statistics.marketCap')
+      })
+      .select(['_id', 'platforms.address'])
+      .populate({
+        ...TokenEntityPlatformPopulate,
+        select: ['_id', 'cmc']
+      })
+      .sort('-statistics.marketCap')
       .limit(100)
     )
     .map(async item => ({
@@ -1017,21 +1019,21 @@ export class TokenService implements OnModuleInit {
         bqSlug: string
       }[]
     }[] = await Promise.all((await self.repoToken.find({
-      ...self.sharedFilter,
-      platforms: {
-        ...self.sharedFilter.platforms,
-        $elemMatch: {
-          platform: {
-            $in: TOKEN_CHAIN_IDS
+        ...self.sharedFilter,
+        platforms: {
+          ...self.sharedFilter.platforms,
+          $elemMatch: {
+            platform: {
+              $in: TOKEN_CHAIN_IDS
+            }
           }
         }
-      }
-    })
-    .select(['_id', 'platforms.address'])
-    .populate({
-      ...TokenEntityPlatformPopulate,
-      select: ['_id', 'cmc']
-    }).sort('-statistics.marketCap')
+      })
+      .select(['_id', 'platforms.address'])
+      .populate({
+        ...TokenEntityPlatformPopulate,
+        select: ['_id', 'cmc']
+      }).sort('-statistics.marketCap')
       .limit(100)
     )
     .map(async item => ({
@@ -1098,24 +1100,24 @@ export class TokenService implements OnModuleInit {
         bqSlug: string
       }[]
     }[] = await Promise.all((await self.repoToken.find({
-      ...self.sharedFilter,
-      platforms: {
-        ...self.sharedFilter.platforms,
-        $elemMatch: {
-          platform: {
-            $in: TOKEN_CHAIN_IDS
+        ...self.sharedFilter,
+        platforms: {
+          ...self.sharedFilter.platforms,
+          $elemMatch: {
+            platform: {
+              $in: TOKEN_CHAIN_IDS
+            }
           }
+        },
+        dexVolume: {
+          $gt: 0
         }
-      },
-      dexVolume: {
-        $gt: 0
-      }
-    })
-    .select(['_id', 'platforms.address'])
-    .populate({
-      ...TokenEntityPlatformPopulate,
-      select: ['_id', 'cmc']
-    })
+      })
+      .select(['_id', 'platforms.address'])
+      .populate({
+        ...TokenEntityPlatformPopulate,
+        select: ['_id', 'cmc']
+      })
       .sort('-statistics.marketCap')
       .limit(100)
     )

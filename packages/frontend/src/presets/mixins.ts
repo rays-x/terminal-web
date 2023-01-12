@@ -14,7 +14,7 @@ const widthMedia = {
     }
   `,
   isTablet: (styles: FlattenSimpleInterpolation) => css`
-    @media (max-width: 1024px) {
+    @media (max-width: 1120px) {
       ${styles}
     }
   `,
