@@ -84,7 +84,6 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
     const [dataMapTransactions, setDataMapTransactions] = React.useState<TransactionType[]>([]);
     const [dataPools, setDataPools] = React.useState<PoolType[]>([]);
     const totalLiquidity = React.useMemo(() => {
-      console.log('dataPools', dataPools.length);
       return dataPools.reduce((p, n) => p + n.liquidity, 0);
     }, [dataPools]);
     React.useEffect(() => {
@@ -237,7 +236,6 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
           ]
         });
       });
-      console.log('pairs', Object.keys(pairs).length);
       Object.entries(pairs).map(([key, {
         tokenVersusIcon,
         btcAddress_poolContract = [],

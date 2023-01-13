@@ -6,6 +6,7 @@ type Network = {
   label: string,
   logo_url: string,
   color: string,
+  swapApi: string,
 }
 
 export interface INetworkExchangesContext {

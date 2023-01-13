@@ -33,7 +33,7 @@ export const TransactionGroup = styled.div`
   padding: 0 8px;
   @media (min-width: 768px) {
     display: grid;
-    grid-template-columns: 2.7fr 1fr;
+    grid-template-columns: 4fr 1fr;
     grid-template-areas: '. .';
   }
 

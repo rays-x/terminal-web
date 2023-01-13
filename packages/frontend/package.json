@@ -25,6 +25,7 @@
     "docker:build:nginx": "docker buildx build --platform linux/amd64 -t ray-nginx-local . --no-cache"
   },
   "dependencies": {
+    "@0x/utils": "^7.0.0",
     "@apollo/client": "3.7.1",
     "@fancyapps/ui": "4.0.31",
     "@rainbow-me/rainbowkit": "^0.8.1",
@@ -72,8 +73,7 @@
     "ts-node-dev": "2.0.0",
     "tsconfig-paths": "4.1.0",
     "usehooks-ts": "2.9.1",
-    "wagmi": "0.10.10",
-    "web3": "1.0.0-beta.34"
+    "wagmi": "0.10.10"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "2.13.11",

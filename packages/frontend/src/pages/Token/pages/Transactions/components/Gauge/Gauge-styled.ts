@@ -54,9 +54,31 @@ export const Title = styled.div`
   font-style: normal;
   font-weight: 700;
   font-size: 16px;
-  line-height: 20px;
+  line-height: 27px;
   text-align: center;
   color: #ffffff;
+`;
+export const SubTitle = styled.div`
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 45px;
+  text-align: center;
+  color: #ffffff;
+  @media (min-width: 768px) {
+    font-size: 27px;
+  }
+`;
+export const SubSubTitle = styled.div`
+  font-style: normal;
+  font-weight: 500;
+  font-size: 29px;
+  line-height: 29px;
+  text-align: center;
+  color: #ffffff;
+  @media (min-width: 768px) {
+    font-size: 32px;
+  }
 `;
 
 export interface GaugeArrowProps extends Pick<BuySellPressureType, 'status'> {
@@ -84,6 +106,8 @@ export const GaugeStyled = {
   Component,
   Arrow,
   Title,
+  SubTitle,
+  SubSubTitle,
   Buttons,
   BuyButton,
   SellButton

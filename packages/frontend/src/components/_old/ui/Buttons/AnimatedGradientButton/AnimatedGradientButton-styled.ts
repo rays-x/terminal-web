@@ -39,6 +39,11 @@ export const Component = styled.button<GradientButtonComponent>`
           css`
             width: inherit;
           `}
+  ${({disabled}) =>
+          disabled &&
+          css`
+            pointer-events: none;
+          `}
 `;
 
 export const Gradient = styled(animated.div)`

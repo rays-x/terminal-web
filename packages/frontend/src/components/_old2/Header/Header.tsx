@@ -9,7 +9,6 @@ import DexRankIcon from '../../../assets/icons/new/DexRankIcon';
 import BuyRaxIcon from '../../../assets/icons/new/BuyRaxIcon';
 import clsx from 'clsx';
 import {ConnectButton} from '@rainbow-me/rainbowkit';
-import {Via} from '@viaprotocol/router-sdk';
 
 
 export const Header: FC<any> = React.memo(() => {

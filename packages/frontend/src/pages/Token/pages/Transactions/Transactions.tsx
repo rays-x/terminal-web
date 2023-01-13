@@ -17,12 +17,15 @@ import {JsonValue} from 'react-use-websocket/src/lib/types';
 import {useFetch} from '../../../../hooks';
 import {TokenTransactionsResponse} from '../../../../types/api/TokenTransactionsResponse';
 import {TokenPairsResponse} from '../../../../types/api/TokenPairsResponse';
+import {TokenTransfersResponse} from '../../../../types/api/TokenTransfersResponse';
 
 const TRANSACTIONS_PAIRS_SLICE = 10;
 
 export const Transactions: React.FC = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
   const {sendMessage, lastMessage} = useCmcTokenSocket();
+
+
 
   const {data: pairs} = useFetch<TokenPairsResponse>({
     baseURL: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData.id}/pairs`,
@@ -37,6 +40,7 @@ export const Transactions: React.FC = React.memo(() => {
   const getPairsWsFormat = React.useCallback(() => {
     return Object.fromEntries(pairs?.items.map(pair => [pair.cmc, pair]));
   }, [pairs]);
+
 
   React.useEffect(() => {
     if(!dataTransactions || !pairs?.items) {

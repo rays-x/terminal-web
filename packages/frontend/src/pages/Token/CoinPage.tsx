@@ -227,7 +227,7 @@ export const CoinPage: FC = React.memo(() => {
                   </CoinPageStyled.VerticalGroup>
                   {!isMobile && <Swap/>}
                 </CoinPageStyled.Group>
-                {/*<SubPage/>*/}
+                <SubPage/>
               </>
             )
         }

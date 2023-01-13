@@ -31,7 +31,8 @@ const data = [
     label: 'BSC Network',
     logo_url: BSCWalletIcon,
     color: 'rgb(240, 185, 11)',
-    wallet: bsc
+    wallet: bsc,
+    swapApi: 'https://bsc.api.0x.org'
   },
   {
     id: '63a121a12afa55c2295c1255',
@@ -39,7 +40,8 @@ const data = [
     label: 'ETH Network',
     logo_url: EthWalletIcon,
     color: 'rgb(115, 138, 225)',
-    wallet: mainnet
+    wallet: mainnet,
+    swapApi: 'https://api.0x.org'
   },
   {
     id: '63a1f86f2afa55c2295d5ba0',
@@ -47,7 +49,8 @@ const data = [
     label: 'AVAX Network',
     logo_url: AVAXWalletIcon,
     color: '#E84142',
-    wallet: avalanche
+    wallet: avalanche,
+    swapApi: 'https://avalanche.api.0x.org'
   },
   {
     id: '63a121a12afa55c2295c125b',
@@ -55,7 +58,8 @@ const data = [
     label: 'MATIC Network',
     logo_url: MATICWalletIcon,
     color: '#8247E5',
-    wallet: polygon
+    wallet: polygon,
+    swapApi: 'https://polygon.api.0x.org'
   },
   {
     id: '63a121a12afa55c2295c125a',
@@ -63,7 +67,8 @@ const data = [
     label: 'FTM Network',
     logo_url: FantomIcon,
     color: '#13B5EC',
-    wallet: fantom
+    wallet: fantom,
+    swapApi: 'https://fantom.api.0x.org'
   }
 ];
 
@@ -73,12 +78,6 @@ const {chains, provider} = configureChains(
     publicProvider()
   ]
 );
-
-/*const {connectors} = getDefaultWallets({
-  appName: 'My RainbowKit App',
-  chains
-});*/
-
 
 const connectors = connectorsForWallets([
   {
@@ -119,10 +118,10 @@ const NetworkWalletProviderWrapper = React.memo(({children}: { children: React.R
         const network = data.find(({name}) => name === _name) || data[0];
         try {
           await switchNetworkAsync(network.wallet.id);
-        } catch (e) {
+        } catch(e) {
         }
         setNetwork(network);
-      } catch (e) {
+      } catch(e) {
       }
     })();
   };
