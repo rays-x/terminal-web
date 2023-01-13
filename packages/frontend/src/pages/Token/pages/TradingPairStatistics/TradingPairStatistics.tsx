@@ -186,7 +186,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
         const tokenVersusSymbol = pair.baseToken.address === currentCoinData.platform_binance
           ? pair.quoteToken.symbol
           : pair.baseToken.symbol;
-        const tokenVersusImage = `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.baseToken.address === currentCoinData.platform_binance
+        const tokenVersusImage = `https://s2.coinmarketcap.com/static/img/coins/128x128/${pair.baseToken.address === currentCoinData.platform_binance
           ? pair.quoteToken.id
           : pair.baseToken.id}.png`;
         set(pairs, tokenVersusSymbol, {
@@ -221,7 +221,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
         const tokenVersusSymbol = pair.baseToken.address === currentCoinData.platform_ethereum
           ? pair.quoteToken.symbol
           : pair.baseToken.symbol;
-        const tokenVersusImage = `https://s2.coinmarketcap.com/static/img/coins/64x64/${pair.baseToken.address === currentCoinData.platform_ethereum
+        const tokenVersusImage = `https://s2.coinmarketcap.com/static/img/coins/128x128/${pair.baseToken.address === currentCoinData.platform_ethereum
           ? pair.quoteToken.id
           : pair.baseToken.id}.png`;
         set(pairs, tokenVersusSymbol, {
@@ -256,7 +256,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
             }
             const result = {
               pair: `${currentCoinData.index} / ${key}`,
-              tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/64x64/${currentCoinData.cmc}.png`,
+              tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/128x128/${currentCoinData.cmc}.png`,
               tokenVersusIcon,
               poolLiquidity: poolLiquidity.reduce((p, n) => Number(p) + Number(n), 0),
               ...data

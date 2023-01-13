@@ -260,6 +260,12 @@ export type CoinMainPage = {
   name?: string;
   platform_binance?: string;
   platform_ethereum?: string;
+  platforms: {
+    id: string
+    icon?: string
+    decimals: number
+    address: string
+  }[]
   price_btc?: number;
   price_change_1h?: number;
   price_change_7d?: number;

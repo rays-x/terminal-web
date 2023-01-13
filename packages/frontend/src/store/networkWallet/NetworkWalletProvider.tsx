@@ -5,6 +5,7 @@ import BSCWalletIcon from '../../assets/icons/new/BSCWalletIcon.png';
 import EthWalletIcon from '../../assets/icons/new/EthWalletIcon.svg';
 import MATICWalletIcon from '../../assets/icons/new/MATICWalletIcon.svg';
 import AVAXWalletIcon from '../../assets/icons/new/AVAXWalletIcon.svg';
+import FantomIcon from '../../assets/icons/new/FantomIcon.svg';
 import {configureChains, createClient, useNetwork, useSwitchNetwork, WagmiConfig} from 'wagmi';
 import {avalanche, bsc, fantom, mainnet, polygon} from 'wagmi/chains';
 import {publicProvider} from 'wagmi/providers/public';
@@ -25,6 +26,7 @@ import {
 
 const data = [
   {
+    id: '63a121a02afa55c2295c123d',
     name: 'bsc',
     label: 'BSC Network',
     logo_url: BSCWalletIcon,
@@ -32,6 +34,7 @@ const data = [
     wallet: bsc
   },
   {
+    id: '63a121a12afa55c2295c1255',
     name: 'eth',
     label: 'ETH Network',
     logo_url: EthWalletIcon,
@@ -39,6 +42,15 @@ const data = [
     wallet: mainnet
   },
   {
+    id: '63a1f86f2afa55c2295d5ba0',
+    name: 'avax',
+    label: 'AVAX Network',
+    logo_url: AVAXWalletIcon,
+    color: '#E84142',
+    wallet: avalanche
+  },
+  {
+    id: '63a121a12afa55c2295c125b',
     name: 'matic',
     label: 'MATIC Network',
     logo_url: MATICWalletIcon,
@@ -46,11 +58,12 @@ const data = [
     wallet: polygon
   },
   {
-    name: 'avax',
-    label: 'AVAX Network',
-    logo_url: AVAXWalletIcon,
-    color: '#E84142',
-    wallet: avalanche
+    id: '63a121a12afa55c2295c125a',
+    name: 'fantom',
+    label: 'FTM Network',
+    logo_url: FantomIcon,
+    color: '#13B5EC',
+    wallet: fantom
   }
 ];
 
@@ -97,16 +110,19 @@ const client = createClient({
 });
 
 const NetworkWalletProviderWrapper = React.memo(({children}: { children: React.ReactNode }) => {
-  const [network, setNetwork] = React.useState<typeof data[0]>(undefined);
+  const [network, setNetwork] = React.useState<typeof data[number]>(undefined);
   const {chain} = useNetwork();
   const {switchNetworkAsync} = useSwitchNetwork();
   const switchNetwork = (_name?: string) => {
     (async () => {
       try {
         const network = data.find(({name}) => name === _name) || data[0];
-        await switchNetworkAsync(network.wallet.id);
+        try {
+          await switchNetworkAsync(network.wallet.id);
+        } catch (e) {
+        }
         setNetwork(network);
-      } catch(e) {
+      } catch (e) {
       }
     })();
   };
@@ -116,10 +132,10 @@ const NetworkWalletProviderWrapper = React.memo(({children}: { children: React.R
   }, [chain]);
   return (
     <NetworkWalletContext.Provider
-      value={{data, network: network?.name, switchNetwork}}>
+      value={{data, network: network, switchNetwork}}>
       <RainbowKitProvider chains={chains} theme={darkTheme({
-        accentColor:'#b518ff',
-        borderRadius: 'medium',
+        accentColor: '#b518ff',
+        borderRadius: 'medium'
       })} initialChain={network?.wallet.id}>
         {children}
       </RainbowKitProvider>

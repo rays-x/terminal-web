@@ -12,7 +12,7 @@ export function NetworkWalletSelect({className}: { className?: string }) {
         text: chain.label,
         color: chain.color
       }))}
-      value={network}
+      value={network?.name}
       onChange={item => switchNetwork(item, false)}
       className={className}
     />

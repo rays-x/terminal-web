@@ -204,7 +204,9 @@ export const CoinStatsTitleLabel = styled.div<CoinStatsTitleChangeProps>`
                   `}
   text-overflow: ellipsis;
   overflow: hidden;
-  max-width: 240px;
+  @media (max-width: 618px) {
+    max-width: 240px;
+  }
 `;
 
 export const CoinStatsTitleChange = styled.div<CoinStatsTitleChangeProps>`

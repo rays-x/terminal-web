@@ -14,6 +14,7 @@ import {CmcTokenSocketProvider} from '../../store/cmcTokenSocket';
 import {useLazyFetch} from '../../hooks/useFetch';
 import {useAdaptiveTriggers} from '../../hooks/useAdaptiveTrigger';
 import Swap from './components/Swap/Swap';
+import {SubPage} from './components/SubPage/SubPage';
 
 
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
@@ -36,15 +37,15 @@ export const CoinPage: FC = React.memo(() => {
   });
   const {sendMessage, lastMessage} = useCmcSocket();
   React.useEffect(() => {
-    if(slug !== 'bitcoin') {
+    if (slug !== 'bitcoin') {
       getBtc().catch();
     }
-    if(slug !== 'ethereum') {
+    if (slug !== 'ethereum') {
       getEth().catch();
     }
   }, [slug]);
   React.useEffect(() => {
-    if(!data || (
+    if (!data || (
       slug !== 'bitcoin'
         ? !dataBtc
         : false
@@ -63,7 +64,7 @@ export const CoinPage: FC = React.memo(() => {
       fully_diluted_mc_change: data.statistics.fullyDilutedMarketCapChangePercentage24h,
       id: String(data.id),
       cmc: Number(data.cmc),
-      image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${data.cmc}.png`,
+      image: `https://s2.coinmarketcap.com/static/img/coins/128x128/${data.cmc}.png`,
       rank: String(data.statistics.rank || '') || undefined,
       index: data.symbol,
       link_binance: undefined,
@@ -80,6 +81,15 @@ export const CoinPage: FC = React.memo(() => {
       name: data.name,
       platform_binance: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 56), 'address', '').toLowerCase() || undefined,
       platform_ethereum: get(get(data, 'platforms', []).find(_ => _.platform?.chainId === 1), 'address', '').toLowerCase() || undefined,
+      platforms: get(data, 'platforms', []).map(({id, ...rest}) => {
+        const iconCmc = get(rest, 'platform.cmcCrypto');
+        return {
+          id: get(rest, 'platform.id'),
+          decimals: get(rest, 'decimals'),
+          address: get(rest, 'address'),
+          icon: iconCmc ? `https://s2.coinmarketcap.com/static/img/coins/128x128/${iconCmc}.png` : undefined
+        };
+      }),
       price_btc: dataBtc ? (1 / dataBtc.statistics.price) * data.statistics.price : undefined,
       price_change_1h: data.statistics.priceChangePercentage1h,
       price_change_7d: data.statistics.priceChangePercentage7d,
@@ -99,7 +109,7 @@ export const CoinPage: FC = React.memo(() => {
   }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if(!data || (
+    if (!data || (
       slug !== 'bitcoin'
         ? !dataBtc
         : false
@@ -127,24 +137,24 @@ export const CoinPage: FC = React.memo(() => {
   }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if(!lastMessage) {
+    if (!lastMessage) {
       return;
     }
     const {id, d} = lastMessage;
-    switch(id) {
+    switch (id) {
       case 'price': {
         const {cr} = d;
-        if(
+        if (
           token?.price_usd === undefined
           || token?.price_change_24h === undefined
         ) {
           return;
         }
         setToken(prev => {
-          switch(cr.id) {
+          switch (cr.id) {
             case data?.cmc: {
               Object.keys(cr).forEach(key => {
-                switch(key) {
+                switch (key) {
                   case 'p': {
                     prev['price_usd'] = cr.p || prev['price_usd'];
                     break;

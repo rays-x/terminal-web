@@ -57,10 +57,10 @@
     "react-router": "6.3.0",
     "react-router-dom": "6.3.0",
     "react-scroll": "1.8.8",
-    "react-select": "^5.7.0",
     "react-spring": "9.5.5",
     "react-table": "7.8.0",
     "react-use-websocket": "4.2.0",
+    "react-virtualized-auto-sizer": "^1.0.7",
     "react-window": "^1.8.8",
     "recharts": "2.1.16",
     "redux": "4.2.0",
@@ -71,7 +71,9 @@
     "ts-node": "10.9.1",
     "ts-node-dev": "2.0.0",
     "tsconfig-paths": "4.1.0",
-    "wagmi": "^0.10.10"
+    "usehooks-ts": "2.9.1",
+    "wagmi": "0.10.10",
+    "web3": "1.0.0-beta.34"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "2.13.11",
@@ -86,6 +88,7 @@
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.8",
     "@types/react-helmet": "^6.1.5",
+    "@types/react-window": "^1.8.5",
     "@types/styled-components": "5.1.26",
     "@vitejs/plugin-react": "2.2.0",
     "compression": "1.7.4",

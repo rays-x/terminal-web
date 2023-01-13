@@ -14,7 +14,7 @@ const Container = styled.div`
   align-items: center;
   background: ${colors.background['card']};
   border-radius: ${radius[20]};
-  padding: ${spacing[24]};
+  padding: 20px;
 `;
 
 

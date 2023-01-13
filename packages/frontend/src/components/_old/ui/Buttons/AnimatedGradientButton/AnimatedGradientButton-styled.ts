@@ -1,10 +1,10 @@
-import styled, { css } from 'styled-components';
-import { animated } from 'react-spring';
-import { mixins } from '../../../../../presets/mixins';
-import { colors, radius } from '../../../../../presets/base';
+import styled, {css} from 'styled-components';
+import {animated} from 'react-spring';
+import {mixins} from '../../../../../presets/mixins';
+import {colors, radius} from '../../../../../presets/base';
 
 export interface GradientButtonComponent {
-  width?: number;
+  width?: number | string;
   height?: number;
   fullWidth?: boolean;
 }
@@ -24,21 +24,21 @@ export const Component = styled.button<GradientButtonComponent>`
   overflow: hidden;
   cursor: pointer;
   background: transparent;
-  ${({ width }) =>
-    width &&
-    css`
-      width: ${width}px;
-    `}
-  ${({ height }) =>
-    height &&
-    css`
-      height: ${height}px;
-    `}
-  ${({ fullWidth }) =>
-    fullWidth &&
-    css`
-      width: inherit;
-    `}
+  ${({width}) =>
+          width &&
+          css`
+            width: ${typeof width === 'number' ? `${width}px` : width};
+          `}
+  ${({height}) =>
+          height &&
+          css`
+            height: ${height}px;
+          `}
+  ${({fullWidth}) =>
+          fullWidth &&
+          css`
+            width: inherit;
+          `}
 `;
 
 export const Gradient = styled(animated.div)`

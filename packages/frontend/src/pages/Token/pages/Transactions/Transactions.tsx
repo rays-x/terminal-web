@@ -67,7 +67,7 @@ export const Transactions: React.FC = React.memo(() => {
         }),//?string
         tokenValue1: '',//string
         maker: '',//string
-        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/64x64/${pairsFormat[transaction.pair]?.dex?.cmc}.png`,
+        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/128x128/${pairsFormat[transaction.pair]?.dex?.cmc}.png`,
         tx: pairsFormat[transaction.pair]?.platform.dexerTxHashFormat?.replace('%s', transaction.txn)
       };
     }).sort((a, b) => b.date.getTime() - a.date.getTime()));
@@ -120,7 +120,7 @@ export const Transactions: React.FC = React.memo(() => {
         }),//?string
         tokenValue1: '',//string
         maker: '',//string
-        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/64x64/${pair?.dex?.cmc}.png`,
+        exchange: `https://s2.coinmarketcap.com/static/img/exchanges/128x128/${pair?.dex?.cmc}.png`,
         tx: pair?.platform.dexerTxHashFormat?.replace('%s', transaction.txn)
       };
     });

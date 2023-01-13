@@ -62,7 +62,7 @@ export const PlatformEntityDefaultPopulateSelect = [
   'id',
   // 'name',
   'cmc',
-  // 'cmcCrypto',
+  'cmcCrypto',
   'chainId'
 ];
 

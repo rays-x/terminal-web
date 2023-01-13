@@ -13,7 +13,6 @@ import {Via} from '@viaprotocol/router-sdk';
 
 
 export const Header: FC<any> = React.memo(() => {
-
   return (
     <header className={s.Header}>
       <LogoLink className={s.Header__logo}/>

@@ -8,6 +8,7 @@ import {
   TokenSlugDto
 } from '../dto/CoinMarketCapScraper';
 import {TokenService} from '../services/Token';
+import {SwapTokensQueryDto} from '../dto/Token';
 
 @ApiTags('token')
 @Controller('/api/rest')
