@@ -236,6 +236,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
           ]
         });
       });
+      console.log('pairs',pairs)
       Object.entries(pairs).map(([key, {
         tokenVersusIcon,
         btcAddress_poolContract = [],

@@ -51,17 +51,11 @@ export const Header: FC<any> = React.memo(() => {
               if(!isConnected) {
                 return (
                   <>
-                    <NavigationStyled.UserGroup>
-                      <NetworkWalletSelect className={s.Header__network}/>
-                      <AnimatedGradientButton
-                        selected
+                      <button
                         onClick={openConnectModal}
-                        width={136}
-                        height={40}
                       >
-                        Connect Wallet
-                      </AnimatedGradientButton>
-                    </NavigationStyled.UserGroup>
+                        Sign-In
+                      </button>
                   </>
                 );
               }
@@ -79,14 +73,7 @@ export const Header: FC<any> = React.memo(() => {
               }
               return (
                 <>
-                  <NavigationStyled.UserGroup>
-                    <NetworkWalletSelect className={s.Header__network}/>
-                    <span
-                      style={{cursor: 'pointer'}}
-                      onClick={openAccountModal}>
-                        {account.displayName}
-                      </span>
-                  </NavigationStyled.UserGroup>
+                  {/*authorized*/}
                 </>
               );
             })();

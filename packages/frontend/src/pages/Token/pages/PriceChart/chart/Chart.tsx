@@ -75,7 +75,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         const requestParams = {
           //TODO check for reverse
           'reverse-order': pair.reverseOrder,
-          usd: true
+          usd: false
         };
         if ((new Date().getTime() - (periodParams.to * 1000)) > 0) {
           requestParams['to'] = (periodParams.to * 1000);
@@ -201,7 +201,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
           widget = {
             subscribeUID: listenerGuid,
             handlers: [handler],
-            isUsd: true,
+            isUsd: false,
             //TODO check for reverse
             reverseOder: pair.reverseOrder
           };

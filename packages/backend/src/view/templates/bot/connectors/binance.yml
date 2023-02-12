@@ -1,0 +1,9 @@
+##########################
+###   binance config   ###
+##########################
+
+connector: binance
+
+binance_api_key: S9IaOlJxuoyYt7CcN1X5xF64kULCUl4DkSsz2xnjusBSwmBYQSEu5klHycpK0PYS
+
+binance_api_secret: Q0mnfeTduaT7dlMTQETavS7Xpf3eO2tagDd6VI5Aha5zzRzMmajAq3zzAqMGIckI

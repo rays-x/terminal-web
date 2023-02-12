@@ -8,6 +8,7 @@ services:
 #      - 2055:80
 
   mongo:
+    container_name: "ray_mongo"
     image: mongo
     ports:
       - 27001:27017
@@ -19,6 +20,7 @@ services:
       - mongo-db-config:/data/configdb
 
   redis:
+    container_name: "ray_redis"
     image: redis:alpine
     privileged: true
     ports:

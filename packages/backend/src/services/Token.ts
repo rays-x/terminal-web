@@ -129,12 +129,11 @@ export class TokenService implements OnModuleInit {
       // this._syncTokensHistory,
       // this._syncPlatforms,
       // this._syncDexs,
-      // this._syncPairs
-      /*this._syncPairsLiquidity,
-      this._syncTokenTransfers,
-      this._syncTokenSwaps,
-      this._syncTokenHolders,
-      this._syncTradersVolume*/
+      // this._syncPairs,
+      // this._syncTokenTransfers,
+      // this._syncTokenSwaps,
+      // this._syncTokenHolders,
+      // this._syncTradersVolume
     ], async (start) => {
       try {
         await start(this);
@@ -1018,6 +1017,7 @@ export class TokenService implements OnModuleInit {
       }[]
     }[] = await Promise.all((await self.repoToken.find({
         ...self.sharedFilter,
+        _id:'63a13aef2afa55c2295cb0fc',
         platforms: {
           ...self.sharedFilter.platforms,
           $elemMatch: {
