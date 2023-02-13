@@ -1,0 +1,11 @@
+###############################
+###   coinbase_pro config   ###
+###############################
+
+connector: coinbase_pro
+
+coinbase_pro_api_key:
+
+coinbase_pro_secret_key:
+
+coinbase_pro_passphrase:

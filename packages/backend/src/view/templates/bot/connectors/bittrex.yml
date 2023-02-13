@@ -1,0 +1,9 @@
+#########################
+###   bitrex config   ###
+#########################
+
+connector: bittrex
+
+bittrex_api_key:
+
+bittrex_secret_key:

@@ -1,0 +1,9 @@
+#######################
+###   None config   ###
+#######################
+
+connector: binance_perpetual
+
+binance_perpetual_api_key:
+
+binance_perpetual_api_secret:

@@ -1,0 +1,11 @@
+#########################
+###   kucoin config   ###
+#########################
+
+connector: kucoin
+
+kucoin_api_key:
+
+kucoin_secret_key:
+
+kucoin_passphrase:

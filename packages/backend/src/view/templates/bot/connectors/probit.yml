@@ -1,0 +1,9 @@
+#########################
+###   probit config   ###
+#########################
+
+connector: probit
+
+probit_api_key:
+
+probit_secret_key:

@@ -1,0 +1,9 @@
+#############################
+###   altmarkets config   ###
+#############################
+
+connector: altmarkets
+
+altmarkets_api_key:
+
+altmarkets_secret_key:

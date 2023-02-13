@@ -1,0 +1,11 @@
+########################
+###   lbank config auth_method - RSA|HmacSHA256   ###
+########################
+
+connector: lbank
+
+lbank_api_key:
+
+lbank_secret_key:
+
+lbank_auth_method:

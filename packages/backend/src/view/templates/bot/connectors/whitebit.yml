@@ -1,0 +1,9 @@
+###########################
+###   whitebit config   ###
+###########################
+
+connector: whitebit
+
+whitebit_api_key:
+
+whitebit_secret_key:

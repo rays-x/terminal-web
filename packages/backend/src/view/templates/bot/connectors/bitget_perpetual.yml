@@ -1,0 +1,11 @@
+###################################
+###   bitget_perpetual config   ###
+###################################
+
+connector: bitget_perpetual
+
+bitget_perpetual_api_key:
+
+bitget_perpetual_secret_key:
+
+bitget_perpetual_passphrase:

@@ -1,0 +1,11 @@
+#######################
+###   None config   ###
+#######################
+
+connector: okx
+
+okx_api_key:
+
+okx_secret_key:
+
+okx_passphrase:

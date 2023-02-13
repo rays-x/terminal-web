@@ -1,0 +1,9 @@
+#############################
+###   binance_us config   ###
+#############################
+
+connector: binance_us
+
+binance_api_key:
+
+binance_api_secret:

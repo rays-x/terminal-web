@@ -1,0 +1,13 @@
+#######################
+###   ndax config   ###
+#######################
+
+connector: ndax
+
+ndax_uid:
+
+ndax_account_name:
+
+ndax_api_key:
+
+ndax_secret_key:

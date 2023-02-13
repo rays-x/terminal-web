@@ -1,0 +1,9 @@
+#######################
+###   None config   ###
+#######################
+
+connector: bitmex_perpetual
+
+bitmex_perpetual_api_key:
+
+bitmex_perpetual_api_secret:

@@ -1,0 +1,11 @@
+####################################
+###   gate_io_perpetual config   ###
+####################################
+
+connector: gate_io_perpetual
+
+gate_io_perpetual_api_key:
+
+gate_io_perpetual_secret_key:
+
+gate_io_perpetual_user_id:

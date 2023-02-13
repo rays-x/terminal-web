@@ -1,0 +1,9 @@
+##########################
+###   gate_io config   ###
+##########################
+
+connector: gate_io
+
+gate_io_api_key:
+
+gate_io_secret_key:

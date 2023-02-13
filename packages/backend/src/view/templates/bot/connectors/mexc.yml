@@ -1,0 +1,9 @@
+#######################
+###   mexc config   ###
+#######################
+
+connector: mexc
+
+mexc_api_key:
+
+mexc_secret_key:

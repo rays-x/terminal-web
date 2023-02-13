@@ -1,0 +1,13 @@
+###########################
+###   loopring config   ###
+###########################
+
+connector: loopring
+
+loopring_accountid:
+
+loopring_exchangeaddress:
+
+loopring_private_key:
+
+loopring_api_key:

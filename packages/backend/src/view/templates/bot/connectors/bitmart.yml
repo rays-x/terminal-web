@@ -1,0 +1,11 @@
+##########################
+###   bitmart config   ###
+##########################
+
+connector: bitmart
+
+bitmart_api_key:
+
+bitmart_secret_key:
+
+bitmart_memo:
