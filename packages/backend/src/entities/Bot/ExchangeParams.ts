@@ -1,6 +1,5 @@
-import {modelOptions, prop, Ref} from '@typegoose/typegoose';
+import {modelOptions, prop} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import ExchangeEntity from './Exchange';
 
 @modelOptions({
   ...defaultModelOptions,
@@ -13,18 +12,18 @@ import ExchangeEntity from './Exchange';
         id: _id,
         ...rest
       })
-    }
+    },
+    timestamps: false
   }
 })
-export class UserExchanges {
+export class ExchangeParams {
   id: string;
-  @prop({
-    required: true,
-    ref: () => ExchangeEntity,
-  })
-  exchange?: Ref<ExchangeEntity>;
   @prop({
     required: true
   })
-  params!: Object;
+  slug!: string;
+  @prop({
+    required: true
+  })
+  name!: string;
 }

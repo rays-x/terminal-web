@@ -2,11 +2,7 @@ import {index, modelOptions, prop} from '@typegoose/typegoose';
 import {_BaseEntity} from '../_BaseEntity';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
 import {ExchangeParams} from './ExchangeParams';
-
-enum ExchangeType {
-  SPOT_CLOB_CEX = 'SPOT_CLOB_CEX',
-  PERP_CLOB_CEX = 'PERP_CLOB_CEX',
-}
+import {StrategyParams} from './StrategyParams';
 
 @modelOptions({
   ...defaultModelOptions,
@@ -20,7 +16,7 @@ enum ExchangeType {
         ...rest
       })
     },
-    collection: 'botExchange',
+    collection: 'botStrategy',
     versionKey: false,
     timestamps: false
   }
@@ -33,28 +29,25 @@ enum ExchangeType {
     background: true
   }
 )
-export class ExchangeEntity extends _BaseEntity {
+export class StrategyEntity extends _BaseEntity {
   @prop({required: true})
   slug!: string;
   @prop({required: true})
   name!: string;
+  @prop({required: false})
+  description?: string;
   @prop({
     required: true,
-    enum: ExchangeType
+    type: () => StrategyParams
   })
-  type!: ExchangeType;
-  @prop({
-    required: true,
-    type: () => ExchangeParams
-  })
-  params?: ExchangeParams[];
+  params?: StrategyParams[];
 }
 
-export const ExchangeEntityDefaultSelect = [
+export const StrategyEntityDefaultSelect = [
   'id',
   'slug',
-  'type',
   'name',
+  'description',
   'params'
 ];
-export default ExchangeEntity;
+export default StrategyEntity;

@@ -4,9 +4,12 @@ import {BotManagerController} from '../controllers/BotManager';
 import {TypegooseModule} from 'nestjs-typegoose';
 import ExchangeEntity from '../entities/Bot/Exchange';
 import UserEntity from '../entities/Bot/User';
+import StrategyEntity from '../entities/Bot/Strategy';
+import BotEntity from '../entities/Bot/Bot';
+import BotLogEntity from '../entities/Bot/BotLog';
 
 @Module({
-  imports: [TypegooseModule.forFeature([ExchangeEntity,UserEntity])],
+  imports: [TypegooseModule.forFeature([ExchangeEntity,UserEntity,StrategyEntity,BotEntity,BotLogEntity])],
   providers: [BotManagerService],
   exports: [BotManagerService],
   controllers: [BotManagerController]

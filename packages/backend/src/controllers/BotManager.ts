@@ -1,5 +1,5 @@
-import {Body, Controller, Get, HttpCode, Post, Query} from '@nestjs/common';
-import {ApiTags} from '@nestjs/swagger';
+import {Body, Controller, Delete, Get, HttpCode, Param, Post, Query} from '@nestjs/common';
+import {ApiQuery, ApiTags} from '@nestjs/swagger';
 import {BotManagerService} from '../services/BotManager';
 
 @ApiTags('bot')
@@ -19,29 +19,79 @@ export class BotManagerController {
     return this.service.userExchangeUpsert(address, body);
   }
 
-  @Get('user/exchange/list')
+  @Get('user/exchanges')
   @HttpCode(200)
+  @ApiQuery({
+    name: 'id',
+    required: false
+  })
   async userExchangesList(
-    @Query('userId') address: string
+    @Query('userId') address: string,
+    @Query('id') id?: string
   ) {
-    return this.service.userExchangesList(address);
+    return this.service.userExchangesList(address, id);
   }
 
-  @Get('exchange/list')
+  @Get('exchanges')
   @HttpCode(200)
   async exchangesList() {
     return this.service.exchangesList();
   }
 
-  @Get('bot/list')
+  @Get('strategies')
   @HttpCode(200)
-  async botList() {
-    return this.service.botList();
+  async strategyFindMany() {
+    return this.service.strategyFindMany();
+  }
+
+  @Get('strategy/:id')
+  @HttpCode(200)
+  async strategyFindOne(
+    @Param('id') id?: string
+  ) {
+    return this.service.strategyFindOne(id);
+  }
+
+  @Get('bots')
+  @HttpCode(200)
+  async botList(
+    @Query('userId') address: string
+  ) {
+    return this.service.botList(address);
   }
 
   @Post('bot/create')
   @HttpCode(200)
-  async botCreate() {
-    return this.service.botCreate();
+  async botCreate(
+    @Query('userId') address: string,
+    @Body() {
+      id,
+      params
+    }: any
+  ) {
+    console.log('body', address, {
+      id,
+      params
+    });
+    return this.service.botCreate(address, {
+      id,
+      params
+    });
+  }
+
+  @Delete('bot/delete/:id')
+  @HttpCode(200)
+  async botDelete(
+    @Param('id') id: string
+  ) {
+    return this.service.botDelete(id);
+  }
+
+  @Get('bot/:id/logs')
+  @HttpCode(200)
+  async botLogs(
+    @Param('id') bot: string
+  ) {
+    return this.service.botLogs(bot);
   }
 }

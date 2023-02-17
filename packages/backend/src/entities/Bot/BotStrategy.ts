@@ -1,5 +1,7 @@
-import {modelOptions, prop} from '@typegoose/typegoose';
+import {modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
+import PlatformEntity from '../Platform';
+import StrategyEntity from './Strategy';
 
 @modelOptions({
   ...defaultModelOptions,
@@ -10,20 +12,19 @@ import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
       virtuals: true,
       transform: (doc, {_id, ...rest}) => ({
         id: _id,
-        ...rest
-      })
-    },
-    timestamps: false
+        ...rest,
+      }),
+    }
   }
 })
-export class ExchangeFields {
-  id: string;
+export class BotStrategy {
+  @prop({
+    required: true,
+    ref: () => StrategyEntity,
+  })
+  id?: Ref<StrategyEntity>;
   @prop({
     required: true
   })
-  slug!: string;
-  @prop({
-    required: true
-  })
-  name!: string;
+  params!: {};
 }
