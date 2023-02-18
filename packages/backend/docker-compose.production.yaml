@@ -17,8 +17,6 @@ services:
     depends_on:
       - mongo
       - redis
-      - postgres
-      - rabbitmq
     links:
       - mongo
       - redis
@@ -27,6 +25,8 @@ services:
       - minio
     volumes:
       - media:/usr/src/app/media
+      - /var/run/docker.sock:/var/run/docker.sock
+    privileged: true
 
   mongo:
     image: mongo
@@ -63,12 +63,11 @@ services:
 
   rabbitmq:
     container_name: hb_rabbitmq
-    image: rabbitmq:3-management-alpine
+    image: bardakdev/rabbitmq
 #    ports:
 #      - "1883:1883"
     volumes:
-      - ./docker/rabbitmq/20-main.conf:/etc/rabbitmq/conf.d/20-main.conf:ro
-      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - rabbitmq-conf:/etc/rabbitmq/conf.d:ro
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
       test: rabbitmq-diagnostics -q ping
@@ -79,8 +78,8 @@ services:
   minio:
     container_name: hb_minio
     image: minio/minio
-#    ports:
-#      - "9000:9000"
+    ports:
+      - "9000:9000"
     volumes:
       - minio-data:/data
     environment:
@@ -107,4 +106,6 @@ volumes:
   minio-data:
     name: "hb.minio"
   rabbitmq-data:
-    name: "hb.rabbitmq"
+    name: "hb.rabbitmq.data"
+  rabbitmq-conf:
+    name: "hb.rabbitmq.conf"

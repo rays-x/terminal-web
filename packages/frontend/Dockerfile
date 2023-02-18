@@ -7,3 +7,4 @@ COPY docker/nginx/options.request.conf /etc/nginx/options.request.conf
 COPY docker/nginx/cloudflare /etc/nginx/cloudflare
 COPY docker/nginx/conf.d/sites-available /etc/nginx/conf.d/sites-available
 COPY dist/client /var/www/frontend-app/public
+COPY dist/mm /var/www/frontend-mm/public

@@ -8,7 +8,7 @@
     "node": ">=19"
   },
   "scripts": {
-    "copyfiles": "copyfiles -u 1 src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json,csv} dist/",
+    "copyfiles": "copyfiles -u 1 src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json,csv,yml} dist/",
     "pre:debug": "yarn copyfiles && yarn build:server",
     "prestart": "docker compose up -d",
     "start": "dotenv ts-node-dev --transpile-only --exit-child -- src/index.ts",

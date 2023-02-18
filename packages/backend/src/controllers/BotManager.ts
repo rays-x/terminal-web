@@ -55,9 +55,10 @@ export class BotManagerController {
   @Get('bots')
   @HttpCode(200)
   async botList(
-    @Query('userId') address: string
+    // @Query('userId') address: string
   ) {
-    return this.service.botList(address);
+
+    return this.service.botList();
   }
 
   @Post('bot/create')

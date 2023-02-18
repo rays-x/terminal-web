@@ -255,16 +255,17 @@ export class BotManagerService {
             Target: '/logs',
             ReadOnly: false
           }
-        ]
+        ],
+        NetworkMode: 'ray'
       },
       Tty: true,
       OpenStdin: true
     });
     await this.repoBot.findByIdAndUpdate(id, {
       container: container.id,
-      status: BotStatus.running
+      status: container ? BotStatus.running : BotStatus.error
     });
-    await container.start();
+    await container?.start();
     return {
       id,
       status: BotStatus.running
@@ -276,10 +277,15 @@ export class BotManagerService {
     if(!bot) {
       throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    const container = await this.docker.getContainer(bot.container);
-    await container.remove({
-      force: true
-    });
+    try {
+      const container = await this.docker.getContainer(bot.container);
+      await container?.remove({
+        force: true
+      });
+    } catch(e) {
+
+    }
+
     await Promise.allSettled([
       this.repoBotLog.deleteMany({
         bot: id
@@ -289,8 +295,22 @@ export class BotManagerService {
     return true;
   }
 
-  async botList(_address) {
-    const address = _address.toLowerCase();
+  async botList() {
+    const ok = () => new Promise((res, rej) => {
+      setTimeout(res, 3000);
+    });
+    const error = () => new Promise((res, rej) => {
+      setTimeout(rej, 2000);
+    });
+
+    const results = await Promise.allSettled([ok(), this.repoBot.create({})]);
+    results.forEach(result => {
+      if(result.status !== 'rejected') {
+        return;
+      }
+      console.log(String(result.reason));
+    });
+    /*const address = _address.toLowerCase();
     const user = await this.repoUser.findOne({address});
     if(!user) {
       return [];
@@ -329,7 +349,7 @@ export class BotManagerService {
         },
         ...rest
       };
-    });
+    });*/
   }
 
   async botLogs(bot) {

@@ -46,12 +46,11 @@ services:
 
   rabbitmq:
     container_name: hb_rabbitmq
-    image: rabbitmq:3-management-alpine
+    image: bardakdev/rabbitmq
     ports:
       - "1883:1883"
     volumes:
       - ./docker/rabbitmq/20-main.conf:/etc/rabbitmq/conf.d/20-main.conf:ro
-      - ./docker/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
       test: rabbitmq-diagnostics -q ping
