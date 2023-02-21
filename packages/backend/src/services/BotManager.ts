@@ -39,8 +39,10 @@ export class BotManagerService {
       upsert: true,
       new: true
     }).select(UserEntityDefaultSelect);
-    const edited = exchanges.reduce((prev, exchange: any) => {
-      if(exchange.exchange.toString() !== id) {
+    console.log('exchanges', exchanges);
+    const edited = exchanges.reduce((prev, exchange) => {
+      console.log('ex', exchange);
+      if(exchange?.exchange.toString() !== id) {
         return [...prev, exchange];
       }
       return [
@@ -51,18 +53,20 @@ export class BotManagerService {
         }
       ];
     }, []);
+    console.log('edited', edited);
     if(!edited.find(({exchange}) => (exchange?.toString() || exchange) === id)) {
       edited.push({
         exchange: id,
         params
       });
     }
+    console.log('edited1', edited);
     const {exchanges: _exchanges} = await this.repoUser.findOneAndUpdate({
       address
     }, {
       exchanges: edited
     }, {new: true}).select(UserEntityDefaultSelect);
-    return _exchanges.find(({exchange}) => exchange.toString() === id);
+    return _exchanges.find(({exchange}) => (exchange?.toString() || exchange) === id);
   }
 
   async userExchangesList(_address: string, id?: string) {
@@ -266,10 +270,7 @@ export class BotManagerService {
       status: container ? BotStatus.running : BotStatus.error
     });
     await container?.start();
-    return {
-      id,
-      status: BotStatus.running
-    };
+    return this.botList(_address, id);
   }
 
   async botDelete(id: string) {
@@ -295,27 +296,16 @@ export class BotManagerService {
     return true;
   }
 
-  async botList() {
-    const ok = () => new Promise((res, rej) => {
-      setTimeout(res, 3000);
-    });
-    const error = () => new Promise((res, rej) => {
-      setTimeout(rej, 2000);
-    });
-
-    const results = await Promise.allSettled([ok(), this.repoBot.create({})]);
-    results.forEach(result => {
-      if(result.status !== 'rejected') {
-        return;
-      }
-      console.log(String(result.reason));
-    });
-    /*const address = _address.toLowerCase();
+  async botList(_address: string, _id?: string) {
+    const address = _address.toLowerCase();
     const user = await this.repoUser.findOne({address});
     if(!user) {
       return [];
     }
-    return (await this.repoBot.find({
+    const result = (await this.repoBot.find(_id ? {
+      _id,
+      user: user.id
+    } : {
       user: user.id
     }).select(BotEntityDefaultSelect).populate({
       path: 'strategy.id',
@@ -349,7 +339,8 @@ export class BotManagerService {
         },
         ...rest
       };
-    });*/
+    });
+    return _id ? get(result, 0) : result;
   }
 
   async botLogs(bot) {
