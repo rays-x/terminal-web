@@ -1,5 +1,3 @@
-import {Types} from 'mongoose';
-
 export interface TokenTransactionsItem {
   time: string;
   type: string;

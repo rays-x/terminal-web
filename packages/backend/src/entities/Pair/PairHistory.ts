@@ -1,4 +1,4 @@
-import {index,modelOptions, prop, Ref} from '@typegoose/typegoose';
+import {index, modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
 import {_SimpleEntity} from '../_BaseEntity';
 import PairEntity from './Pair';
@@ -20,7 +20,7 @@ import PairEntity from './Pair';
     },
     collection: 'pairHistory',
     versionKey: false,
-    timestamps: false,
+    timestamps: false
   }
 })
 @index(

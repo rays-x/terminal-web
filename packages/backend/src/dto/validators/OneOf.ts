@@ -1,10 +1,10 @@
-import { ClassConstructor, plainToInstance, Type } from 'class-transformer';
-import { registerDecorator, validateSync } from 'class-validator';
+import {ClassConstructor, plainToInstance, Type} from 'class-transformer';
+import {registerDecorator, validateSync} from 'class-validator';
 
 export function OneOf(
   types: Exclude<Parameters<typeof Type>[0], undefined>[]
 ): PropertyDecorator {
-  return function (target: Object, propertyName: PropertyKey) {
+  return function(target: Object, propertyName: PropertyKey) {
     registerDecorator({
       name: 'wrongType',
       target: target.constructor,
@@ -14,18 +14,18 @@ export function OneOf(
         validate(arg: object | Array<object>) {
           let objects: Array<object>;
 
-          if (Array.isArray(arg)) objects = arg;
+          if(Array.isArray(arg)) objects = arg;
           else objects = [arg];
 
-          for (const somethingToTransform of objects) {
+          for(const somethingToTransform of objects) {
             const isValid = types.some((t) => {
               const classType = t() as ClassConstructor<object>;
 
               let object: object;
 
-              if (typeof somethingToTransform === 'string') {
+              if(typeof somethingToTransform === 'string') {
                 object = JSON.parse(somethingToTransform);
-              } else if (
+              } else if(
                 somethingToTransform != null &&
                 typeof somethingToTransform === 'object'
               ) {
@@ -42,20 +42,20 @@ export function OneOf(
                 const errors = validateSync(instance);
 
                 return !errors.length;
-              } catch (error) {
+              } catch(error) {
                 return false;
               }
             });
 
-            if (!isValid) return false;
+            if(!isValid) return false;
           }
 
           return true;
         },
         defaultMessage() {
-          if (types.length === 0) {
+          if(types.length === 0) {
             return '';
-          } else if (types.length === 1) {
+          } else if(types.length === 1) {
             const type = types[0]();
             return `Has to be of type ${type.name}.`;
           } else {

@@ -17,6 +17,76 @@ export class CovalentService {
   ) {
   }
 
+  async statsLiquidity(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
+    const cacheKey = `cov:statsLiquidity:${md5(`${btcAddress}_${ethAddress}`)}`;
+    try {
+      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
+      if(cacheKey in this.awaiterStatsLiquidityList) {
+        if(cache && !update) {
+          return cache;
+        }
+        return [];
+      }
+      if(cache && !update) {
+        return cache;
+      }
+      if(!(cacheKey in this.awaiterStatsLiquidityList)) {
+        this.awaiterStatsLiquidityList[cacheKey] = true;
+      }
+      const data: Promise<{
+        eth?: { [date: string]: number }
+        bsc?: { [date: string]: number }
+      }> = Object.fromEntries((await Promise.all(Object.entries({
+        btcAddress,
+        ethAddress
+      }).map(async ([key, token]) => {
+        switch(key) {
+          case 'btcAddress': {
+            return ['btc', token ? await this.getStatsLiquidity({
+              chain: '56',
+              dex: 'pancakeswap_v2',
+              token
+            }) : undefined];
+          }
+          case 'ethAddress': {
+            return ['eth', token ? await this.getStatsLiquidity({
+              chain: '1',
+              dex: 'uniswap_v2',
+              token
+            }) : undefined];
+          }
+        }
+      }))).filter(([, data]) => data));
+      const map = {};
+      Object.values(data)
+      .forEach((items: { [date: string]: number }) => {
+        Object.entries(items).forEach(([date, value]) => {
+          set(map, date,
+            value + get(map, date, 0)
+          );
+        });
+      });
+      const result = Object.entries(map)
+      .map(([date, amount]: [string, number]) => ({date, amount}))
+      .sort((a, b) => {
+        return String(a.date).localeCompare(String(b.date), undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      });
+      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
+      if(cacheKey in this.awaiterStatsLiquidityList) {
+        delete this.awaiterStatsLiquidityList[cacheKey];
+      }
+      return result;
+    } catch(e) {
+      if(cacheKey in this.awaiterStatsLiquidityList) {
+        delete this.awaiterStatsLiquidityList[cacheKey];
+      }
+    }
+    return [];
+  }
+
   private async getStatsLiquidity({chain, dex, token}: {
     chain: '1' | '56',
     dex: 'uniswap_v2' | 'pancakeswap_v2',
@@ -24,7 +94,7 @@ export class CovalentService {
   }): Promise<{ [date: string]: number }> {
     let page = 0;
     const summaryChart: { [date: string]: number } = {};
-    while (true) {
+    while(true) {
       try {
         const {
           data: {
@@ -53,86 +123,16 @@ export class CovalentService {
             );
           });
         });
-        if (!has_more) {
+        if(!has_more) {
           break;
         } else {
           page++;
         }
-      } catch (e) {
+      } catch(e) {
         console.error(get(e, 'message', e));
         break;
       }
     }
     return summaryChart;
-  }
-
-  async statsLiquidity(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
-    const cacheKey = `cov:statsLiquidity:${md5(`${btcAddress}_${ethAddress}`)}`;
-    try {
-      const cache = JSON.parse(await this.redisClient.get(cacheKey) || 'null');
-      if (cacheKey in this.awaiterStatsLiquidityList) {
-        if (cache && !update) {
-          return cache;
-        }
-        return [];
-      }
-      if (cache && !update) {
-        return cache;
-      }
-      if (!(cacheKey in this.awaiterStatsLiquidityList)) {
-        this.awaiterStatsLiquidityList[cacheKey] = true;
-      }
-      const data: Promise<{
-        eth?: { [date: string]: number }
-        bsc?: { [date: string]: number }
-      }> = Object.fromEntries((await Promise.all(Object.entries({
-        btcAddress,
-        ethAddress
-      }).map(async ([key, token]) => {
-        switch (key) {
-          case 'btcAddress': {
-            return ['btc', token ? await this.getStatsLiquidity({
-              chain: '56',
-              dex: 'pancakeswap_v2',
-              token
-            }) : undefined];
-          }
-          case 'ethAddress': {
-            return ['eth', token ? await this.getStatsLiquidity({
-              chain: '1',
-              dex: 'uniswap_v2',
-              token
-            }) : undefined];
-          }
-        }
-      }))).filter(([, data]) => data));
-      const map = {};
-      Object.values(data)
-        .forEach((items: { [date: string]: number }) => {
-          Object.entries(items).forEach(([date, value]) => {
-            set(map, date,
-              value + get(map, date, 0)
-            );
-          });
-        });
-      const result = Object.entries(map)
-        .map(([date, amount]: [string, number]) => ({date, amount}))
-        .sort((a, b) => {
-          return String(a.date).localeCompare(String(b.date), undefined, {
-            numeric: true,
-            sensitivity: 'base'
-          });
-        });
-      await this.redisClient.set(cacheKey, JSON.stringify(result), 'PX', 24 * 60 * 60 * 1000);
-      if (cacheKey in this.awaiterStatsLiquidityList) {
-        delete this.awaiterStatsLiquidityList[cacheKey];
-      }
-      return result;
-    } catch (e) {
-      if (cacheKey in this.awaiterStatsLiquidityList) {
-        delete this.awaiterStatsLiquidityList[cacheKey];
-      }
-    }
-    return [];
   }
 }

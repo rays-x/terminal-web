@@ -12,7 +12,7 @@ export const HttpStatusMessages = {
   FILE_INVALID: 'File invalid.',
   SMS_REQUESTED_INTERVAL: 'To many sms requests, try in 5 minutes.',
   SIGN_UP_INTERVAL: 'To many sign-up requests, try in 24 hours.',
-  SMS_REQUESTED_TIMEOUT: 'Time to verify is past, try send another sms.',
+  SMS_REQUESTED_TIMEOUT: 'Time to verify is past, try send another sms.'
 };
 export const HttpStatusMessagesRu = {
   UNAUTHORIZED: 'Не аторизован',
@@ -27,5 +27,5 @@ export const HttpStatusMessagesRu = {
   FILE_INVALID: 'File invalid.',
   SMS_REQUESTED_INTERVAL: 'To many sms requests, try in 5 minutes.',
   SIGN_UP_INTERVAL: 'To many sign-up requests, try in 24 hours.',
-  SMS_REQUESTED_TIMEOUT: 'Time to verify is past, try send another sms.',
+  SMS_REQUESTED_TIMEOUT: 'Time to verify is past, try send another sms.'
 };

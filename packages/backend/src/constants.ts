@@ -17,5 +17,5 @@ export const TOKEN_CHAIN_IDS = [
   new Types.ObjectId('63a121a02afa55c2295c123d'),
   new Types.ObjectId('63a1f86f2afa55c2295d5ba0'),
   new Types.ObjectId('63a121a12afa55c2295c125b'),
-  new Types.ObjectId('63a121a12afa55c2295c125a'),
-]
+  new Types.ObjectId('63a121a12afa55c2295c125a')
+];

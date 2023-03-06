@@ -47,6 +47,7 @@ interface DataNew {
 export interface BitQueryStatsTransfersQuery {
   data: Data;
 }
+
 export interface BitQueryStatsTransfersNewQuery {
   data: DataNew;
 }

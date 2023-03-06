@@ -56,352 +56,6 @@ export class BitQueryService {
     this.token = '+LDiubcQUptEmjNSJQICeNWkdi77X3iAKQQ8dSyD+VkhwPhDf3lOj6oZyqnAmube1UyI57igIekZb87YHEMYjQ==';
   }
 
-  private async getStatsTransfers(variables: {
-    network: string,
-    token: string,
-    since?: string
-  }) {
-    const {
-      data: {
-        stats: {
-          transfers
-        }
-      }
-    } = await got.post<BitQueryStatsTransfersQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query (
-          $network: EthereumNetwork!,
-          $token: String!,
-          $since: ISO8601DateTime,
-          $till: ISO8601DateTime
-        ) {
-          stats: ethereum(network: $network) {
-            transfers(
-            options: {desc: "date.date"},
-            currency: {is: $token},
-            amount: {gt: 0},
-            date: {since: $since, till: $till}
-            ) {
-              date {
-                date: date
-              }
-              total_amount: amount
-              total_amount_usd: amount(in: USD)
-              median_transfer_amount: amount(calculate: median)
-              median_transfer_amount_usd: amount(calculate: median, in: USD)
-              average_transfer_amount: amount(calculate: average)
-              average_transfer_amount_usd: amount(calculate: average, in: USD)
-              uniq_receivers: count(uniq: receivers)
-              uniq_senders: count(uniq: senders)
-              transfer_count: count
-            }
-          }
-        }
-        `,
-        variables: variables
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return transfers;
-  }
-
-  private async getStatsTransfersNew(variables: {
-    network: string,
-    token: string,
-    since?: string,
-    till?: string,
-  }) {
-    const {
-      data: {
-        stats: {
-          transfers
-        }
-      }
-    } = await got.post<BitQueryStatsTransfersNewQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query (
-          $network: EthereumNetwork!,
-          $token: String!,
-          $since: ISO8601DateTime,
-          $till: ISO8601DateTime
-        ) {
-          stats: ethereum(network: $network) {
-            transfers(
-            options: {desc: "date.date"},
-            currency: {is: $token},
-            amount: {gt: 0},
-            date: {since: $since, till: $till}
-            ) {
-              date {
-                date: date
-              }
-              totalAmount: amount
-              totalAmountUsd: amount(in: USD)
-              medianTransferAmount: amount(calculate: median)
-              medianTransferAmountUsd: amount(calculate: median, in: USD)
-              averageTransferAmount: amount(calculate: average)
-              averageTransferAmountUsd: amount(calculate: average, in: USD)
-              uniqReceivers: count(uniq: receivers)
-              uniqSenders: count(uniq: senders)
-              transferCount: count
-            }
-          }
-        }
-        `,
-        variables
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return transfers;
-  }
-
-  private async getStatsSwapsNew(variables: {
-    network: string,
-    token: string,
-  }) {
-    const {
-      data: {
-        stats: {
-          swaps
-        }
-      }
-    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
-          stats: ethereum(network: $network) {
-            swaps: dexTrades(
-              baseCurrency: {is: $token}
-              options: {desc: "date.date"}
-              date: {since: $since, till: null}
-            ) {
-              date {
-                date
-              }
-              tradeAmountUsd: tradeAmount(in: USD)
-              countTxs: count(uniq: txs)
-            }
-          }
-        }
-        `,
-        variables: variables
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return swaps;
-  }
-
-  private async getStatsHoldersNew(variables: {
-    network: string,
-    token: string,
-    till: string
-  }): Promise<number> {
-    const {
-      data: {
-        stats: {
-          holders
-        }
-      }
-    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
-          stats: ethereum(network: $network) {
-            holders: transfers(
-              currency: {is: $token}
-              date: {till: $till}
-            ) {
-              count(uniq: receivers, amount: {gt: 0})
-            }
-          }
-        }
-        `,
-        variables: variables
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return get(holders, '0.count', 0);
-  }
-
-  private async getStatsSwaps(variables: {
-    network: 'ethereum' | 'bsc',
-    token: string
-  }) {
-    const {
-      data: {
-        stats: {
-          swaps
-        }
-      }
-    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
-          stats: ethereum(network: $network) {
-            swaps: dexTrades(
-              baseCurrency: {is: $token}
-              options: {desc: "date.date"}
-              date: {since: $since, till: null}
-            ) {
-              date {
-                date
-              }
-              tradeAmountUsd: tradeAmount(in: USD)
-              countTxs: count(uniq: txs)
-            }
-          }
-        }
-        `,
-        variables: {
-          ...variables,
-          since: since()
-        }
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return swaps;
-  }
-
-  private async getStatsHolders(variables: {
-    network: 'ethereum' | 'bsc',
-    token: string,
-    till: string
-  }) {
-    const {
-      data: {
-        stats: {
-          holders
-        }
-      }
-    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
-      json: {
-        query: `
-        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
-          stats: ethereum(network: $network) {
-            holders: transfers(
-              currency: {is: $token}
-              date: {till: $till}
-            ) {
-              count(uniq: receivers, amount: {gt: 0})
-            }
-          }
-        }
-        `,
-        variables
-      },
-      headers: {
-        'user-agent': CMC_USER_AGENT,
-        'accept-encoding': 'gzip, deflate, br',
-        'Cookie': this.cookie,
-        'X-CSRF-Token': this.token
-      },
-      responseType: 'json',
-      resolveBodyOnly: true
-    });
-    return holders?.shift();
-  }
-
-  private async getStatsTradersDistributionValue(variables: {
-    network: 'ethereum' | 'bsc',
-    token: string,
-    since: string
-    till: string
-  }): Promise<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']> {
-    let result = [];
-    let offsetStep = 0;
-    while(offsetStep < 10) {
-      try {
-        const {
-          data: {
-            stats: {
-              tradersDistributionValue
-            }
-          }
-        } = await got.post<BitQueryStatsTradersDistributionValueQuery>('https://explorer.bitquery.io/proxy_graphql', {
-          json: {
-            query: `
-            query ($network: EthereumNetwork!, $token: String!, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
-              stats: ethereum(network: $network) {
-                tradersDistributionValue: dexTrades(
-                  options: {limit: $limit, offset: $offset}
-                  baseCurrency: {is: $token}
-                  date: {since: $since, till: $till}
-                  tradeAmountUsd: {gt: 0}
-                ) {
-                  maker {
-                    address
-                  }
-                  taker {
-                    address
-                  }
-                  tradeAmount(in: USD)
-                }
-              }
-            }
-            `,
-            variables: {
-              ...variables,
-              offset: 25000 * offsetStep
-            }
-          },
-          headers: {
-            'user-agent': CMC_USER_AGENT,
-            'accept-encoding': 'gzip, deflate, br',
-            'Cookie': this.cookie,
-            'X-CSRF-Token': this.token
-          },
-          responseType: 'json',
-          resolveBodyOnly: true
-        });
-        if(!tradersDistributionValue.length) {
-          break;
-        }
-        result = result.concat(tradersDistributionValue);
-      } catch(e) {
-        break;
-      }
-      offsetStep++;
-    }
-    return result;
-  }
-
   async getStatsTradersDistributionValueNew(variables: {
     network: string,
     address: string,
@@ -496,95 +150,6 @@ export class BitQueryService {
         break;
       }
     }
-  }
-
-  private async getStatsPairStatistics(variables: {
-    network: 'ethereum' | 'bsc',
-    contracts: string[],
-    since: string
-    till: string
-  }): Promise<BitQueryStatsPairStatisticsQuery['data']['stats']['pairStatistics']> {
-    let result = [];
-    let offsetStep = 0;
-    while(offsetStep < DEEP_OF_STEP) {
-      try {
-        const {
-          data: {
-            stats: {
-              pairStatistics
-            }
-          }
-        } = await got.post<BitQueryStatsPairStatisticsQuery>('https://explorer.bitquery.io/proxy_graphql', {
-          json: {
-            query: `
-            query ($network: EthereumNetwork!, $contracts: [String!], $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
-              stats: ethereum(network: $network) {
-                pairStatistics: dexTrades(
-                  options: {desc: ["block.height", "tradeIndex"], limit: $limit, offset: $offset}
-                  smartContractAddress: {in: $contracts}
-                  date: {since: $since, till: $till}
-                  tradeAmountUsd: {gt: 0}
-                ) {
-                  maker {
-                    address
-                  }
-                  taker {
-                    address
-                  }
-                  block {
-                    timestamp {
-                      time(format: "%Y-%m-%d %H:%M:%S")
-                    }
-                    height
-                  }
-                  tradeIndex
-                  exchange {
-                    fullName
-                  }
-                  buyAmount(in: USD)
-                  buyCurrency {
-                    address
-                    symbol
-                  }
-                  sellAmount(in: USD)
-                  sellCurrency {
-                    address
-                    symbol
-                  }
-                  transaction {
-                    hash
-                  }
-                  exchange {
-                    fullName
-                  }
-                }
-              }
-            }
-            `,
-            variables: {
-              ...variables,
-              offset: 25000 * offsetStep
-            }
-          },
-          headers: {
-            'user-agent': CMC_USER_AGENT,
-            'accept-encoding': 'gzip, deflate, br',
-            'Cookie': this.cookie,
-            'X-CSRF-Token': this.token
-          },
-          responseType: 'json',
-          resolveBodyOnly: true
-        });
-        if(!pairStatistics.length) {
-          break;
-        }
-        result = result.concat(pairStatistics);
-      } catch(e) {
-        break;
-      }
-      offsetStep++;
-    }
-    return result;
   }
 
   async statsTransfers(btcAddress?: string, ethAddress?: string, update = false): Promise<any> {
@@ -1206,5 +771,440 @@ export class BitQueryService {
       console.error(e);
     }
     return null;
+  }
+
+  private async getStatsTransfers(variables: {
+    network: string,
+    token: string,
+    since?: string
+  }) {
+    const {
+      data: {
+        stats: {
+          transfers
+        }
+      }
+    } = await got.post<BitQueryStatsTransfersQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query (
+          $network: EthereumNetwork!,
+          $token: String!,
+          $since: ISO8601DateTime,
+          $till: ISO8601DateTime
+        ) {
+          stats: ethereum(network: $network) {
+            transfers(
+            options: {desc: "date.date"},
+            currency: {is: $token},
+            amount: {gt: 0},
+            date: {since: $since, till: $till}
+            ) {
+              date {
+                date: date
+              }
+              total_amount: amount
+              total_amount_usd: amount(in: USD)
+              median_transfer_amount: amount(calculate: median)
+              median_transfer_amount_usd: amount(calculate: median, in: USD)
+              average_transfer_amount: amount(calculate: average)
+              average_transfer_amount_usd: amount(calculate: average, in: USD)
+              uniq_receivers: count(uniq: receivers)
+              uniq_senders: count(uniq: senders)
+              transfer_count: count
+            }
+          }
+        }
+        `,
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return transfers;
+  }
+
+  private async getStatsTransfersNew(variables: {
+    network: string,
+    token: string,
+    since?: string,
+    till?: string,
+  }) {
+    const {
+      data: {
+        stats: {
+          transfers
+        }
+      }
+    } = await got.post<BitQueryStatsTransfersNewQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query (
+          $network: EthereumNetwork!,
+          $token: String!,
+          $since: ISO8601DateTime,
+          $till: ISO8601DateTime
+        ) {
+          stats: ethereum(network: $network) {
+            transfers(
+            options: {desc: "date.date"},
+            currency: {is: $token},
+            amount: {gt: 0},
+            date: {since: $since, till: $till}
+            ) {
+              date {
+                date: date
+              }
+              totalAmount: amount
+              totalAmountUsd: amount(in: USD)
+              medianTransferAmount: amount(calculate: median)
+              medianTransferAmountUsd: amount(calculate: median, in: USD)
+              averageTransferAmount: amount(calculate: average)
+              averageTransferAmountUsd: amount(calculate: average, in: USD)
+              uniqReceivers: count(uniq: receivers)
+              uniqSenders: count(uniq: senders)
+              transferCount: count
+            }
+          }
+        }
+        `,
+        variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return transfers;
+  }
+
+  private async getStatsSwapsNew(variables: {
+    network: string,
+    token: string,
+  }) {
+    const {
+      data: {
+        stats: {
+          swaps
+        }
+      }
+    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            swaps: dexTrades(
+              baseCurrency: {is: $token}
+              options: {desc: "date.date"}
+              date: {since: $since, till: null}
+            ) {
+              date {
+                date
+              }
+              tradeAmountUsd: tradeAmount(in: USD)
+              countTxs: count(uniq: txs)
+            }
+          }
+        }
+        `,
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return swaps;
+  }
+
+  private async getStatsHoldersNew(variables: {
+    network: string,
+    token: string,
+    till: string
+  }): Promise<number> {
+    const {
+      data: {
+        stats: {
+          holders
+        }
+      }
+    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            holders: transfers(
+              currency: {is: $token}
+              date: {till: $till}
+            ) {
+              count(uniq: receivers, amount: {gt: 0})
+            }
+          }
+        }
+        `,
+        variables: variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return get(holders, '0.count', 0);
+  }
+
+  private async getStatsSwaps(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string
+  }) {
+    const {
+      data: {
+        stats: {
+          swaps
+        }
+      }
+    } = await got.post<BitQueryStatsSwapsQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $since: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            swaps: dexTrades(
+              baseCurrency: {is: $token}
+              options: {desc: "date.date"}
+              date: {since: $since, till: null}
+            ) {
+              date {
+                date
+              }
+              tradeAmountUsd: tradeAmount(in: USD)
+              countTxs: count(uniq: txs)
+            }
+          }
+        }
+        `,
+        variables: {
+          ...variables,
+          since: since()
+        }
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return swaps;
+  }
+
+  private async getStatsHolders(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string,
+    till: string
+  }) {
+    const {
+      data: {
+        stats: {
+          holders
+        }
+      }
+    } = await got.post<BitQueryStatsHoldersQuery>('https://explorer.bitquery.io/proxy_graphql', {
+      json: {
+        query: `
+        query ($network: EthereumNetwork!, $till: ISO8601DateTime, $token: String!) {
+          stats: ethereum(network: $network) {
+            holders: transfers(
+              currency: {is: $token}
+              date: {till: $till}
+            ) {
+              count(uniq: receivers, amount: {gt: 0})
+            }
+          }
+        }
+        `,
+        variables
+      },
+      headers: {
+        'user-agent': CMC_USER_AGENT,
+        'accept-encoding': 'gzip, deflate, br',
+        'Cookie': this.cookie,
+        'X-CSRF-Token': this.token
+      },
+      responseType: 'json',
+      resolveBodyOnly: true
+    });
+    return holders?.shift();
+  }
+
+  private async getStatsTradersDistributionValue(variables: {
+    network: 'ethereum' | 'bsc',
+    token: string,
+    since: string
+    till: string
+  }): Promise<BitQueryStatsTradersDistributionValueQuery['data']['stats']['tradersDistributionValue']> {
+    let result = [];
+    let offsetStep = 0;
+    while(offsetStep < 10) {
+      try {
+        const {
+          data: {
+            stats: {
+              tradersDistributionValue
+            }
+          }
+        } = await got.post<BitQueryStatsTradersDistributionValueQuery>('https://explorer.bitquery.io/proxy_graphql', {
+          json: {
+            query: `
+            query ($network: EthereumNetwork!, $token: String!, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
+              stats: ethereum(network: $network) {
+                tradersDistributionValue: dexTrades(
+                  options: {limit: $limit, offset: $offset}
+                  baseCurrency: {is: $token}
+                  date: {since: $since, till: $till}
+                  tradeAmountUsd: {gt: 0}
+                ) {
+                  maker {
+                    address
+                  }
+                  taker {
+                    address
+                  }
+                  tradeAmount(in: USD)
+                }
+              }
+            }
+            `,
+            variables: {
+              ...variables,
+              offset: 25000 * offsetStep
+            }
+          },
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br',
+            'Cookie': this.cookie,
+            'X-CSRF-Token': this.token
+          },
+          responseType: 'json',
+          resolveBodyOnly: true
+        });
+        if(!tradersDistributionValue.length) {
+          break;
+        }
+        result = result.concat(tradersDistributionValue);
+      } catch(e) {
+        break;
+      }
+      offsetStep++;
+    }
+    return result;
+  }
+
+  private async getStatsPairStatistics(variables: {
+    network: 'ethereum' | 'bsc',
+    contracts: string[],
+    since: string
+    till: string
+  }): Promise<BitQueryStatsPairStatisticsQuery['data']['stats']['pairStatistics']> {
+    let result = [];
+    let offsetStep = 0;
+    while(offsetStep < DEEP_OF_STEP) {
+      try {
+        const {
+          data: {
+            stats: {
+              pairStatistics
+            }
+          }
+        } = await got.post<BitQueryStatsPairStatisticsQuery>('https://explorer.bitquery.io/proxy_graphql', {
+          json: {
+            query: `
+            query ($network: EthereumNetwork!, $contracts: [String!], $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {
+              stats: ethereum(network: $network) {
+                pairStatistics: dexTrades(
+                  options: {desc: ["block.height", "tradeIndex"], limit: $limit, offset: $offset}
+                  smartContractAddress: {in: $contracts}
+                  date: {since: $since, till: $till}
+                  tradeAmountUsd: {gt: 0}
+                ) {
+                  maker {
+                    address
+                  }
+                  taker {
+                    address
+                  }
+                  block {
+                    timestamp {
+                      time(format: "%Y-%m-%d %H:%M:%S")
+                    }
+                    height
+                  }
+                  tradeIndex
+                  exchange {
+                    fullName
+                  }
+                  buyAmount(in: USD)
+                  buyCurrency {
+                    address
+                    symbol
+                  }
+                  sellAmount(in: USD)
+                  sellCurrency {
+                    address
+                    symbol
+                  }
+                  transaction {
+                    hash
+                  }
+                  exchange {
+                    fullName
+                  }
+                }
+              }
+            }
+            `,
+            variables: {
+              ...variables,
+              offset: 25000 * offsetStep
+            }
+          },
+          headers: {
+            'user-agent': CMC_USER_AGENT,
+            'accept-encoding': 'gzip, deflate, br',
+            'Cookie': this.cookie,
+            'X-CSRF-Token': this.token
+          },
+          responseType: 'json',
+          resolveBodyOnly: true
+        });
+        if(!pairStatistics.length) {
+          break;
+        }
+        result = result.concat(pairStatistics);
+      } catch(e) {
+        break;
+      }
+      offsetStep++;
+    }
+    return result;
   }
 }

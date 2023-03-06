@@ -1,7 +1,7 @@
-import {Types} from "mongoose";
+import {Types} from 'mongoose';
 
 export interface TokenVolumeItem {
-  id: Types.ObjectId
+  id: Types.ObjectId;
   volume: number;
   marketCap: number;
   price: number;

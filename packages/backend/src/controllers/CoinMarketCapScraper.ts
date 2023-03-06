@@ -5,7 +5,8 @@ import {CoinMarketCapScraperService} from '../services/CoinMarketCapScraper';
 import {
   QueryPairListDto,
   QueryPairsInfoDto,
-  QueryTokensDto, QueryTransactionsDto,
+  QueryTokensDto,
+  QueryTransactionsDto,
   TokensSortOrder,
   TransactionsResponse
 } from '../dto/CoinMarketCapScraper';
@@ -68,7 +69,7 @@ export class CoinMarketCapScraperController {
     try {
       const data = await this.service.pairsInfo(platform, pairs);
       return Object.fromEntries(Object.entries(data).filter(([, value]) => 'priceUsd' in (value as Object)));
-    } catch (e) {
+    } catch(e) {
       console.error(get(e, 'message', e));
     }
     throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -100,7 +101,7 @@ export class CoinMarketCapScraperController {
   ): Promise<TransactionsResponse['data']['transactions']> {
     try {
       return this.service.transactions(btcPairs, ethPairs);
-    } catch (e) {
+    } catch(e) {
       console.error(get(e, 'message', e));
     }
     throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -122,7 +123,7 @@ export class CoinMarketCapScraperController {
         searchParams: query
       });
       return body;
-    } catch (e) {
+    } catch(e) {
       console.error(get(e, 'message', e));
     }
     throw new HttpException(HttpStatusMessages.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);

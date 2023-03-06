@@ -9,7 +9,7 @@ import BotEntity from '../entities/Bot/Bot';
 import BotLogEntity from '../entities/Bot/BotLog';
 
 @Module({
-  imports: [TypegooseModule.forFeature([ExchangeEntity,UserEntity,StrategyEntity,BotEntity,BotLogEntity])],
+  imports: [TypegooseModule.forFeature([ExchangeEntity, UserEntity, StrategyEntity, BotEntity, BotLogEntity])],
   providers: [BotManagerService],
   exports: [BotManagerService],
   controllers: [BotManagerController]

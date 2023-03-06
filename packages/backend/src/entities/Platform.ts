@@ -24,7 +24,7 @@ import {_BaseEntity} from './_BaseEntity';
   {cmc: 1},
   {
     unique: true,
-    background: true,
+    background: true
   }
 )
 @index(

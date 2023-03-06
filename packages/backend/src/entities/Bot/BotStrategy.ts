@@ -1,6 +1,5 @@
 import {modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import PlatformEntity from '../Platform';
 import StrategyEntity from './Strategy';
 
 @modelOptions({
@@ -12,15 +11,15 @@ import StrategyEntity from './Strategy';
       virtuals: true,
       transform: (doc, {_id, ...rest}) => ({
         id: _id,
-        ...rest,
-      }),
+        ...rest
+      })
     }
   }
 })
 export class BotStrategy {
   @prop({
     required: true,
-    ref: () => StrategyEntity,
+    ref: () => StrategyEntity
   })
   id?: Ref<StrategyEntity>;
   @prop({

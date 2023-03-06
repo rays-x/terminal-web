@@ -1,15 +1,10 @@
 import Redis from 'ioredis';
 import {InjectRedisClient} from 'nestjs-ioredis-tags';
 import {REDIS_TAG, TOKEN_CHAIN_IDS} from '../constants';
-import TokenEntity, {
-  TokenEntityDefaultPopulate
-} from '../entities/Token/Token';
+import TokenEntity, {TokenEntityDefaultPopulate} from '../entities/Token/Token';
 import {ReturnModelType} from '@typegoose/typegoose';
 import {InjectModel} from 'nestjs-typegoose';
-import {
-  TokensSortBy,
-  TokensSortOrder
-} from '../dto/CoinMarketCapScraper';
+import {TokensSortBy, TokensSortOrder} from '../dto/CoinMarketCapScraper';
 import {SwapTokensQueryDto} from '../dto/Token';
 
 const DEFAULT_AWAIT_TIME: number = 0.65 * 1000;
@@ -80,7 +75,7 @@ export class SwapService {
         }
       }
     };
-    if (exclude) {
+    if(exclude) {
       filterShared['_id'] = {
         $ne: exclude
       };
@@ -116,47 +111,47 @@ export class SwapService {
       ]
     } : filterShared;
     const [tokens, tokensCount] = await Promise.all([this.repoToken.find(filter).populate(TokenEntityDefaultPopulate)
-      .skip(Number(offset))
-      .limit(Number(limit || Infinity))
-      .sort((() => {
-        return `${sortOrder === TokensSortOrder.desc ? '-' : ''}${(() => {
-          switch (sortBy) {
-            case TokensSortBy.symbol: {
-              return 'symbol';
-            }
-            case TokensSortBy.volume: {
-              return 'volume';
-            }
-            case TokensSortBy.volumeChangePercentage24h: {
-              return 'volumeChangePercentage24h';
-            }
-            case TokensSortBy.marketCap: {
-              return 'statistics.marketCap';
-            }
-            case TokensSortBy.liquidity: {
-              return 'statistics.fullyDilutedMarketCap';
-            }
-            case TokensSortBy.circulatingSupply: {
-              return 'statistics.circulatingSupply';
-            }
-            case TokensSortBy.price: {
-              return 'statistics.price';
-            }
-            case TokensSortBy.priceChangePercentage1h: {
-              return 'statistics.priceChangePercentage1h';
-            }
-            case TokensSortBy.priceChangePercentage24h: {
-              return 'statistics.priceChangePercentage24h';
-            }
+    .skip(Number(offset))
+    .limit(Number(limit || Infinity))
+    .sort((() => {
+      return `${sortOrder === TokensSortOrder.desc ? '-' : ''}${(() => {
+        switch(sortBy) {
+          case TokensSortBy.symbol: {
+            return 'symbol';
           }
-        })()}`;
-      })())
-      .select([
-        'name',
-        'symbol',
-        'cmc',
-        'platforms'
-      ]),
+          case TokensSortBy.volume: {
+            return 'volume';
+          }
+          case TokensSortBy.volumeChangePercentage24h: {
+            return 'volumeChangePercentage24h';
+          }
+          case TokensSortBy.marketCap: {
+            return 'statistics.marketCap';
+          }
+          case TokensSortBy.liquidity: {
+            return 'statistics.fullyDilutedMarketCap';
+          }
+          case TokensSortBy.circulatingSupply: {
+            return 'statistics.circulatingSupply';
+          }
+          case TokensSortBy.price: {
+            return 'statistics.price';
+          }
+          case TokensSortBy.priceChangePercentage1h: {
+            return 'statistics.priceChangePercentage1h';
+          }
+          case TokensSortBy.priceChangePercentage24h: {
+            return 'statistics.priceChangePercentage24h';
+          }
+        }
+      })()}`;
+    })())
+    .select([
+      'name',
+      'symbol',
+      'cmc',
+      'platforms'
+    ]),
       this.repoToken.count(filter)
     ]);
     return {

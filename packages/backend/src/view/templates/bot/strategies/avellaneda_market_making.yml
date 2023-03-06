@@ -11,7 +11,7 @@ exchange:
 market:
 
 # The execution timeframe.
-execution_timeframe_mode: {}
+execution_timeframe_mode: { }
 
 # The strategy order amount.
 order_amount:
@@ -53,13 +53,13 @@ volatility_buffer_size: 200
 trading_intensity_buffer_size: 200
 
 # Allows activating multi-order levels.
-order_levels_mode: {}
+order_levels_mode: { }
 
 # Allows custom specification of the order levels and their spreads and amounts.
 order_override: null
 
 # When tracking hanging orders, the orders on the side opposite to the filled orders remain active.
-hanging_orders_mode: {}
+hanging_orders_mode: { }
 
 # If activated, the strategy will await cancellation confirmation from the exchange before placing a new order.
 should_wait_order_cancel_confirmation: true

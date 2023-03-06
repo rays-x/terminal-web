@@ -26,7 +26,7 @@ order_amount:
 adjust_order_enabled: true
 
 # Refresh orders by cancellation or by letting them expire.
-order_refresh_mode: {}
+order_refresh_mode: { }
 
 # Volume requirement for determining a possible top bid or ask price from the order book.
 top_depth_tolerance: 0.0
@@ -44,7 +44,7 @@ order_size_taker_balance_factor: 99.5
 order_size_portfolio_ratio_limit: 16.67
 
 # Convert between different trading pairs using fixed conversion rates or using the rate oracle.
-conversion_rate_mode: {}
+conversion_rate_mode: { }
 
 # Allowed slippage to fill ensure taker orders are filled.
 slippage_buffer: 5.0

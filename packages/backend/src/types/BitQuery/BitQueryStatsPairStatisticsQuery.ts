@@ -34,8 +34,8 @@ interface Taker {
 }
 
 interface PairStatistic {
-  maker: Maker
-  taker: Taker
+  maker: Maker;
+  taker: Taker;
   block: Block;
   tradeIndex: string;
   exchange: Exchange;

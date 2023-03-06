@@ -1,6 +1,6 @@
 import {index, modelOptions, prop, Ref} from '@typegoose/typegoose';
-import {defaultModelOptions, defaultSchemaOptions} from "../mongoose.config";
-import PlatformEntity from "./Platform";
+import {defaultModelOptions, defaultSchemaOptions} from '../mongoose.config';
+import PlatformEntity from './Platform';
 
 @modelOptions({
   ...defaultModelOptions,
@@ -22,7 +22,7 @@ import PlatformEntity from "./Platform";
 })
 @index(
   {
-    cmc: 1,
+    cmc: 1
   },
   {
     unique: true,
@@ -43,12 +43,12 @@ export class DexEntity {
 
 export const DexEntityDefaultSelect = [
   'id',
-  'name',
+  'name'
 ];
 export const DexEntityDefaultPopulateSelect = [
   'id',
   'cmc',
-  'name',
+  'name'
 ];
 
 export default DexEntity;

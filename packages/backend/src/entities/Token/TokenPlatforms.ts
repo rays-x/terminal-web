@@ -1,6 +1,6 @@
 import {modelOptions, prop, Ref} from '@typegoose/typegoose';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import PlatformEntity from "../Platform";
+import PlatformEntity from '../Platform';
 
 @modelOptions({
   ...defaultModelOptions,
@@ -21,7 +21,7 @@ export class TokenPlatform {
   id: string;
   @prop({
     required: true,
-    ref: () => PlatformEntity,
+    ref: () => PlatformEntity
   })
   platform?: Ref<PlatformEntity>;
   @prop({

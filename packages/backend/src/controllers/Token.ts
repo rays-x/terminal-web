@@ -8,7 +8,6 @@ import {
   TokenSlugDto
 } from '../dto/CoinMarketCapScraper';
 import {TokenService} from '../services/Token';
-import {SwapTokensQueryDto} from '../dto/Token';
 
 @ApiTags('token')
 @Controller('/api/rest')
@@ -47,7 +46,7 @@ export class TokenController {
     type: String
   })
   async token(
-    @Param() {slug}: TokenSlugDto,
+    @Param() {slug}: TokenSlugDto
   ) {
     return this.service.token(slug);
   }
@@ -62,7 +61,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.volume(id, args)
+    return this.service.volume(id, args);
   }
 
   @Get('token/:id/liquidity')
@@ -75,7 +74,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.liquidity(id, args)
+    return this.service.liquidity(id, args);
   }
 
   @Get('token/:id/transfers')
@@ -88,7 +87,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.transfers(id, args)
+    return this.service.transfers(id, args);
   }
 
   @Get('token/:id/swaps')
@@ -101,7 +100,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.swaps(id, args)
+    return this.service.swaps(id, args);
   }
 
   @Get('token/:id/holders')
@@ -114,7 +113,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.holders(id, args)
+    return this.service.holders(id, args);
   }
 
   @Get('token/:id/traders')
@@ -127,7 +126,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.traders(id, args)
+    return this.service.traders(id, args);
   }
 
   @Get('token/:id/pairs')
@@ -140,7 +139,7 @@ export class TokenController {
     @Param() {id}: TokenIdDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.pairs(id, args)
+    return this.service.pairs(id, args);
   }
 
   @Get('token/:id/transactions')
@@ -153,6 +152,6 @@ export class TokenController {
     @Param() {id}: TokenIdStringDto,
     @Query() args: TokenPaginationDto
   ) {
-    return this.service.transactions(id, args)
+    return this.service.transactions(id, args);
   }
 }

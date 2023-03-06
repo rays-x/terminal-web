@@ -91,13 +91,13 @@ export const PairEntityDefaultSelect = [
   'volume24h'
 ];
 export const PairEntityBasePopulate = {
-    path: 'base',
-    select: TokenEntityDefaultPopulateSelect
-  };
+  path: 'base',
+  select: TokenEntityDefaultPopulateSelect
+};
 export const PairEntityQuotePopulate = {
-    path: 'quote',
-    select: TokenEntityDefaultPopulateSelect
-  };
+  path: 'quote',
+  select: TokenEntityDefaultPopulateSelect
+};
 export const PairEntityDexPopulate = {
   path: 'dex',
   select: DexEntityDefaultPopulateSelect

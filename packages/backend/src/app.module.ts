@@ -32,7 +32,7 @@ import * as process from 'process';
     }),
     AwsSdkModule.forRoot({
       defaultServiceOptions: {
-        endpoint:process.env.S3_ENDPOINT,
+        endpoint: process.env.S3_ENDPOINT,
         signatureVersion: 'v4',
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY,

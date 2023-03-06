@@ -20,7 +20,7 @@ export class UserExchanges {
   id: string;
   @prop({
     required: true,
-    ref: () => ExchangeEntity,
+    ref: () => ExchangeEntity
   })
   exchange?: Ref<ExchangeEntity>;
   @prop({

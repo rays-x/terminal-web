@@ -1,7 +1,6 @@
 import {index, modelOptions, prop} from '@typegoose/typegoose';
 import {_BaseEntity} from '../_BaseEntity';
 import {defaultModelOptions, defaultSchemaOptions} from '../../mongoose.config';
-import {ExchangeParams} from './ExchangeParams';
 import {StrategyParams} from './StrategyParams';
 
 @modelOptions({

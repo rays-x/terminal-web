@@ -1,5 +1,4 @@
-import {Express, Router} from 'express';
-import payload from 'payload';
+import {Express} from 'express';
 import cors from 'cors';
 import session, {SessionData} from 'express-session';
 import connectRedis from 'connect-redis';
@@ -19,20 +18,20 @@ const RedisSessionStore = new RedisStore({
   client: RedisTaggableClient,
   prefix: REDIS_SESSION_PREFIX
 });
-RedisSessionStore.set = function (sid: string, sess: SessionData, cb: (err) => void) {
+RedisSessionStore.set = function(sid: string, sess: SessionData, cb: (err) => void) {
   const $this = this;
   let args = [$this.prefix + sid];
   let value;
   // console.log('session',sess)
   try {
     value = $this.serializer.stringify(sess);
-  } catch (er) {
+  } catch(er) {
     return cb(er);
   }
   args.push(value);
   args.push('EX', $this._getTTL(sess));
   const userId = get(sess, 'user.id');
-  if (userId) {
+  if(userId) {
     $this.client.tags([userId]).set(args, cb);
   } else {
     $this.client.set(args, cb);
@@ -59,24 +58,24 @@ const expressPlugins = (express: Express) => {
       'Tus-Resumable',
       'Upload-Length',
       'Upload-Metadata',
-      'Upload-Offset',
+      'Upload-Offset'
     ],
     preflightContinue: true,
     credentials: true
   }));
   express.use(cookieParser());
   express.use((req, res, next) => {
-    if ('OPTIONS' === req.method) {
+    if('OPTIONS' === req.method) {
       return res.sendStatus(204);
     }
-    if ('authorization' in req.headers && !get(req, `cookies.${process.env.SESSIONS_KEY}`)) {
-      const authorization = get(req, 'headers.authorization', '').replace(/^Bearer\s/, '')
-      if (!authorization) {
+    if('authorization' in req.headers && !get(req, `cookies.${process.env.SESSIONS_KEY}`)) {
+      const authorization = get(req, 'headers.authorization', '').replace(/^Bearer\s/, '');
+      if(!authorization) {
         return next();
       }
-      const cookies = parse(get(req, 'headers.cookie', ''))
-      cookies[`${process.env.SESSIONS_KEY}`] = authorization
-      req.headers['cookie'] = Object.entries(cookies).map(([key, value]) => `${key}=${value}`).join('; ')
+      const cookies = parse(get(req, 'headers.cookie', ''));
+      cookies[`${process.env.SESSIONS_KEY}`] = authorization;
+      req.headers['cookie'] = Object.entries(cookies).map(([key, value]) => `${key}=${value}`).join('; ');
     }
     return next();
   });

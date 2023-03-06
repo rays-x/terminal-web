@@ -10,7 +10,7 @@ const serializeSlateHtml = (children) => children.map((node, i) => {
   }
   switch(node.type) {
     case 'h1':
-      return `<h1>${serializeSlateHtml(node.children)}</h1>`
+      return `<h1>${serializeSlateHtml(node.children)}</h1>`;
     case 'h6':
       return `<h6>${serializeSlateHtml(node.children)}</h6>`;
     case 'quote':
@@ -27,4 +27,4 @@ const serializeSlateHtml = (children) => children.map((node, i) => {
       return `<p>${serializeSlateHtml(node.children)}</p>`;
   }
 }).join('');
-export default serializeSlateHtml
+export default serializeSlateHtml;

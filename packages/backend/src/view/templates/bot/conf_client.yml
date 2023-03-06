@@ -17,12 +17,12 @@ logger_override_whitelist:
 
 log_file_path: /home/hummingbot/logs
 
-kill_switch_mode: {}
+kill_switch_mode: { }
 
 # What to auto-fill in the prompt after each import command (start/config)
 autofill_import: disabled
 
-telegram_mode: {}
+telegram_mode: { }
 
 # MQTT Bridge configuration.
 mqtt_bridge:
@@ -62,7 +62,7 @@ db_mode:
   db_password: HummingBot
   db_name: HummingBot
 
-pmm_script_mode: {}
+pmm_script_mode: { }
 
 # Balance Limit Configurations
 # e.g. Setting USDT and BTC limits on Binance.
@@ -71,41 +71,41 @@ pmm_script_mode: {}
 #     BTC: 0.1
 #     USDT: 1000
 balance_asset_limit:
-  binance_us: {}
-  kucoin_paper_trade: {}
-  bitmex: {}
-  kraken: {}
-  probit: {}
-  bitmart: {}
-  huobi: {}
-  ascend_ex_paper_trade: {}
-  ndax: {}
-  ascend_ex: {}
-  ndax_testnet: {}
-  bittrex: {}
-  probit_kr: {}
-  lbank: {}
-  altmarkets: {}
-  loopring: {}
-  k2: {}
-  ciex: {}
-  hitbtc: {}
-  whitebit: {}
-  okx: {}
-  bybit_testnet: {}
-  binance: {}
-  crypto_com: {}
-  bitfinex: {}
-  kucoin: {}
-  coinbase_pro: {}
-  gate_io: {}
-  kucoin_testnet: {}
-  bybit: {}
-  mexc: {}
-  mock_paper_exchange: {}
-  gate_io_paper_trade: {}
-  binance_paper_trade: {}
-  bitmex_testnet: {}
+  binance_us: { }
+  kucoin_paper_trade: { }
+  bitmex: { }
+  kraken: { }
+  probit: { }
+  bitmart: { }
+  huobi: { }
+  ascend_ex_paper_trade: { }
+  ndax: { }
+  ascend_ex: { }
+  ndax_testnet: { }
+  bittrex: { }
+  probit_kr: { }
+  lbank: { }
+  altmarkets: { }
+  loopring: { }
+  k2: { }
+  ciex: { }
+  hitbtc: { }
+  whitebit: { }
+  okx: { }
+  bybit_testnet: { }
+  binance: { }
+  crypto_com: { }
+  bitfinex: { }
+  kucoin: { }
+  coinbase_pro: { }
+  gate_io: { }
+  kucoin_testnet: { }
+  bybit: { }
+  mexc: { }
+  mock_paper_exchange: { }
+  gate_io_paper_trade: { }
+  binance_paper_trade: { }
+  bitmex_testnet: { }
 
 # Fixed gas price (in Gwei) for Ethereum transactions
 manual_gas_price: 50.0
