@@ -17,14 +17,12 @@ import {JsonValue} from 'react-use-websocket/src/lib/types';
 import {useFetch} from '../../../../hooks';
 import {TokenTransactionsResponse} from '../../../../types/api/TokenTransactionsResponse';
 import {TokenPairsResponse} from '../../../../types/api/TokenPairsResponse';
-import {TokenTransfersResponse} from '../../../../types/api/TokenTransfersResponse';
 
 const TRANSACTIONS_PAIRS_SLICE = 10;
 
 export const Transactions: React.FC = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
   const {sendMessage, lastMessage} = useCmcTokenSocket();
-
 
 
   const {data: pairs} = useFetch<TokenPairsResponse>({
@@ -80,7 +78,7 @@ export const Transactions: React.FC = React.memo(() => {
     if(!pairs) {
       return;
     }
-    const pairsWs = take(pairs?.items,10).map(pair => {
+    const pairsWs = take(pairs?.items, 10).map(pair => {
       const reverse = pair.base.id !== currentCoinData.id;
       return `dexscan@transaction@${pair.platform.cmc}@${pair.cmc}@${reverse}`;
     });

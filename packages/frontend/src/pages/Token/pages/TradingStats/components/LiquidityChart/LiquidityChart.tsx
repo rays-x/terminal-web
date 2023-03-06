@@ -5,24 +5,14 @@ import {Axes} from '../Axes/Axes';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Gradients} from '../Gradients/Gradients';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
-import {
-  SubChartValue
-} from '../../../../components/SubChart/SubChartValue/SubChartValue';
-import {
-  chooseNumeralFormat,
-  formatNumeral
-} from '../../../../../../utils/numbers';
-import {
-  dateMapF,
-  getValueChange
-} from '../../../../../../presets/helpers/charts';
+import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
+import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
+import {dateMapF, getValueChange} from '../../../../../../presets/helpers/charts';
 import {LiquidityChartStyled} from './LiquidityChart-styled';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsHoldersResponse, StatsLiquidityResponse} from '../../../../types';
-import {get, take, takeRight} from 'lodash';
+import {StatsLiquidityResponse} from '../../../../types';
+import {get, takeRight} from 'lodash';
 import {useFetch} from '../../../../../../hooks';
-import {TokenVolumeResponse} from '../TradingVolumeChart/types';
 import {format} from 'date-fns';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 

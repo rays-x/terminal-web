@@ -1,4 +1,4 @@
-import { define } from '../../utils/types/define';
+import {define} from '../../utils/types/define';
 
 export const radius = define<Record<string | number, string>>()({
   none: '0',

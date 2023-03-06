@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { colors, spacing } from '../../../../../../presets/base';
+import {colors, spacing} from '../../../../../../presets/base';
 
 const Component = styled.div`
   display: flex;

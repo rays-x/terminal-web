@@ -27,7 +27,7 @@ export function Dropdown<ID = string>({itemList = [], value, onChange, className
 
   // color customization
   let color: Color | undefined;
-  if (itemListSorted[0]?.color) color = Color(itemListSorted[0].color);
+  if(itemListSorted[0]?.color) color = Color(itemListSorted[0].color);
   const colorStyle = !isOpen &&
     color && {backgroundColor: color.alpha(0.27).string(), borderColor: color.alpha(0.32).string()};
 

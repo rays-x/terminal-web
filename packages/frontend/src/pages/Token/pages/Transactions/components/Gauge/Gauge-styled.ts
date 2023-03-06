@@ -90,7 +90,7 @@ export const Arrow = styled.div<GaugeArrowProps>`
   left: 36%;
   transform-origin: 100% 50%;
   ${({status}) =>
-          css`
+  css`
             transform: rotate(${status}deg);
           `}
 `;

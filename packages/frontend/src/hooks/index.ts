@@ -1,2 +1,2 @@
-export { default as useDispatchToStore } from './useDispatchToStore';
-export { default as useFetch } from './useFetch';
+export {default as useDispatchToStore} from './useDispatchToStore';
+export {default as useFetch} from './useFetch';

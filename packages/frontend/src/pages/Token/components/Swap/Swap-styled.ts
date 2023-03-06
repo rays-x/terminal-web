@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
+import styled, {css} from 'styled-components';
 import {mixins} from '../../../../presets/mixins';
-import {colors, radius, spacing} from '../../../../presets/base';
+import {colors, radius} from '../../../../presets/base';
 
 const Container = styled.div`
   width: 100%;
@@ -19,5 +19,5 @@ const Container = styled.div`
 
 
 export const SwapStyled = {
-  Container,
+  Container
 };

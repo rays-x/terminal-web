@@ -1,2 +1,3 @@
-import { BaseLayout } from './BaseLayout';
-export { BaseLayout };
+import {BaseLayout} from './BaseLayout';
+
+export {BaseLayout};

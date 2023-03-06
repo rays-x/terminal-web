@@ -10,10 +10,10 @@ interface ComponentProps extends StyledType<GridProps> {
 
 const Component = styled.div<ComponentProps>`
   ${({$colsAmount, $gap}) =>
-          mixins.grid({colsAmount: $colsAmount, gap: $gap || spacing[20]})};
+  mixins.grid({colsAmount: $colsAmount, gap: $gap || spacing[20]})};
   ${({$height}) =>
-          $height &&
-          css`
+  $height &&
+  css`
             height: ${$height};
           `};
 `;

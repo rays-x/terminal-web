@@ -1,2 +1,3 @@
-import { NetworkSelect } from './NetworkSelect';
-export { NetworkSelect };
+import {NetworkSelect} from './NetworkSelect';
+
+export {NetworkSelect};

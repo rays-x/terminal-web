@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
 const HeaderComponentHtml = React.memo(() => {
-  const [active, setActive] = React.useState(false)
+  const [active, setActive] = React.useState(false);
   return (
     <header className={`header ${active ? 'active' : ''}`} id="header">
       <div className="header__cover cover">

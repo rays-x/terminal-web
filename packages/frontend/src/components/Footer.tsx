@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 const FooterComponentHtml = React.memo(() => {
   return (
@@ -8,7 +8,7 @@ const FooterComponentHtml = React.memo(() => {
           <div className="footer__info-block">
             <div className="footer__logo">
               <a href="/" className="logo">
-                <img src="images/content/logo.svg" alt="Logo" className="logo__img" />
+                <img src="images/content/logo.svg" alt="Logo" className="logo__img"/>
               </a>
             </div>
             <div className="footer__socials">

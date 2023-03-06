@@ -5,8 +5,8 @@ export function isValidNumber(n: any) {
 export function tryNumber(value: any): number | null;
 export function tryNumber<D>(value: any, defaultValue: D): number | (D extends undefined ? null : D);
 export function tryNumber<D>(value: any, defaultValue?: D): number | D | null {
-  if (value === undefined || value === null || value === '') return defaultValue ?? null;
+  if(value === undefined || value === null || value === '') return defaultValue ?? null;
   const number = +value;
-  if (isValidNumber(number)) return number;
+  if(isValidNumber(number)) return number;
   return defaultValue ?? null;
 }

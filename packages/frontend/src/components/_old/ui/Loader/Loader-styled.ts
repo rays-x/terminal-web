@@ -1,10 +1,6 @@
-import styled, {
-  css,
-  FlattenSimpleInterpolation,
-  keyframes
-} from 'styled-components';
-import { SCG, SPG } from '../../../../presets/types';
-import { colors } from '../../../../presets/base';
+import styled, {css, FlattenSimpleInterpolation, keyframes} from 'styled-components';
+import {SCG, SPG} from '../../../../presets/types';
+import {colors} from '../../../../presets/base';
 
 export enum LoaderPositions {
   absolute = 'absolute',
@@ -44,7 +40,7 @@ export const Positions: SPG<LoaderPositions, FlattenSimpleInterpolation> = {
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Component = styled.div<Component>`
   will-change: transform;
-  ${({ position }) => (position ? Positions[position] : Positions['static'])}
+  ${({position}) => (position ? Positions[position] : Positions['static'])}
 `;
 
 export interface LoaderSpinnerStyled {
@@ -80,14 +76,14 @@ export const Spinner = styled.div<Partial<LoaderSpinnerStyled>>`
   border: 4px solid ${colors.text.secondary};
   border-bottom-color: transparent !important;
   border-radius: 50%;
-  ${({ size }) => defineSize(size)}
-  ${({ borderColor }) =>
-    borderColor &&
-    css`
+  ${({size}) => defineSize(size)}
+  ${({borderColor}) =>
+  borderColor &&
+  css`
       border-color: ${borderColor};
     `}
-  ${({ borderWidth }) =>
-    css`
+  ${({borderWidth}) =>
+  css`
       border-width: ${borderWidth || defaultLoaderSpinnerProps['borderSize']}px;
     `}
 `;

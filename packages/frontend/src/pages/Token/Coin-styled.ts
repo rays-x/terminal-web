@@ -1,6 +1,6 @@
 import styled, {css} from 'styled-components';
 import {animated} from '@react-spring/web';
-import {colors, radius, gap, fonts} from '../../presets/base';
+import {colors, fonts, gap, radius} from '../../presets/base';
 import {mixins} from '../../presets/mixins';
 
 export const Component = styled.div``;
@@ -16,7 +16,7 @@ export const Group = styled.div`
   @media (min-width: 1240px) {
     grid-template-columns: 2.25fr 1fr;
   }
-  
+
   @media (min-width: 1560px) {
     grid-template-columns: 2.5fr 1fr;
   }
@@ -143,6 +143,7 @@ export const CoinAddress = styled.div`
 
     color: white;
   }
+
   max-width: 192px;
 `;
 
@@ -154,7 +155,7 @@ export const CoinStatsGroup = styled.div`
   ${mixins.isMobile(css`
     margin: 0;
   `)};
-  
+
 `;
 
 export const CurrentCoinScore = styled.div`

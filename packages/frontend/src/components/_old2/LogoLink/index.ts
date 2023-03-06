@@ -1,2 +1,3 @@
-import { LogoLink } from './LogoLink';
-export { LogoLink };
+import {LogoLink} from './LogoLink';
+
+export {LogoLink};

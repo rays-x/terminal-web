@@ -3,18 +3,18 @@ import React from 'react';
 import s from './HeaderCell.module.scss';
 
 export function HeaderCell({
-  children,
-  isSorted,
-  sortDescending,
-  onSort
-}: {
+                             children,
+                             isSorted,
+                             sortDescending,
+                             onSort
+                           }: {
   children: string;
   isSorted?: boolean;
   sortDescending?: boolean;
   onSort?: () => void;
 }) {
   return (
-    <div className={clsx(s.HeaderCell, { [s.HeaderCell_hasSort]: !!onSort })} onClick={onSort}>
+    <div className={clsx(s.HeaderCell, {[s.HeaderCell_hasSort]: !!onSort})} onClick={onSort}>
       <span>{children}</span>
       {onSort && (
         <div

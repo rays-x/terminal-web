@@ -1,6 +1,5 @@
-import React from 'react'
-import {useState, useRef, useContext} from 'react'
-import {FixedSizeList, FixedSizeListProps} from 'react-window'
+import React, {useContext, useRef, useState} from 'react';
+import {FixedSizeList, FixedSizeListProps} from 'react-window';
 
 /** Context for cross component communication */
 const VirtualTableContext = React.createContext<{
@@ -17,8 +16,8 @@ const VirtualTableContext = React.createContext<{
   header: <></>,
   footer: <></>,
   tableProps: {},
-  tbodyProps: {},
-})
+  tbodyProps: {}
+});
 
 /** The virtual table. It basically accepts all of the same params as the original FixedSizeList.*/
 export function VirtualTable({
@@ -35,8 +34,8 @@ export function VirtualTable({
   tableProps?: any,
   tbodyProps?: any,
 } & Omit<FixedSizeListProps, 'children' | 'innerElementType'>) {
-  const listRef = useRef<FixedSizeList | null>()
-  const [top, setTop] = useState(0)
+  const listRef = useRef<FixedSizeList | null>();
+  const [top, setTop] = useState(0);
   return (
     <VirtualTableContext.Provider value={{top, setTop, header, footer, tableProps, tbodyProps}}>
       <FixedSizeList
@@ -46,16 +45,16 @@ export function VirtualTable({
           const style =
             listRef.current &&
             // @ts-ignore private method access
-            listRef.current._getItemStyle(props.overscanStartIndex)
-          setTop((style && style.top) || 0)
-          rest.onItemsRendered && rest.onItemsRendered(props)
+            listRef.current._getItemStyle(props.overscanStartIndex);
+          setTop((style && style.top) || 0);
+          rest.onItemsRendered && rest.onItemsRendered(props);
         }}
         ref={(el: any) => (listRef.current = el)}
       >
         {row}
       </FixedSizeList>
     </VirtualTableContext.Provider>
-  )
+  );
 }
 
 /**
@@ -65,7 +64,7 @@ export function VirtualTable({
  **/
 const Inner = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
   function Inner({children, ...rest}, ref) {
-    const {header, footer, top, tableProps, tbodyProps} = useContext(VirtualTableContext)
+    const {header, footer, top, tableProps, tbodyProps} = useContext(VirtualTableContext);
     return (
       <div {...rest} ref={ref}>
         <table style={{top, position: 'absolute', width: '100%'}} {...tableProps}>
@@ -74,6 +73,6 @@ const Inner = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
           {footer}
         </table>
       </div>
-    )
+    );
   }
-)
+);

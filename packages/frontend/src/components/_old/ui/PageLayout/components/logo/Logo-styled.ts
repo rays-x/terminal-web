@@ -1,7 +1,7 @@
 import styled from 'styled-components';
-import { animated } from '@react-spring/web';
-import { SCG } from '../../../../../../presets/types';
-import { breakpoints } from '../../../../../../presets/base';
+import {animated} from '@react-spring/web';
+import {SCG} from '../../../../../../presets/types';
+import {breakpoints} from '../../../../../../presets/base';
 
 export const Component = styled.div`
   display: flex;

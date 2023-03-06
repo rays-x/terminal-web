@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
-import { SCG } from '../../../../presets/types';
-import { gap } from '../../../../presets/base';
-import { mixins } from '../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {SCG} from '../../../../presets/types';
+import {gap} from '../../../../presets/base';
+import {mixins} from '../../../../presets/mixins';
 
 export const Container = styled.div`
   @media (min-width: 768px) {

@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
-import { animated } from '@react-spring/web';
-import { colors, fonts, gap, radius } from '../../../../presets/base';
-import { mixins } from '../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {animated} from '@react-spring/web';
+import {colors, fonts, gap, radius} from '../../../../presets/base';
+import {mixins} from '../../../../presets/mixins';
 
 const dropDownText = css`
   font-weight: ${fonts.fontWeight._600};
@@ -25,7 +25,7 @@ export const Wrapper = styled(animated.div)<DropdownStyledProps>`
   align-items: center;
   justify-content: space-around;
   padding: 6px 10px;
-  width: ${({ $wrapperWidth }) => ($wrapperWidth || 95) + 'px'};
+  width: ${({$wrapperWidth}) => ($wrapperWidth || 95) + 'px'};
   height: 30px;
   background: ${colors.background.opacityBlack};
   border-radius: ${radius[12]};
@@ -45,19 +45,19 @@ export const Component = styled(animated.div)`
 
 export const Content = styled(animated.div)<DropdownStyledProps>`
   position: absolute;
-  ${({ width }) =>
-    width &&
-    css`
+  ${({width}) =>
+  width &&
+  css`
       width: ${width}px;
     `};
   display: flex;
   flex-flow: column;
   gap: 4px;
   font-size: 20px;
-  ${({ position, width }) =>
-    position === Position.leftBottom &&
-    width &&
-    css`
+  ${({position, width}) =>
+  position === Position.leftBottom &&
+  width &&
+  css`
       left: -${width / 2}px;
       ${mixins.isMobile(css`
         left: -${width / 4}px;
@@ -88,9 +88,9 @@ export const ContentButton = styled.button<ContentButtonsProps>`
   border-radius: ${radius[8]};
   text-align: left;
   transition: background-color 300ms;
-  ${({ isSelected }) =>
-    isSelected &&
-    css`
+  ${({isSelected}) =>
+  isSelected &&
+  css`
       background-color: ${colors.background.opacityBlackSecondary};
     `}
 `;

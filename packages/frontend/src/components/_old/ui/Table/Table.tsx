@@ -1,7 +1,7 @@
-import React, { createContext, FC } from 'react';
-import { useFlexLayout, useResizeColumns, useTable } from 'react-table';
-import { headerProps } from '../../../../presets/helpers/table';
-import { TableStyled } from './Table-styled';
+import React, {createContext, FC} from 'react';
+import {useFlexLayout, useResizeColumns, useTable} from 'react-table';
+import {headerProps} from '../../../../presets/helpers/table';
+import {TableStyled} from './Table-styled';
 
 interface TableCoreProps {
   columns: Columns[];
@@ -11,29 +11,29 @@ interface TableCoreProps {
 
 export type Columns =
   | {
-      Header: string;
-      accessor: string;
-      width?: number;
-      align?: string;
-      justify?: string;
-    }
+  Header: string;
+  accessor: string;
+  width?: number;
+  align?: string;
+  justify?: string;
+}
   | {
-      Header: string;
-      columns: Columns[];
-    };
+  Header: string;
+  columns: Columns[];
+};
 
 export const TableRoute = createContext<
   ((pathname: string, search: string) => void) | null
 >(null);
 
-export const TableCore: FC<TableCoreProps> = ({ columns, data, RowParcer }) => {
+export const TableCore: FC<TableCoreProps> = ({columns, data, RowParcer}) => {
   const defaultColumn = React.useMemo(
-    () => ({ minWidth: 30, maxWidth: 150 }),
+    () => ({minWidth: 30, maxWidth: 150}),
     []
   );
 
-  const { headerGroups, rows, prepareRow } = useTable(
-    { columns, data, defaultColumn },
+  const {headerGroups, rows, prepareRow} = useTable(
+    {columns, data, defaultColumn},
     useResizeColumns,
     useFlexLayout
   );
@@ -55,7 +55,7 @@ export const TableCore: FC<TableCoreProps> = ({ columns, data, RowParcer }) => {
       <TableStyled.Body>
         {rows?.map((row: any) => {
           prepareRow(row);
-          return <RowParcer key={row.id} row={row} />;
+          return <RowParcer key={row.id} row={row}/>;
         })}
       </TableStyled.Body>
     </div>

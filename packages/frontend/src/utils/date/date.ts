@@ -1,7 +1,7 @@
-import { isNil } from 'lodash-es';
-import { format, isValid, parseISO } from 'date-fns';
-import { EMDASH } from '../data/utf';
-import { joinNonEmpty } from '../arrays';
+import {isNil} from 'lodash-es';
+import {format, isValid, parseISO} from 'date-fns';
+import {EMDASH} from '../data/utf';
+import {joinNonEmpty} from '../arrays';
 import {formatDate} from '../../hooks/useFormatDate';
 
 export const DATE_FORMAT_FULL = 'dd MMMM yyyy';
@@ -52,9 +52,9 @@ export function convertToUtcStr(date?: Date | number | string | null) {
  * @param string - строка, содержащая дату в формате ISO
  */
 export function tryParseIso(string?: string) {
-  if (!string) return null;
+  if(!string) return null;
   const date = parseISO(string);
-  if (isValid(date)) {
+  if(isValid(date)) {
     return date;
   }
   return null;
@@ -67,24 +67,24 @@ export function tryParseIso(string?: string) {
  * @param date - строка в формате ISO
  */
 export function parseIsoToLocal(date?: string): string {
-  if (!date) return '';
-  if (date[date.length - 1] !== 'Z') return date;
+  if(!date) return '';
+  if(date[date.length - 1] !== 'Z') return date;
   return date.slice(0, date.length - 1);
 }
 
 export function isoStringWithoutTime(isoString?: string) {
-  if (!isoString) return undefined;
+  if(!isoString) return undefined;
   const tIndex = isoString.indexOf('T');
   return tIndex > -1 ? isoString.slice(0, tIndex) : isoString;
 }
 
 export function setIsoStartOfDay(isoString?: string) {
-  if (!isoString) return undefined;
+  if(!isoString) return undefined;
   return isoStringWithoutTime(isoString) + 'T00:00:00Z';
 }
 
 export function setIsoEndOfDay(isoString?: string) {
-  if (!isoString) return undefined;
+  if(!isoString) return undefined;
   return isoStringWithoutTime(isoString) + 'T23:59:59Z';
 }
 
@@ -92,7 +92,7 @@ export function getFormattedDateStr(
   date: Date | string | number,
   formatString: string = DATE_FORMAT_SHORT
 ): string | null {
-  if (!date) return null;
+  if(!date) return null;
 
   return formatDate(convertToUtcStr(date), formatString) ?? null;
 }
@@ -101,7 +101,7 @@ export function getDateRangeStr(
   dates: Date[] | string[] | number[],
   formatString: string = DATE_FORMAT_SHORT
 ): string {
-  if (!dates?.length) return '';
+  if(!dates?.length) return '';
 
   // const d1 = convertToUtcStr(dates[0]);
   // const d2 = convertToUtcStr(dates[1]);

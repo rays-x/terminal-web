@@ -1,1 +1,1 @@
-export { default } from "./Fancybox";
+export {default} from './Fancybox';

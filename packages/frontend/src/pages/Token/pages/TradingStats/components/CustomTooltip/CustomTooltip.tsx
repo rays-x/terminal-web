@@ -1,10 +1,6 @@
 import React from 'react';
 import {throttle} from 'lodash-es';
-import {
-  chooseNumeralFormat,
-  formatNumeral,
-  NumeralFormatType
-} from '../../../../../../utils/numbers';
+import {chooseNumeralFormat, formatNumeral, NumeralFormatType} from '../../../../../../utils/numbers';
 import {EMDASH} from '../../../../../../utils/data/utf';
 import {CustomTooltipStyled} from './CustomTooltip-styled';
 

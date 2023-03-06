@@ -1,7 +1,7 @@
 import styled, {css} from 'styled-components';
 import {animated} from 'react-spring';
 import {mixins} from '../../../../presets/mixins';
-import {colors, breakpoints, fonts} from '../../../../presets/base';
+import {breakpoints, colors, fonts} from '../../../../presets/base';
 
 export const Component = styled(animated.div)`
   display: flex;
@@ -38,8 +38,8 @@ export const Sidebar = styled(animated.div)<SidebarProps>`
     transition: 0.5s;
     margin-left: -1px;
     ${({$isOpen}) =>
-            $isOpen &&
-            css`
+  $isOpen &&
+  css`
               min-width: 240px;
               max-width: 240px;
               padding-left: 30px;
@@ -66,7 +66,7 @@ export const Close = styled.div<CloseProps>`
   transition: 0.6s ease;
   transition-delay: 0.2s;
   transform: ${({$sidebarOpen}) =>
-          $sidebarOpen ? 'none' : 'translate(-35px, 0)'};
+  $sidebarOpen ? 'none' : 'translate(-35px, 0)'};
   opacity: ${({$sidebarOpen}) => ($sidebarOpen ? 1 : 0)};
   @media (max-width: ${breakpoints.width['mobileMax']}) {
     display: block;
@@ -87,7 +87,7 @@ export const PageLink = styled.a<PageLinkProps>`
 
   div {
     color: ${({active}) =>
-            active ? colors.text.secondary : colors.background.sidebarLink};
+  active ? colors.text.secondary : colors.background.sidebarLink};
     font-weight: ${({active}) => active ? 700 : 400};
     font-size: ${fonts.fontSize._14};
     line-height: 24px;
@@ -105,7 +105,7 @@ export const PageNonLink = styled.div<PageLinkProps>`
 
   div {
     color: ${({active}) =>
-            active ? colors.text.secondary : colors.background.sidebarLink};
+  active ? colors.text.secondary : colors.background.sidebarLink};
     font-weight: ${({active}) => active ? 700 : 400};
     font-size: ${fonts.fontSize._14};
     line-height: 24px;

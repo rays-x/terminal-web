@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  SubChartHeaderComponentProps,
-  SubChartHeaderStyled,
-  SubChartHeaderVariant
-} from './SubChartHeader-styled';
+import {SubChartHeaderComponentProps, SubChartHeaderStyled, SubChartHeaderVariant} from './SubChartHeader-styled';
 
 export interface SubChartHeaderProps extends SubChartHeaderComponentProps {
   title?: string;
@@ -12,11 +8,11 @@ export interface SubChartHeaderProps extends SubChartHeaderComponentProps {
 }
 
 export const SubChartHeader: React.FC<SubChartHeaderProps> = ({
-  title,
-  titleContent,
-  chartValue,
-  $variant = SubChartHeaderVariant.vertical
-}) => {
+                                                                title,
+                                                                titleContent,
+                                                                chartValue,
+                                                                $variant = SubChartHeaderVariant.vertical
+                                                              }) => {
   return (
     <SubChartHeaderStyled.Component $variant={$variant}>
       <SubChartHeaderStyled.Head>

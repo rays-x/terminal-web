@@ -1,4 +1,4 @@
-import { spacing } from './base';
+import {spacing} from './base';
 
 export interface GridProps {
   colsAmount?: number;

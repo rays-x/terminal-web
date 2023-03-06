@@ -1,5 +1,6 @@
-import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
+import {gql} from '@apollo/client';
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -4746,13 +4747,15 @@ export const TokensUniswapDocument = gql`
  * });
  */
 export function useTokensUniswapQuery(baseOptions?: Apollo.QueryHookOptions<TokensUniswapQuery, TokensUniswapQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TokensUniswapQuery, TokensUniswapQueryVariables>(TokensUniswapDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TokensUniswapQuery, TokensUniswapQueryVariables>(TokensUniswapDocument, options);
+}
+
 export function useTokensUniswapLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TokensUniswapQuery, TokensUniswapQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TokensUniswapQuery, TokensUniswapQueryVariables>(TokensUniswapDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TokensUniswapQuery, TokensUniswapQueryVariables>(TokensUniswapDocument, options);
+}
+
 export type TokensUniswapQueryHookResult = ReturnType<typeof useTokensUniswapQuery>;
 export type TokensUniswapLazyQueryHookResult = ReturnType<typeof useTokensUniswapLazyQuery>;
 export type TokensUniswapQueryResult = Apollo.QueryResult<TokensUniswapQuery, TokensUniswapQueryVariables>;
@@ -4813,13 +4816,15 @@ export const TransactionsSwapsUniswapDocument = gql`
  * });
  */
 export function useTransactionsSwapsUniswapQuery(baseOptions: Apollo.QueryHookOptions<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>(TransactionsSwapsUniswapDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>(TransactionsSwapsUniswapDocument, options);
+}
+
 export function useTransactionsSwapsUniswapLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>(TransactionsSwapsUniswapDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>(TransactionsSwapsUniswapDocument, options);
+}
+
 export type TransactionsSwapsUniswapQueryHookResult = ReturnType<typeof useTransactionsSwapsUniswapQuery>;
 export type TransactionsSwapsUniswapLazyQueryHookResult = ReturnType<typeof useTransactionsSwapsUniswapLazyQuery>;
 export type TransactionsSwapsUniswapQueryResult = Apollo.QueryResult<TransactionsSwapsUniswapQuery, TransactionsSwapsUniswapQueryVariables>;
@@ -4882,13 +4887,15 @@ export const TransactionsMintsUniswapDocument = gql`
  * });
  */
 export function useTransactionsMintsUniswapQuery(baseOptions: Apollo.QueryHookOptions<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>(TransactionsMintsUniswapDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>(TransactionsMintsUniswapDocument, options);
+}
+
 export function useTransactionsMintsUniswapLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>(TransactionsMintsUniswapDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>(TransactionsMintsUniswapDocument, options);
+}
+
 export type TransactionsMintsUniswapQueryHookResult = ReturnType<typeof useTransactionsMintsUniswapQuery>;
 export type TransactionsMintsUniswapLazyQueryHookResult = ReturnType<typeof useTransactionsMintsUniswapLazyQuery>;
 export type TransactionsMintsUniswapQueryResult = Apollo.QueryResult<TransactionsMintsUniswapQuery, TransactionsMintsUniswapQueryVariables>;
@@ -4949,13 +4956,15 @@ export const TransactionsBurnsUniswapDocument = gql`
  * });
  */
 export function useTransactionsBurnsUniswapQuery(baseOptions: Apollo.QueryHookOptions<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>(TransactionsBurnsUniswapDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>(TransactionsBurnsUniswapDocument, options);
+}
+
 export function useTransactionsBurnsUniswapLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>(TransactionsBurnsUniswapDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>(TransactionsBurnsUniswapDocument, options);
+}
+
 export type TransactionsBurnsUniswapQueryHookResult = ReturnType<typeof useTransactionsBurnsUniswapQuery>;
 export type TransactionsBurnsUniswapLazyQueryHookResult = ReturnType<typeof useTransactionsBurnsUniswapLazyQuery>;
 export type TransactionsBurnsUniswapQueryResult = Apollo.QueryResult<TransactionsBurnsUniswapQuery, TransactionsBurnsUniswapQueryVariables>;

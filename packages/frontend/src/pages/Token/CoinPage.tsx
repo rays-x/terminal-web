@@ -37,15 +37,15 @@ export const CoinPage: FC = React.memo(() => {
   });
   const {sendMessage, lastMessage} = useCmcSocket();
   React.useEffect(() => {
-    if (slug !== 'bitcoin') {
+    if(slug !== 'bitcoin') {
       getBtc().catch();
     }
-    if (slug !== 'ethereum') {
+    if(slug !== 'ethereum') {
       getEth().catch();
     }
   }, [slug]);
   React.useEffect(() => {
-    if (!data || (
+    if(!data || (
       slug !== 'bitcoin'
         ? !dataBtc
         : false
@@ -109,7 +109,7 @@ export const CoinPage: FC = React.memo(() => {
   }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if (!data || (
+    if(!data || (
       slug !== 'bitcoin'
         ? !dataBtc
         : false
@@ -137,24 +137,24 @@ export const CoinPage: FC = React.memo(() => {
   }, [data, dataBtc, dataEth]);
 
   React.useEffect(() => {
-    if (!lastMessage) {
+    if(!lastMessage) {
       return;
     }
     const {id, d} = lastMessage;
-    switch (id) {
+    switch(id) {
       case 'price': {
         const {cr} = d;
-        if (
+        if(
           token?.price_usd === undefined
           || token?.price_change_24h === undefined
         ) {
           return;
         }
         setToken(prev => {
-          switch (cr.id) {
+          switch(cr.id) {
             case data?.cmc: {
               Object.keys(cr).forEach(key => {
-                switch (key) {
+                switch(key) {
                   case 'p': {
                     prev['price_usd'] = cr.p || prev['price_usd'];
                     break;

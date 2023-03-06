@@ -3,12 +3,12 @@ import React from 'react';
 
 function useKeyPress(targetKey) {
   const [keyPressed, setKeyPressed] = React.useState(false);
-  const downHandler = ({ key }) => {
-    if (key !== targetKey) return;
+  const downHandler = ({key}) => {
+    if(key !== targetKey) return;
     setKeyPressed(true);
   };
-  const upHandler = ({ key }) => {
-    if (key !== targetKey) return;
+  const upHandler = ({key}) => {
+    if(key !== targetKey) return;
     setKeyPressed(false);
   };
   React.useEffect(
@@ -20,8 +20,9 @@ function useKeyPress(targetKey) {
         window.removeEventListener('keyup', upHandler);
       };
     }, // eslint-disable-next-line
-    [],
+    []
   );
   return keyPressed;
 }
+
 export default useKeyPress;

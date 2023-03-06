@@ -1,6 +1,6 @@
 import styled, {css} from 'styled-components';
 import {animated} from '@react-spring/web';
-import {colors, radius, gap, fonts} from '../../presets/base';
+import {colors, fonts, gap, radius} from '../../presets/base';
 import {mixins} from '../../presets/mixins';
 
 export const Component = styled.div``;

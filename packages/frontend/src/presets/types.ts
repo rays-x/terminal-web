@@ -1,4 +1,4 @@
-import { StyledComponent } from 'styled-components';
+import {StyledComponent} from 'styled-components';
 
 /**
  * PresetType
@@ -28,15 +28,15 @@ export declare type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? DeepPartial<U>[]
     : T[P] extends readonly (infer X)[]
-    ? readonly DeepPartial<X>[]
-    : DeepPartial<T[P]>;
+      ? readonly DeepPartial<X>[]
+      : DeepPartial<T[P]>;
 };
 
 // Analogues to array.prototype.shift
 export type Shift<T extends any[]> = ((...t: T) => any) extends (
-  first: any,
-  ...rest: infer Rest
-) => any
+    first: any,
+    ...rest: infer Rest
+  ) => any
   ? Rest
   : never;
 
@@ -45,20 +45,20 @@ export type ShiftUnion<T> = T extends any[] ? Shift<T> : never;
 
 export type DeepRequired<T, P extends string[]> = T extends object
   ? Omit<T, Extract<keyof T, P[0]>> &
-      Required<{
-        [K in Extract<keyof T, P[0]>]: NonNullable<
-          DeepRequired<T[K], ShiftUnion<P>>
-        >;
-      }>
+  Required<{
+    [K in Extract<keyof T, P[0]>]: NonNullable<
+      DeepRequired<T[K], ShiftUnion<P>>
+    >;
+  }>
   : T;
 
 export type DeepExclude<T, U> = T extends U
   ? never
   : T extends object
-  ? {
+    ? {
       [K in keyof T]: DeepExclude<T[K], U>;
     }
-  : T;
+    : T;
 
 export type NonNullable<T> = Exclude<T, null | undefined>;
 

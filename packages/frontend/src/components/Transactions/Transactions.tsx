@@ -1,27 +1,30 @@
 import React from 'react';
 import {
-  TransactionsBurnsUniswapQuery, TransactionsMintsUniswapQuery,
+  TransactionsBurnsUniswapQuery,
+  TransactionsMintsUniswapQuery,
   TransactionsSwapsUniswapQuery,
   useTransactionsBurnsUniswapLazyQuery,
   useTransactionsMintsUniswapLazyQuery,
   useTransactionsSwapsUniswapLazyQuery
-} from "../../graphql/generated/schema-uniswap";
-import {clientUniswap} from "../../graphql/clients/client-uniswap";
+} from '../../graphql/generated/schema-uniswap';
+import {clientUniswap} from '../../graphql/clients/client-uniswap';
 import {
-  TransactionsBurnsPancakeQuery, TransactionsMintsPancakeQuery,
+  TransactionsBurnsPancakeQuery,
+  TransactionsMintsPancakeQuery,
   TransactionsSwapsPancakeQuery,
-  useTransactionsBurnsPancakeLazyQuery, useTransactionsMintsPancakeLazyQuery,
+  useTransactionsBurnsPancakeLazyQuery,
+  useTransactionsMintsPancakeLazyQuery,
   useTransactionsSwapsPancakeLazyQuery
-} from "../../graphql/generated/schema-pancake";
-import {clientPancake} from "../../graphql/clients/client-pancake";
-import {fromUnixTime} from "date-fns";
-import millify from "millify";
-import {hashShorten} from "../../utils/hashShorten";
-import UniswapIcon from "../../assets/icons/dex/uniswap.png";
-import PancakeIcon from "../../assets/icons/dex/pancake.png";
-import EtherScanIcon from "../../assets/icons/dex/etherscan.jpg";
-import BscScanIcon from "../../assets/icons/dex/bscscan.jpg";
-import {VirtualTable} from "../App/UI/Table/VirtualTable";
+} from '../../graphql/generated/schema-pancake';
+import {clientPancake} from '../../graphql/clients/client-pancake';
+import {fromUnixTime} from 'date-fns';
+import millify from 'millify';
+import {hashShorten} from '../../utils/hashShorten';
+import UniswapIcon from '../../assets/icons/dex/uniswap.png';
+import PancakeIcon from '../../assets/icons/dex/pancake.png';
+import EtherScanIcon from '../../assets/icons/dex/etherscan.jpg';
+import BscScanIcon from '../../assets/icons/dex/bscscan.jpg';
+import {VirtualTable} from '../App/UI/Table/VirtualTable';
 import {toFixedToken} from '../../utils/diff';
 
 type TransactionType = {
@@ -46,9 +49,9 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
                                                                                    pairPancake: PAIR_PANCAKE,
                                                                                    limit: PAGINATION_LIMIT
                                                                                  }) => {
-  const tableRefOuter = React.useRef<HTMLDivElement>(null)
-  const [dataUniswap, setDataUniswap] = React.useState<TransactionType[]>([])
-  const [dataPancake, setDataPancake] = React.useState<TransactionType[]>([])
+  const tableRefOuter = React.useRef<HTMLDivElement>(null);
+  const [dataUniswap, setDataUniswap] = React.useState<TransactionType[]>([]);
+  const [dataPancake, setDataPancake] = React.useState<TransactionType[]>([]);
   const [pageSwapsUniswap, setSwapsPageUniswap] = React.useState<number | null>(1);
   const [pageMintsUniswap, setMintsPageUniswap] = React.useState<number | null>(1);
   const [pageBurnsUniswap, setBurnsPageUniswap] = React.useState<number | null>(1);
@@ -91,246 +94,246 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
 
   const isLoading =
     loadingSwapsUniswap || loadingMintsUniswap || loadingBurnsUniswap
-    || loadingSwapsPancake || loadingBurnsPancake || loadingMintsPancake
+    || loadingSwapsPancake || loadingBurnsPancake || loadingMintsPancake;
 
   React.useEffect(() => {
-    if (!dataSwapsUniswapReceived) {
-      return
+    if(!dataSwapsUniswapReceived) {
+      return;
     }
     const dataSwapsReceived = Object.values(dataSwapsUniswapReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) === -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) === -1);
     const data = dataSwapsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsSwapsUniswapQuery['swaps'][0]) => {
-        switch (_['__typename']) {
-          case 'Swap': {
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: Number(_.amount0) < 0 ? 'Buy' : 'Sell',
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${millify(toFixedToken(String(_.amount0).replace('-', ''), 2), {precision: 2})}`,
-              tokenValue1: `${millify(toFixedToken(String(_.amount1).replace('-', ''), 2), {precision: 2})}`,
-              maker: `${_.origin}`,
-              exchange: `uniswap`,
-              tx: `${_.transaction.id}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsSwapsUniswapQuery['swaps'][0]) => {
+      switch(_['__typename']) {
+        case 'Swap': {
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: Number(_.amount0) < 0 ? 'Buy' : 'Sell',
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${millify(toFixedToken(String(_.amount0).replace('-', ''), 2), {precision: 2})}`,
+            tokenValue1: `${millify(toFixedToken(String(_.amount1).replace('-', ''), 2), {precision: 2})}`,
+            maker: `${_.origin}`,
+            exchange: `uniswap`,
+            tx: `${_.transaction.id}`
+          }];
         }
-      }, [])
-    if (!dataSwapsReceived.length) {
-      return setSwapsPageUniswap(null)
+      }
+    }, []);
+    if(!dataSwapsReceived.length) {
+      return setSwapsPageUniswap(null);
     }
     setDataUniswap(
       [
         ...dataUniswap,
         ...data
       ]
-    )
-  }, [dataSwapsUniswapReceived])
+    );
+  }, [dataSwapsUniswapReceived]);
   React.useEffect(() => {
-    if (!dataBurnsUniswapReceived) {
-      return
+    if(!dataBurnsUniswapReceived) {
+      return;
     }
     const dataBurnsReceived = Object.values(dataBurnsUniswapReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataBurnsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsBurnsUniswapQuery['burns'][0]) => {
-        switch (_['__typename']) {
-          case 'Burn': {
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: `Remove`,
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
-              tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
-              maker: `${_.owner}`,
-              exchange: `uniswap`,
-              tx: `${_.transaction.id}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsBurnsUniswapQuery['burns'][0]) => {
+      switch(_['__typename']) {
+        case 'Burn': {
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: `Remove`,
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
+            tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
+            maker: `${_.owner}`,
+            exchange: `uniswap`,
+            tx: `${_.transaction.id}`
+          }];
         }
-      }, [])
-    if (!dataBurnsReceived.length) {
-      return setBurnsPageUniswap(null)
+      }
+    }, []);
+    if(!dataBurnsReceived.length) {
+      return setBurnsPageUniswap(null);
     }
     setDataUniswap(
       [
         ...dataUniswap,
         ...data
       ]
-    )
-  }, [dataBurnsUniswapReceived])
+    );
+  }, [dataBurnsUniswapReceived]);
   React.useEffect(() => {
-    if (!dataMintsUniswapReceived) {
-      return
+    if(!dataMintsUniswapReceived) {
+      return;
     }
     const dataMintsReceived = Object.values(dataMintsUniswapReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataMintsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsMintsUniswapQuery['mints'][0]) => {
-        switch (_['__typename']) {
-          case 'Mint': {
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: `Add`,
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
-              tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
-              maker: `${_.sender}`,
-              exchange: `uniswap`,
-              tx: `${_.transaction.id}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsMintsUniswapQuery['mints'][0]) => {
+      switch(_['__typename']) {
+        case 'Mint': {
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: `Add`,
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
+            tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
+            maker: `${_.sender}`,
+            exchange: `uniswap`,
+            tx: `${_.transaction.id}`
+          }];
         }
-      }, [])
-    if (!dataMintsReceived.length) {
-      return setMintsPageUniswap(null)
+      }
+    }, []);
+    if(!dataMintsReceived.length) {
+      return setMintsPageUniswap(null);
     }
     setDataUniswap(
       [
         ...dataUniswap,
         ...data
       ]
-    )
-  }, [dataMintsUniswapReceived])
+    );
+  }, [dataMintsUniswapReceived]);
   React.useEffect(() => {
-    if (!dataSwapsPancakeReceived) {
-      return
+    if(!dataSwapsPancakeReceived) {
+      return;
     }
     const dataSwapsReceived = Object.values(dataSwapsPancakeReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) === -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) === -1);
     const data = dataSwapsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsSwapsPancakeQuery['swaps'][0]) => {
-        switch (_['__typename']) {
-          case 'Swap': {
-            const isBuy = Number(_.amount0In) > 0
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: isBuy ? 'Buy' : 'Sell',
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${
-                millify(
-                  isBuy ?
-                    toFixedToken(String(_.amount0In).replace('-', ''), 2)
-                    : toFixedToken(String(_.amount0Out).replace('-', ''), 2)
-                  , {precision: 2})
-              }`,
-              tokenValue1: `${
-                millify(
-                  isBuy ?
-                    toFixedToken(String(_.amount1Out).replace('-', ''), 2)
-                    : toFixedToken(String(_.amount1In).replace('-', ''), 2)
-                  , {precision: 2})
-              }`,
-              maker: `${_.from}`,
-              exchange: `pancake`,
-              tx: `${_.id.split('-').shift()}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsSwapsPancakeQuery['swaps'][0]) => {
+      switch(_['__typename']) {
+        case 'Swap': {
+          const isBuy = Number(_.amount0In) > 0;
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: isBuy ? 'Buy' : 'Sell',
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${
+              millify(
+                isBuy ?
+                  toFixedToken(String(_.amount0In).replace('-', ''), 2)
+                  : toFixedToken(String(_.amount0Out).replace('-', ''), 2)
+                , {precision: 2})
+            }`,
+            tokenValue1: `${
+              millify(
+                isBuy ?
+                  toFixedToken(String(_.amount1Out).replace('-', ''), 2)
+                  : toFixedToken(String(_.amount1In).replace('-', ''), 2)
+                , {precision: 2})
+            }`,
+            maker: `${_.from}`,
+            exchange: `pancake`,
+            tx: `${_.id.split('-').shift()}`
+          }];
         }
-        return prev;
-      }, [])
-      .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1)
-    if (!dataSwapsReceived.length) {
-      return setSwapsPagePancake(null)
+      }
+      return prev;
+    }, [])
+    .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1);
+    if(!dataSwapsReceived.length) {
+      return setSwapsPagePancake(null);
     }
     setDataPancake(
       [
         ...dataPancake,
         ...data
       ]
-    )
-  }, [dataSwapsPancakeReceived])
+    );
+  }, [dataSwapsPancakeReceived]);
   React.useEffect(() => {
-    if (!dataBurnsPancakeReceived) {
-      return
+    if(!dataBurnsPancakeReceived) {
+      return;
     }
     const dataBurnsReceived = Object.values(dataBurnsPancakeReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataBurnsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsBurnsPancakeQuery['burns'][0]) => {
-        switch (_['__typename']) {
-          case 'Burn': {
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: `Remove`,
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
-              tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
-              maker: `${_.sender}`,
-              exchange: `pancake`,
-              tx: `${_.id.split('-').shift()}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsBurnsPancakeQuery['burns'][0]) => {
+      switch(_['__typename']) {
+        case 'Burn': {
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: `Remove`,
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
+            tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
+            maker: `${_.sender}`,
+            exchange: `pancake`,
+            tx: `${_.id.split('-').shift()}`
+          }];
         }
-        return prev;
-      }, [])
-      .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1)
-    if (!dataBurnsReceived.length) {
-      return setBurnsPagePancake(null)
+      }
+      return prev;
+    }, [])
+    .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1);
+    if(!dataBurnsReceived.length) {
+      return setBurnsPagePancake(null);
     }
     setDataPancake(
       [
         ...dataPancake,
         ...data
       ]
-    )
-  }, [dataBurnsPancakeReceived])
+    );
+  }, [dataBurnsPancakeReceived]);
   React.useEffect(() => {
-    if (!dataMintsPancakeReceived) {
-      return
+    if(!dataMintsPancakeReceived) {
+      return;
     }
     const dataMintsReceived = Object.values(dataMintsPancakeReceived || {})
-      .flatMap<any>(_ => _)
-      .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1)
+    .flatMap<any>(_ => _)
+    .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataMintsReceived
-      .reduce<TransactionType[]>((prev, _: TransactionsMintsPancakeQuery['mints'][0]) => {
-        switch (_['__typename']) {
-          case 'Mint': {
-            return [...prev, {
-              id: _.id,
-              date: fromUnixTime(_.timestamp),
-              type: `Add`,
-              totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
-              tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
-              tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
-              maker: `${_.sender}`,
-              exchange: `pancake`,
-              tx: `${_.id.split('-').shift()}`
-            }]
-          }
+    .reduce<TransactionType[]>((prev, _: TransactionsMintsPancakeQuery['mints'][0]) => {
+      switch(_['__typename']) {
+        case 'Mint': {
+          return [...prev, {
+            id: _.id,
+            date: fromUnixTime(_.timestamp),
+            type: `Add`,
+            totalValue: `$${millify(toFixedToken(_.amountUSD, 2), {precision: 2})}`,
+            tokenValue0: `${millify(toFixedToken(_.amount0, 2), {precision: 2})}`,
+            tokenValue1: `${millify(toFixedToken(_.amount1, 2), {precision: 2})}`,
+            maker: `${_.sender}`,
+            exchange: `pancake`,
+            tx: `${_.id.split('-').shift()}`
+          }];
         }
-        return prev;
-      }, [])
-      .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1)
-    if (!dataMintsReceived.length) {
-      return setMintsPagePancake(null)
+      }
+      return prev;
+    }, [])
+    .filter(_ => dataPancake.findIndex(__ => _.id === __.id) == -1);
+    if(!dataMintsReceived.length) {
+      return setMintsPagePancake(null);
     }
     setDataPancake(
       [
         ...dataPancake,
         ...data
       ]
-    )
-  }, [dataMintsPancakeReceived])
+    );
+  }, [dataMintsPancakeReceived]);
 
   const transactions = [
     ...dataUniswap,
     ...dataPancake
-  ].sort((a, b) => b.date.getTime() - a.date.getTime())
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   React.useEffect(() => {
-    if (!pageSwapsUniswap) {
-      return
+    if(!pageSwapsUniswap) {
+      return;
     }
     getTransactionsSwapsUniswap({
       variables: {
@@ -338,11 +341,11 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageSwapsUniswap - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageSwapsUniswap])
+    }).finally();
+  }, [pageSwapsUniswap]);
   React.useEffect(() => {
-    if (!pageBurnsUniswap) {
-      return
+    if(!pageBurnsUniswap) {
+      return;
     }
     getTransactionsBurnsUniswap({
       variables: {
@@ -350,11 +353,11 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageBurnsUniswap - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageBurnsUniswap])
+    }).finally();
+  }, [pageBurnsUniswap]);
   React.useEffect(() => {
-    if (!pageMintsUniswap) {
-      return
+    if(!pageMintsUniswap) {
+      return;
     }
     getTransactionsMintsUniswap({
       variables: {
@@ -362,11 +365,11 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageMintsUniswap - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageMintsUniswap])
+    }).finally();
+  }, [pageMintsUniswap]);
   React.useEffect(() => {
-    if (!pageSwapsPancake) {
-      return
+    if(!pageSwapsPancake) {
+      return;
     }
     getTransactionsSwapsPancake({
       variables: {
@@ -374,11 +377,11 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageSwapsPancake - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageSwapsPancake])
+    }).finally();
+  }, [pageSwapsPancake]);
   React.useEffect(() => {
-    if (!pageBurnsPancake) {
-      return
+    if(!pageBurnsPancake) {
+      return;
     }
     getTransactionsBurnsPancake({
       variables: {
@@ -386,11 +389,11 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageBurnsPancake - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageBurnsPancake])
+    }).finally();
+  }, [pageBurnsPancake]);
   React.useEffect(() => {
-    if (!pageMintsPancake) {
-      return
+    if(!pageMintsPancake) {
+      return;
     }
     getTransactionsMintsPancake({
       variables: {
@@ -398,82 +401,82 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         first: PAGINATION_LIMIT,
         skip: (pageMintsPancake - 1) * PAGINATION_LIMIT
       }
-    }).finally()
-  }, [pageMintsPancake])
+    }).finally();
+  }, [pageMintsPancake]);
 
   React.useEffect(() => {
-    if (!tableRefOuter.current) {
+    if(!tableRefOuter.current) {
       return;
     }
-    if (isLoading && !tableRefOuter.current.classList.contains('!overflow-hidden')) {
-      tableRefOuter.current.classList.add('!overflow-hidden')
+    if(isLoading && !tableRefOuter.current.classList.contains('!overflow-hidden')) {
+      tableRefOuter.current.classList.add('!overflow-hidden');
     } else {
-      tableRefOuter.current.classList.remove('!overflow-hidden')
+      tableRefOuter.current.classList.remove('!overflow-hidden');
     }
   }, [
     `${pageMintsUniswap}:${pageBurnsUniswap}:${pageSwapsUniswap}:${isLoading}`,
     `${pageMintsPancake}:${pageBurnsPancake}:${pageSwapsPancake}:${isLoading}`
-  ])
+  ]);
   const checkPagination = React.useCallback((index: number) => {
     const filterUniswapSwaps = pageSwapsUniswap ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index &&
-          (type === 'Sell' || type === 'Buy') && exchange === 'uniswap'
-      }) : []
-    if (pageSwapsUniswap
+    .filter(({type, exchange}, i) => {
+      return i <= index &&
+        (type === 'Sell' || type === 'Buy') && exchange === 'uniswap';
+    }) : [];
+    if(pageSwapsUniswap
       && filterUniswapSwaps.length === (pageSwapsUniswap * PAGINATION_LIMIT)
     ) {
-      setSwapsPageUniswap(pageSwapsUniswap + 1)
+      setSwapsPageUniswap(pageSwapsUniswap + 1);
     }
     const filterUniswapBurns = pageBurnsUniswap ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index
-          && type === 'Remove' && exchange === 'uniswap'
-      }) : []
-    if (pageBurnsUniswap && filterUniswapBurns.length === PAGINATION_LIMIT) {
-      setBurnsPageUniswap(pageBurnsUniswap + 1)
+    .filter(({type, exchange}, i) => {
+      return i <= index
+        && type === 'Remove' && exchange === 'uniswap';
+    }) : [];
+    if(pageBurnsUniswap && filterUniswapBurns.length === PAGINATION_LIMIT) {
+      setBurnsPageUniswap(pageBurnsUniswap + 1);
     }
     const filterUniswapMints = pageMintsUniswap ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index
-          && type === 'Add' && exchange === 'uniswap'
-      }) : []
-    if (pageMintsUniswap && filterUniswapMints.length === PAGINATION_LIMIT) {
-      setMintsPageUniswap(pageMintsUniswap + 1)
+    .filter(({type, exchange}, i) => {
+      return i <= index
+        && type === 'Add' && exchange === 'uniswap';
+    }) : [];
+    if(pageMintsUniswap && filterUniswapMints.length === PAGINATION_LIMIT) {
+      setMintsPageUniswap(pageMintsUniswap + 1);
     }
     const filterPancakeSwaps = pageSwapsPancake ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index &&
-          (type === 'Sell' || type === 'Buy') && exchange === 'pancake'
-      }) : []
-    if (pageSwapsPancake
+    .filter(({type, exchange}, i) => {
+      return i <= index &&
+        (type === 'Sell' || type === 'Buy') && exchange === 'pancake';
+    }) : [];
+    if(pageSwapsPancake
       && filterPancakeSwaps.length === (pageSwapsPancake * PAGINATION_LIMIT)
     ) {
-      setSwapsPagePancake(pageSwapsPancake + 1)
+      setSwapsPagePancake(pageSwapsPancake + 1);
     }
     const filterPancakeBurns = pageBurnsPancake ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index
-          && type === 'Remove' && exchange === 'pancake'
-      }) : []
-    if (pageBurnsPancake && filterPancakeBurns.length === PAGINATION_LIMIT) {
-      setBurnsPagePancake(pageBurnsPancake + 1)
+    .filter(({type, exchange}, i) => {
+      return i <= index
+        && type === 'Remove' && exchange === 'pancake';
+    }) : [];
+    if(pageBurnsPancake && filterPancakeBurns.length === PAGINATION_LIMIT) {
+      setBurnsPagePancake(pageBurnsPancake + 1);
     }
     const filterPancakeMints = pageMintsPancake ? transactions
-      .filter(({type, exchange}, i) => {
-        return i <= index
-          && type === 'Add' && exchange === 'pancake'
-      }) : []
-    if (pageMintsPancake && filterPancakeMints.length === PAGINATION_LIMIT) {
-      setMintsPagePancake(pageMintsPancake + 1)
+    .filter(({type, exchange}, i) => {
+      return i <= index
+        && type === 'Add' && exchange === 'pancake';
+    }) : [];
+    if(pageMintsPancake && filterPancakeMints.length === PAGINATION_LIMIT) {
+      setMintsPagePancake(pageMintsPancake + 1);
     }
   }, [
     `${pageMintsUniswap}:${pageBurnsUniswap}:${pageSwapsUniswap}:${transactions.length}`,
     `${pageMintsPancake}:${pageBurnsPancake}:${pageSwapsPancake}:${transactions.length}`
-  ])
+  ]);
   const Row = ({index}: any) => {
     const transaction: TransactionType = transactions[index];
-    if (!transaction) return null;
+    if(!transaction) return null;
     return (
       <tr key={transaction.id}>
         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-[#dbdfe6] font-semibold sm:pl-6">
@@ -482,21 +485,21 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         <td className={
           `whitespace-nowrap px-3 py-4 text-sm font-semibold
                         ${(() => {
-            switch (transaction.type) {
-              case "Buy": {
-                return 'text-green-600'
+            switch(transaction.type) {
+              case 'Buy': {
+                return 'text-green-600';
               }
-              case "Sell": {
-                return 'text-red-600'
+              case 'Sell': {
+                return 'text-red-600';
               }
-              case "Add": {
-                return 'text-yellow-600'
+              case 'Add': {
+                return 'text-yellow-600';
               }
-              case "Remove": {
-                return 'text-blue-600'
+              case 'Remove': {
+                return 'text-blue-600';
               }
               default: {
-                return 'text-[#dbdfe6]'
+                return 'text-[#dbdfe6]';
               }
             }
           })()}
@@ -558,7 +561,8 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
               header={
                 <thead className="bg-[#1f2037] sticky top-0 z-10">
                 <tr>
-                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-bold text-[#9292ab] sm:pl-6 whitespace-nowrap">
+                  <th scope="col"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-bold text-[#9292ab] sm:pl-6 whitespace-nowrap">
                     Date
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-bold text-[#9292ab] whitespace-nowrap">
@@ -600,7 +604,7 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
               footer={null}
               row={Row}
               onItemsRendered={({visibleStopIndex}) => {
-                checkPagination(visibleStopIndex)
+                checkPagination(visibleStopIndex);
               }}
             />
             <div className={`absolute top-[50%] left-[50%] ${isLoading ? '' : 'hidden'}`}>
@@ -616,6 +620,6 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
         </div>
       </div>
     </>
-  )
+  );
 });
 export default Transactions;

@@ -1,7 +1,5 @@
 import React, {FC} from 'react';
 import s from './Header.module.scss';
-import {NetworkWalletSelect} from '../NetworkWalletSelect';
-import {NavigationStyled} from '../../_old/ui/Navigation/Navigation-styled';
 import {AnimatedGradientButton} from '../../_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton';
 import {LogoLink} from '../LogoLink';
 import HomeIcon from '../../../assets/icons/new/HomeIcon';
@@ -51,11 +49,11 @@ export const Header: FC<any> = React.memo(() => {
               if(!isConnected) {
                 return (
                   <>
-                      <button
-                        onClick={openConnectModal}
-                      >
-                        Sign-In
-                      </button>
+                    <button
+                      onClick={openConnectModal}
+                    >
+                      Sign-In
+                    </button>
                   </>
                 );
               }

@@ -49,7 +49,7 @@ export function useOutsideAllEvent(
 ) {
   useEffect(() => {
     function handleClickOutside(mouseEvent) {
-      if (
+      if(
         refs.every(
           (ref) => ref.current && !ref.current.contains(mouseEvent.target)
         )

@@ -1,6 +1,6 @@
-import { css, FlattenSimpleInterpolation } from 'styled-components';
-import { breakpoints, textMixins } from './base';
-import { GridItemProps, GridProps } from './mixinTypes';
+import {css, FlattenSimpleInterpolation} from 'styled-components';
+import {breakpoints, textMixins} from './base';
+import {GridItemProps, GridProps} from './mixinTypes';
 
 const widthMedia = {
   isDesktopMid: (styles: FlattenSimpleInterpolation) => css`
@@ -93,7 +93,7 @@ const resetMixins = {
 };
 
 const gridMixins = {
-  grid: ({ colsAmount, gap }: GridProps = {}) => css`
+  grid: ({colsAmount, gap}: GridProps = {}) => css`
     position: relative;
     display: grid;
     width: 100%;
@@ -102,15 +102,15 @@ const gridMixins = {
     gap: ${gap || 0};
 
     ${colsAmount &&
-    css`
+  css`
       grid-template-columns: repeat(${colsAmount}, 1fr);
     `};
     ${!colsAmount &&
-    css`
+  css`
       grid-auto-columns: 1fr;
     `};
   `,
-  gridItem: ({ colSpan }: GridItemProps = {}) =>
+  gridItem: ({colSpan}: GridItemProps = {}) =>
     colSpan &&
     css`
       grid-column: span ${colSpan};
@@ -137,14 +137,14 @@ export const mixins = {
     text-overflow: ellipsis;
     word-break: break-all;
     ${linesAmount > 1
-      ? css`
+    ? css`
           width: 100%;
           display: -webkit-box;
           -webkit-line-clamp: ${linesAmount};
           line-clamp: ${linesAmount};
           -webkit-box-orient: vertical;
         `
-      : css`
+    : css`
           white-space: nowrap;
         `}
   `,

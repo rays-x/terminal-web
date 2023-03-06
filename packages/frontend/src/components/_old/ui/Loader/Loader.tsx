@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoaderStyled, LoaderPositions } from './Loader-styled';
+import {LoaderPositions, LoaderStyled} from './Loader-styled';
 
 export interface LoaderProps {
   position?: LoaderPositions;
@@ -9,11 +9,11 @@ export interface LoaderProps {
 }
 
 export const Loader: React.FC<LoaderProps> = ({
-  position,
-  singleColor,
-  size,
-  borderSize
-}) => (
+                                                position,
+                                                singleColor,
+                                                size,
+                                                borderSize
+                                              }) => (
   <LoaderStyled.Component position={position}>
     <LoaderStyled.Spinner
       size={size}

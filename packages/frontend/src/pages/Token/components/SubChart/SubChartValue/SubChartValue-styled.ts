@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
-import { colors, spacing } from '../../../../../presets/base';
-import { ValueChangeDirection } from './SubChartValue';
+import styled, {css} from 'styled-components';
+import {colors, spacing} from '../../../../../presets/base';
+import {ValueChangeDirection} from './SubChartValue';
 
 const Component = styled.div`
   display: flex;
@@ -29,18 +29,18 @@ const ValueChange = styled.div<{ $direction?: ValueChangeDirection }>`
   font-size: 11px;
   line-height: 14px;
 
-  ${({ $direction }) => {
-    switch ($direction) {
-      case ValueChangeDirection.positive:
-        return css`
+  ${({$direction}) => {
+  switch($direction) {
+    case ValueChangeDirection.positive:
+      return css`
           color: ${colors.text.green};
         `;
-      case ValueChangeDirection.negative:
-        return css`
+    case ValueChangeDirection.negative:
+      return css`
           color: ${colors.text.red};
         `;
-    }
-  }}
+  }
+}}
 `;
 
 export const SubChartValueStyled = {

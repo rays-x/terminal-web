@@ -1,8 +1,7 @@
-import styled, { css } from 'styled-components';
-import { animated } from '@react-spring/web';
-import { SCG } from '../../../../presets/types';
-import { colors } from '../../../../presets/base';
-import { breakpoints } from '../../../../presets/base';
+import styled, {css} from 'styled-components';
+import {animated} from '@react-spring/web';
+import {SCG} from '../../../../presets/types';
+import {colors} from '../../../../presets/base';
 
 export const center = css`
   justify-content: center;

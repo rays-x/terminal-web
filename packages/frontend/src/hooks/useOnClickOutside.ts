@@ -5,7 +5,7 @@ const useOnClickOutside = (ref, handler) => {
   React.useEffect(
     () => {
       const listener = (event) => {
-        if (!ref.current || ref.current.contains(event.target)) return;
+        if(!ref.current || ref.current.contains(event.target)) return;
         handler(event);
       };
       document.addEventListener('mousedown', listener);
@@ -15,7 +15,7 @@ const useOnClickOutside = (ref, handler) => {
         document.removeEventListener('touchstart', listener);
       };
     }, // eslint-disable-next-line
-    [ref, handler],
+    [ref, handler]
   );
 };
 export default useOnClickOutside;

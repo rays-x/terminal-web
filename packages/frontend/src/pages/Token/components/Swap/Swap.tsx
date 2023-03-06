@@ -181,7 +181,7 @@ export const Swap = React.memo(() => {
       value: get(dataPrice, 'value'),
       data: get(dataPrice, 'data'),
       gasLimit: get(dataPrice, 'gas'),
-      gasPrice: get(dataPrice, 'gasPrice'),
+      gasPrice: get(dataPrice, 'gasPrice')
     }
   });
   const {sendTransaction} = useSendTransaction(config);
@@ -248,7 +248,7 @@ export const Swap = React.memo(() => {
         sellToken: tokens.from?.address,
         skipValidation: false,
         slippagePercentage: 0.005,
-        takerAddress: address,
+        takerAddress: address
       }
     })
     .catch((e) => console.error(e));

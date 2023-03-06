@@ -1,6 +1,4 @@
 import React from 'react';
-import {useNetworkExchanges} from '../../../store/networkExchanges';
-import {Dropdown} from '../Dropdown';
 
 export function ExchangeSelect() {
   /*const {network, data, exchange, switchExchange} = useNetworkExchanges();

@@ -1,5 +1,6 @@
-import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
+import {gql} from '@apollo/client';
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -2374,13 +2375,15 @@ export const TransactionsSwapsPancakeDocument = gql`
  * });
  */
 export function useTransactionsSwapsPancakeQuery(baseOptions: Apollo.QueryHookOptions<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>(TransactionsSwapsPancakeDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>(TransactionsSwapsPancakeDocument, options);
+}
+
 export function useTransactionsSwapsPancakeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>(TransactionsSwapsPancakeDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>(TransactionsSwapsPancakeDocument, options);
+}
+
 export type TransactionsSwapsPancakeQueryHookResult = ReturnType<typeof useTransactionsSwapsPancakeQuery>;
 export type TransactionsSwapsPancakeLazyQueryHookResult = ReturnType<typeof useTransactionsSwapsPancakeLazyQuery>;
 export type TransactionsSwapsPancakeQueryResult = Apollo.QueryResult<TransactionsSwapsPancakeQuery, TransactionsSwapsPancakeQueryVariables>;
@@ -2423,13 +2426,15 @@ export const TransactionsMintsPancakeDocument = gql`
  * });
  */
 export function useTransactionsMintsPancakeQuery(baseOptions: Apollo.QueryHookOptions<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>(TransactionsMintsPancakeDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>(TransactionsMintsPancakeDocument, options);
+}
+
 export function useTransactionsMintsPancakeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>(TransactionsMintsPancakeDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>(TransactionsMintsPancakeDocument, options);
+}
+
 export type TransactionsMintsPancakeQueryHookResult = ReturnType<typeof useTransactionsMintsPancakeQuery>;
 export type TransactionsMintsPancakeLazyQueryHookResult = ReturnType<typeof useTransactionsMintsPancakeLazyQuery>;
 export type TransactionsMintsPancakeQueryResult = Apollo.QueryResult<TransactionsMintsPancakeQuery, TransactionsMintsPancakeQueryVariables>;
@@ -2471,13 +2476,15 @@ export const TransactionsBurnsPancakeDocument = gql`
  * });
  */
 export function useTransactionsBurnsPancakeQuery(baseOptions: Apollo.QueryHookOptions<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>(TransactionsBurnsPancakeDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>(TransactionsBurnsPancakeDocument, options);
+}
+
 export function useTransactionsBurnsPancakeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>(TransactionsBurnsPancakeDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>(TransactionsBurnsPancakeDocument, options);
+}
+
 export type TransactionsBurnsPancakeQueryHookResult = ReturnType<typeof useTransactionsBurnsPancakeQuery>;
 export type TransactionsBurnsPancakeLazyQueryHookResult = ReturnType<typeof useTransactionsBurnsPancakeLazyQuery>;
 export type TransactionsBurnsPancakeQueryResult = Apollo.QueryResult<TransactionsBurnsPancakeQuery, TransactionsBurnsPancakeQueryVariables>;

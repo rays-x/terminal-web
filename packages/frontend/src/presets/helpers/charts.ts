@@ -36,7 +36,7 @@ export function getValueChange(
   data?: any[],
   valueKey: string = 'value'
 ): ValueChangeType | null {
-  if (!data?.length) return null;
+  if(!data?.length) return null;
   const itemLast = data[data.length - 1];
   const itemPreLast = data[data.length - 2];
   const value = getValueAspectDiff(

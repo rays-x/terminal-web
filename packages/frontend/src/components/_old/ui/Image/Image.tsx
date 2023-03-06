@@ -41,7 +41,7 @@ export const ImagePreview: FC<ImagePreviewProps & { children?: any }> = ({
   useEffect(() => {
     const img = new Image();
 
-    if (imageSrc) {
+    if(imageSrc) {
       img.src = imageSrc;
       img.addEventListener('load', handleImgLoaded);
       img.addEventListener('error', handleImgFailed);

@@ -1,4 +1,4 @@
-import { isNil } from 'lodash-es';
+import {isNil} from 'lodash-es';
 import numeral from 'numeral';
 
 numeral.register('locale', 'custom', {
@@ -12,7 +12,7 @@ numeral.register('locale', 'custom', {
     billion: 'B',
     trillion: 'T'
   },
-  ordinal: function (number) {
+  ordinal: function(number) {
     return '.';
   },
   currency: {
@@ -44,7 +44,7 @@ export function tryNumberLike<T extends any>(
   defaultValue?: T,
   convertToNumber = false
 ): T | null {
-  if (isNumberLike(value)) {
+  if(isNumberLike(value)) {
     return convertToNumber ? +value : value;
   }
   return defaultValue ?? null;
@@ -55,7 +55,7 @@ export function toFixed<T extends any>(
   digits?: number,
   defaultValue?: T
 ): T | null {
-  if (!isNumberLike(value)) return defaultValue ?? null;
+  if(!isNumberLike(value)) return defaultValue ?? null;
   return !isNil(digits) ? (+value).toFixed(digits) : value;
 }
 
@@ -64,7 +64,7 @@ export function formatNumeral(
   formatString: string = NUMERAL_FORMAT_NUM,
   defaultValue?: string | number
 ): string {
-  if (!isNumberLike(value)) return (defaultValue ?? '').toString();
+  if(!isNumberLike(value)) return (defaultValue ?? '').toString();
   return numeral(value).format(formatString);
 }
 
@@ -77,14 +77,14 @@ export type NumeralFormatType = {
 };
 
 export const chooseNumeralFormat = ({
-  value,
-  maxLength = 6,
-  type = 'number',
-  hasDigits = true,
-  shouldBeShortened = true
-}: NumeralFormatType): string => {
+                                      value,
+                                      maxLength = 6,
+                                      type = 'number',
+                                      hasDigits = true,
+                                      shouldBeShortened = true
+                                    }: NumeralFormatType): string => {
   const val = tryNumberLike<any>(value, null, true);
-  if (!val) return '';
+  if(!val) return '';
   const isCurrency = type === 'currency';
   const shouldBeShort =
     shouldBeShortened && (val ? val.toFixed().length > maxLength : false);

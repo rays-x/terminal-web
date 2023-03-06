@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, {useMemo} from 'react';
 import Icons from '../../../../../assets';
-import { SubChartValueStyled } from './SubChartValue-styled';
+import {SubChartValueStyled} from './SubChartValue-styled';
 
 export enum ValueChangeDirection {
   positive = 'positive',
@@ -15,17 +15,17 @@ export interface SubChartValueProps {
 }
 
 export const SubChartValue: React.FC<SubChartValueProps> = ({
-  label,
-  value,
-  valueChange,
-  valueChangeDirection
-}) => {
+                                                              label,
+                                                              value,
+                                                              valueChange,
+                                                              valueChangeDirection
+                                                            }) => {
   const valueChangeIcon = useMemo(() => {
-    switch (valueChangeDirection) {
+    switch(valueChangeDirection) {
       case ValueChangeDirection.positive:
-        return <Icons.Rise />;
+        return <Icons.Rise/>;
       case ValueChangeDirection.negative:
-        return <Icons.Fall />;
+        return <Icons.Fall/>;
       default:
         return null;
     }

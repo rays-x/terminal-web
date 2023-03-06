@@ -1,37 +1,25 @@
 import React, {useState} from 'react';
-import {CoinPageStyled} from '../../Coin-styled';
 import {CurrentCoinData} from '../../CoinPage';
-import {TradingPairStatisticsRow} from './components/TableRow/TradingPairStatisticsRow';
 import {TotalLiquidity} from './components/TotalLiquidity/TotalLiquidity';
-import {Columns, TableCore} from '../../../../components/_old/ui/Table/Table';
 import {HeaderStyled} from '../../../../components/_old/ui/Header/Header-styled';
 import {TableStyled} from '../../../../components/_old/ui/Table/Table-styled';
 import {HeaderVariant} from '../../../../components/_old/ui/Header/types';
 import {get, set, take} from 'lodash';
-import {
-  PoolType,
-  StatsPairStatisticsResponse,
-  TransactionsPairsResponse,
-  TransactionType
-} from '../../types';
-import UniswapIcon from '../../../../assets/icons/dex/uniswap.png';
-import PancakeIcon from '../../../../assets/icons/dex/pancake.png';
+import {PoolType, StatsPairStatisticsResponse, TransactionsPairsResponse, TransactionType} from '../../types';
 import {useLazyFetch} from '../../../../hooks/useFetch';
 import {CmcSearch} from '../PriceChart/types';
 import {CmcPairInfo} from '../PriceChart/chart/types';
 import s from '../../../Home/components/TokenList.module.scss';
 import {
-  HeaderCell, PercentageChange,
-  RowNumber,
+  HeaderCell,
   Table,
-  TableContent, TableFooter,
+  TableContent,
+  TableFooter,
   TableHeader,
-  TableRowLink, Token
+  TableRowLink
 } from '../../../../components/_old2/Table';
-import {Loader} from '../../../../components/_old/ui/Loader/Loader';
 import {RowText} from '../../../../components/_old2/Table/RowText/RowText';
 import millify from 'millify';
-import {toFixedToken} from '../../../../utils/diff';
 import {EMDASH} from '../../../../utils/UTF';
 import {Pair} from '../../../../components/_old2/Table/Pair/Pair';
 import {PairPageStyled} from '../../Pair-styled';
@@ -87,7 +75,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
       return dataPools.reduce((p, n) => p + n.liquidity, 0);
     }, [dataPools]);
     React.useEffect(() => {
-      if (!currentCoinData?.id) {
+      if(!currentCoinData?.id) {
         return;
       }
       (async () => {
@@ -131,7 +119,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
         ]));
         eth.forEach(pair => {
           const index = main.ethPairs.findIndex(_pair => _pair.poolId === pair.poolId);
-          if (index > -1) {
+          if(index > -1) {
             set(main, `ethPairs.${index}`, {
               ...get(main, `ethPairs.${index}`, {}),
               ...pair
@@ -142,7 +130,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
         });
         btc.forEach(pair => {
           const index = main.btcPairs.findIndex(_pair => _pair.poolId === pair.poolId);
-          if (index > -1) {
+          if(index > -1) {
             set(main, `btcPairs.${index}`, {
               ...get(main, `btcPairs.${index}`, {}),
               ...pair
@@ -155,7 +143,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
       })();
     }, [currentCoinData?.id]);
     React.useEffect(() => {
-      if (!dataPairs) {
+      if(!dataPairs) {
         return;
       }
       const pairs: {
@@ -168,18 +156,18 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
       } = {};
       take(
         dataPairs.btcPairs
-          .sort((a, b) => {
-            return Number(get(b, 'volume24h', 0)) - Number(get(a, 'volume24h', 0));
-          })
-          .filter(({address: _, pairContractAddress: __}) => _ || __)
-          .filter((item) => {
-            return get(item, 'poolInfoD.liquidity', get(item, 'liquidity'));
-          })
-          .filter((pair) => {
-            return pair.baseToken.address === currentCoinData.platform_binance
-              ? pair.quoteToken.id
-              : pair.baseToken.id;
-          }),
+        .sort((a, b) => {
+          return Number(get(b, 'volume24h', 0)) - Number(get(a, 'volume24h', 0));
+        })
+        .filter(({address: _, pairContractAddress: __}) => _ || __)
+        .filter((item) => {
+          return get(item, 'poolInfoD.liquidity', get(item, 'liquidity'));
+        })
+        .filter((pair) => {
+          return pair.baseToken.address === currentCoinData.platform_binance
+            ? pair.quoteToken.id
+            : pair.baseToken.id;
+        }),
         PAIRS_STATS_SLICE
       ).forEach(pair => {
         const tokenVersusSymbol = pair.baseToken.address === currentCoinData.platform_binance
@@ -203,18 +191,18 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
       });
       take(
         dataPairs.ethPairs
-          .sort((a, b) => {
-            return Number(get(b, 'volume24h', 0)) - Number(get(a, 'volume24h', 0));
-          })
-          .filter(({address: _, pairContractAddress: __}) => _ || __)
-          .filter((item) => {
-            return get(item, 'poolInfoD.liquidity', get(item, 'liquidity'));
-          })
-          .filter((pair) => {
-            return pair.baseToken.address === currentCoinData.platform_ethereum
-              ? pair.quoteToken.id
-              : pair.baseToken.id;
-          }),
+        .sort((a, b) => {
+          return Number(get(b, 'volume24h', 0)) - Number(get(a, 'volume24h', 0));
+        })
+        .filter(({address: _, pairContractAddress: __}) => _ || __)
+        .filter((item) => {
+          return get(item, 'poolInfoD.liquidity', get(item, 'liquidity'));
+        })
+        .filter((pair) => {
+          return pair.baseToken.address === currentCoinData.platform_ethereum
+            ? pair.quoteToken.id
+            : pair.baseToken.id;
+        }),
         PAIRS_STATS_SLICE
       ).forEach(pair => {
         const tokenVersusSymbol = pair.baseToken.address === currentCoinData.platform_ethereum
@@ -236,7 +224,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
           ]
         });
       });
-      console.log('pairs',pairs)
+      console.log('pairs', pairs);
       Object.entries(pairs).map(([key, {
         tokenVersusIcon,
         btcAddress_poolContract = [],
@@ -249,33 +237,33 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
             ethAddress_poolContract
           }
         })
-          .then(({data}) => {
-            if (!data.buyersAndSellersCount) {
-              return;
-            }
-            const result = {
-              pair: `${currentCoinData.index} / ${key}`,
-              tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/128x128/${currentCoinData.cmc}.png`,
-              tokenVersusIcon,
-              poolLiquidity: poolLiquidity.reduce((p, n) => Number(p) + Number(n), 0),
-              ...data
-            };
-            setDataPools(prev => [...prev, {
-              pair: result.pair,
-              icons: [result.tokenIcon, tokenVersusIcon],
-              trades: result.tradesSellCount + result.tradesBuyCount,
-              buys: result.tradesBuyCount,
-              sells: result.tradesSellCount,
-              traders: result.buyersAndSellersCount,
-              buyers: result.buyersCount,
-              sellers: result.sellersCount,
-              volume: result.totalVolume,
-              volumeBuy: result.buyersVolume,
-              volumeSell: result.sellersVolume,
-              liquidity: result.poolLiquidity
-            }]);
-          })
-          .catch(err => console.error(err));
+        .then(({data}) => {
+          if(!data.buyersAndSellersCount) {
+            return;
+          }
+          const result = {
+            pair: `${currentCoinData.index} / ${key}`,
+            tokenIcon: `https://s2.coinmarketcap.com/static/img/coins/128x128/${currentCoinData.cmc}.png`,
+            tokenVersusIcon,
+            poolLiquidity: poolLiquidity.reduce((p, n) => Number(p) + Number(n), 0),
+            ...data
+          };
+          setDataPools(prev => [...prev, {
+            pair: result.pair,
+            icons: [result.tokenIcon, tokenVersusIcon],
+            trades: result.tradesSellCount + result.tradesBuyCount,
+            buys: result.tradesBuyCount,
+            sells: result.tradesSellCount,
+            traders: result.buyersAndSellersCount,
+            buyers: result.buyersCount,
+            sellers: result.sellersCount,
+            volume: result.totalVolume,
+            volumeBuy: result.buyersVolume,
+            volumeSell: result.sellersVolume,
+            liquidity: result.poolLiquidity
+          }]);
+        })
+        .catch(err => console.error(err));
       });
     }, [dataPairs]);
     /*React.useEffect(() => {
@@ -316,7 +304,7 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
       isSorted: sortBy === column,
       sortDescending,
       onSort: () => {
-        if (sortBy === column) {
+        if(sortBy === column) {
           setSortDescending((sortDescending) => !sortDescending);
         } else {
           setSortBy(column);
@@ -381,24 +369,24 @@ export const TradingPairStatistics: React.FC = React.memo(() => {
                                 sensitivity: 'base'
                               });
                           })
-                            .slice(Number(offset), Number(limit) + Number(offset))
-                            .map((pool, i) => {
-                              return (
-                                <TableRowLink key={pool.pair}>
-                                  <Pair icons={pool.icons}>{pool.pair}</Pair>
-                                  <RowText>{valueOrDash(millify(pool.trades))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.buys))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.sells))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.traders))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.buyers))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.sellers))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.volume))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.volumeBuy))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.volumeSell))}</RowText>
-                                  <RowText>{valueOrDash(millify(pool.liquidity))}</RowText>
-                                </TableRowLink>
-                              );
-                            })}
+                          .slice(Number(offset), Number(limit) + Number(offset))
+                          .map((pool, i) => {
+                            return (
+                              <TableRowLink key={pool.pair}>
+                                <Pair icons={pool.icons}>{pool.pair}</Pair>
+                                <RowText>{valueOrDash(millify(pool.trades))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.buys))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.sells))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.traders))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.buyers))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.sellers))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.volume))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.volumeBuy))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.volumeSell))}</RowText>
+                                <RowText>{valueOrDash(millify(pool.liquidity))}</RowText>
+                              </TableRowLink>
+                            );
+                          })}
                         </TableContent>
                       ) : null/*)*/
                     }

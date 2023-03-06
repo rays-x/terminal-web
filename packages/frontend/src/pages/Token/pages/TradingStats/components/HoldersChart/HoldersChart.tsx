@@ -1,28 +1,17 @@
 import React from 'react';
-import {
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-  CartesianGrid,
-  Tooltip
-} from 'recharts';
+import {Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip} from 'recharts';
 import {Gradients} from '../Gradients/Gradients';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Axes} from '../Axes/Axes';
 import {getLineDefaults} from '../../TradingStats';
 import {dateMapF} from '../../../../../../presets/helpers/charts';
-import {
-  chooseNumeralFormat,
-  formatNumeral
-} from '../../../../../../utils/numbers';
+import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
 import {HoldersChartStyled} from './HoldersChart-styled';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {useLazyFetch} from '../../../../../../hooks/useFetch';
-import {StatsHoldersResponse} from '../../../../types';
-import {get, takeRight} from 'lodash';
+import {get} from 'lodash';
 import {useFetch} from '../../../../../../hooks';
 import {TokenHoldersResponse} from '../../../../../../types/api/TokenHoldersResponse';
 

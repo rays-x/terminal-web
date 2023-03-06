@@ -1,11 +1,4 @@
-import {
-  Dispatch,
-  FC,
-  forwardRef,
-  SetStateAction,
-  useRef,
-  useState
-} from 'react';
+import {Dispatch, FC, forwardRef, SetStateAction, useRef, useState} from 'react';
 import {useSpring} from '@react-spring/web';
 import {animated, config} from 'react-spring';
 

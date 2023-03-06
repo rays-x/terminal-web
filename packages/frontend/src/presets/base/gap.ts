@@ -1,4 +1,4 @@
-import { PT } from '../types';
+import {PT} from '../types';
 
 export const gap: PT = {
   4: '4px',

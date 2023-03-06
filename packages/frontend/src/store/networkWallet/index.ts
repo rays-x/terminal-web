@@ -1,3 +1,4 @@
-import { NetworkWalletProvider } from './NetworkWalletProvider';
-import { useNetworkWallet } from './useNetworkWallet';
-export { NetworkWalletProvider, useNetworkWallet };
+import {NetworkWalletProvider} from './NetworkWalletProvider';
+import {useNetworkWallet} from './useNetworkWallet';
+
+export {NetworkWalletProvider, useNetworkWallet};

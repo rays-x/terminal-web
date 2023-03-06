@@ -1,5 +1,4 @@
 import React from 'react';
-import {useParams} from 'react-router';
 import {HeaderStyled} from '../../../../components/_old/ui/Header/Header-styled';
 import {HoldersChart} from './components/HoldersChart/HoldersChart';
 import {LiquidityChart} from './components/LiquidityChart/LiquidityChart';

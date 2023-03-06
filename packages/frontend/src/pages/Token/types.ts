@@ -1,5 +1,3 @@
-import {TradingPairStatistics} from './pages/TradingPairStatistics/TradingPairStatistics';
-
 export interface PageButton {
   width: number;
   height: number;

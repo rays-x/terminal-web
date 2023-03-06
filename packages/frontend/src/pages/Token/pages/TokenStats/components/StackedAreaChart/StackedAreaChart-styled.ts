@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
-import { colors } from '../../../../../../presets/base';
-import { mixins } from '../../../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {colors} from '../../../../../../presets/base';
+import {mixins} from '../../../../../../presets/mixins';
 
 const valuesMaxWidth = 650;
 

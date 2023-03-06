@@ -1,8 +1,8 @@
-import styled, { css } from 'styled-components';
-import { mixins } from '../../../../presets/mixins';
-import { colors, spacing } from '../../../../presets/base';
-import { SCG } from '../../../../presets/types';
-import { HeaderProps, HeaderVariant } from './types';
+import styled, {css} from 'styled-components';
+import {mixins} from '../../../../presets/mixins';
+import {colors, spacing} from '../../../../presets/base';
+import {SCG} from '../../../../presets/types';
+import {HeaderProps, HeaderVariant} from './types';
 
 export const Wrapper = styled.div`
   display: flex;
@@ -19,22 +19,22 @@ export const Wrapper = styled.div`
 
 export const Text = styled.div<HeaderProps>`
   color: ${colors.text.secondary};
-  ${({ $variant = HeaderVariant.Default }) => {
-    if ($variant === HeaderVariant.Default) {
-      return css`
+  ${({$variant = HeaderVariant.Default}) => {
+  if($variant === HeaderVariant.Default) {
+    return css`
         font-weight: 700;
         font-size: 36px;
         line-height: 72px;
       `;
-    }
-    if ($variant === HeaderVariant.Small) {
-      return css`
+  }
+  if($variant === HeaderVariant.Small) {
+    return css`
         font-weight: 700;
         font-size: 22px;
         line-height: 44px;
       `;
-    }
-  }}
+  }
+}}
 `;
 
 export enum Header {

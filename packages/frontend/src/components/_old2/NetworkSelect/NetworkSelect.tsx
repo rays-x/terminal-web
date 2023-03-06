@@ -1,8 +1,6 @@
 import React from 'react';
-import {Dropdown} from '../Dropdown';
 import {useNetworkExchanges} from '../../../store/networkExchanges';
-import {AnimatedGradientButton} from '../../_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton';
-import {NavigationStyled, NetworkGroup} from '../../_old/ui/Navigation/Navigation-styled';
+import {NavigationStyled} from '../../_old/ui/Navigation/Navigation-styled';
 import s from '../../../pages/Home/components/TokenList.module.scss';
 
 export function NetworkSelect({className}: { className?: string }) {

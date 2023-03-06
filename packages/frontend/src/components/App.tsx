@@ -29,11 +29,11 @@ const App = () => (
       <NetworkExchangesProvider>
         <NetworkWalletProvider>
 
-              <Routes>
-                {routes.map(({path, component: RouteComp}) => {
-                  return <Route key={path} path={path} element={<RouteComp/>}/>;
-                })}
-              </Routes>
+          <Routes>
+            {routes.map(({path, component: RouteComp}) => {
+              return <Route key={path} path={path} element={<RouteComp/>}/>;
+            })}
+          </Routes>
 
         </NetworkWalletProvider>
       </NetworkExchangesProvider>

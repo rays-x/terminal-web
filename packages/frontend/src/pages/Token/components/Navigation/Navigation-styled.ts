@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
-import { radius, breakpoints } from '../../../../presets/base';
-import { mixins } from '../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {breakpoints, radius} from '../../../../presets/base';
+import {mixins} from '../../../../presets/mixins';
 
 export const Component = styled.div`
   display: flex;
@@ -69,9 +69,9 @@ export const Burger = styled.div<BurgerProps>`
     bottom: 3px;
   }
 
-  ${({ burgerOpen }) =>
-    burgerOpen &&
-    css`
+  ${({burgerOpen}) =>
+  burgerOpen &&
+  css`
       span:nth-child(1) {
         transform: translateX(40px);
         background-color: transparent;

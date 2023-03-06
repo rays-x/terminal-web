@@ -1,2 +1,3 @@
-import { NetworkWalletSelect } from './NetworkWalletSelect';
-export { NetworkWalletSelect };
+import {NetworkWalletSelect} from './NetworkWalletSelect';
+
+export {NetworkWalletSelect};

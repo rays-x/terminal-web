@@ -1,4 +1,4 @@
-import { SPG } from '../types';
+import {SPG} from '../types';
 
 export const enum Breakpoints {
   width = 'width'

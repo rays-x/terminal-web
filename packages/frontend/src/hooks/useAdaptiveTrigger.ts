@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import {useLayoutEffect, useState} from 'react';
 
 export const useWindowWidth = () => {
   const [windowWidth, setWindowWidth] = useState<number | null>(null);
@@ -32,39 +32,39 @@ interface UseAdaptiveTriggersProps {
 }
 
 export const useAdaptiveTriggers = ({
-  onExtraSmallEnter,
-  onSmallEnter,
-  onMediumEnter,
-  onLargeEnter,
-  onExtraLargeEnter
-}: UseAdaptiveTriggersProps={}) => {
+                                      onExtraSmallEnter,
+                                      onSmallEnter,
+                                      onMediumEnter,
+                                      onLargeEnter,
+                                      onExtraLargeEnter
+                                    }: UseAdaptiveTriggersProps = {}) => {
   const [width, setWidth] = useState<Adaptive>(Adaptive.xl);
   useLayoutEffect(() => {
     const handleResize = () => {
-      if (document.activeElement?.tagName.toLowerCase() === 'input') {
+      if(document.activeElement?.tagName.toLowerCase() === 'input') {
         return;
       }
-      if (window?.innerWidth < 768) {
+      if(window?.innerWidth < 768) {
         onExtraSmallEnter?.();
-        if (window?.innerHeight < 700) {
+        if(window?.innerHeight < 700) {
           return setWidth(Adaptive.xxs);
         }
         return setWidth(Adaptive.xs);
       }
-      if (window?.innerWidth < 1120) {
+      if(window?.innerWidth < 1120) {
         onSmallEnter?.();
         return setWidth(Adaptive.s);
       }
-      if (window?.innerWidth < 1280) {
+      if(window?.innerWidth < 1280) {
         onMediumEnter?.();
         return setWidth(Adaptive.m);
       }
-      if (window?.innerWidth < 1440) {
+      if(window?.innerWidth < 1440) {
         onLargeEnter?.();
         return setWidth(Adaptive.l);
       }
       onExtraLargeEnter?.();
-      if (window?.innerHeight < 900) {
+      if(window?.innerHeight < 900) {
         return setWidth(Adaptive.xl);
       }
       return setWidth(Adaptive.xxl);
@@ -82,6 +82,6 @@ export const useAdaptiveTriggers = ({
   return {
     width,
     isDesktop: width !== Adaptive.s && width !== Adaptive.xs && width !== Adaptive.xxs,
-    isMobile: width === Adaptive.xs || width === Adaptive.xxs || width === Adaptive.s,
+    isMobile: width === Adaptive.xs || width === Adaptive.xxs || width === Adaptive.s
   };
 };

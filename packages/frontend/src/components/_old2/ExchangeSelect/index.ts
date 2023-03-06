@@ -1,2 +1,3 @@
-import { ExchangeSelect } from './ExchangeSelect';
-export { ExchangeSelect };
+import {ExchangeSelect} from './ExchangeSelect';
+
+export {ExchangeSelect};

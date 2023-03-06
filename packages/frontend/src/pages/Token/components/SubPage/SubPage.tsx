@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {Link, Element} from 'react-scroll';
+import {Element, Link} from 'react-scroll';
 import {CoinPageStyled} from '../../Coin-styled';
 import {PriceChart} from '../../pages/PriceChart/PriceChart';
 import {Transactions} from '../../pages/Transactions/Transactions';
@@ -36,7 +36,7 @@ export const subPagesConfig: Record<SubPages, PageButton> = {
     width: 188,
     height: 40,
     label: 'Trading Pair Statistics'
-  },
+  }
   // [SubPages.Pair]: {
   //   width: 162,
   //   height: 40,

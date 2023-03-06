@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
-import { CrosshairMode } from 'lightweight-charts';
-import { radius, sizing, spacing } from '../../../../../presets/base';
-import { mixins } from '../../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {CrosshairMode} from 'lightweight-charts';
+import {radius, sizing, spacing} from '../../../../../presets/base';
+import {mixins} from '../../../../../presets/mixins';
 
 export const layoutStyles = {
   layout: {
@@ -9,8 +9,8 @@ export const layoutStyles = {
     textColor: 'rgba(255, 255, 255, 0.9)'
   },
   grid: {
-    vertLines: { color: '#334158' },
-    horzLines: { color: '#334158' }
+    vertLines: {color: '#334158'},
+    horzLines: {color: '#334158'}
   },
   crosshair: {
     mode: CrosshairMode.Magnet
@@ -41,9 +41,9 @@ export const Component = styled.div<{ $height: number }>`
   background-color: ${layoutStyles.layout.backgroundColor};
   overflow: hidden;
 
-  ${({ $height }) =>
-    $height &&
-    css`
+  ${({$height}) =>
+  $height &&
+  css`
       height: ${$height}px;
     `}
 `;

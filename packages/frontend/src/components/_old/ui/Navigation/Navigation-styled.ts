@@ -1,5 +1,5 @@
 import styled, {css} from 'styled-components';
-import {radius, breakpoints} from '../../../../presets/base';
+import {breakpoints, radius} from '../../../../presets/base';
 import {mixins} from '../../../../presets/mixins';
 import {rgba} from 'polished';
 
@@ -33,7 +33,7 @@ export const NetworkButton = styled.div<{
   beta?: boolean
 }>`
   ${({borderColor = 'rgba(255, 255, 255, 0.32)', selected, logo}) => {
-    return selected ? (logo ? css`
+  return selected ? (logo ? css`
       background: ${rgba(borderColor, 0.3)};
       border: 1px solid ${borderColor};
     ` : css`
@@ -42,9 +42,9 @@ export const NetworkButton = styled.div<{
     `) : css`
       border: 1px solid ${borderColor};
     `;
-  }}
+}}
   ${({logo}) => {
-    return logo ? css`
+  return logo ? css`
       &::before {
         content: '';
         display: block;
@@ -55,7 +55,7 @@ export const NetworkButton = styled.div<{
         margin-left: -2px;
       }
     ` : undefined;
-  }}
+}}
   display: flex;
   align-items: center;
   font-family: 'Work Sans', sans-serif;
@@ -69,7 +69,7 @@ export const NetworkButton = styled.div<{
   gap: 7px;
   white-space: nowrap;
   ${({soon, beta}) => {
-    const soonOrBetaSharedStyles = css`
+  const soonOrBetaSharedStyles = css`
       &::after {
         padding: 0 8.31px;
         margin-left: 2px;
@@ -85,8 +85,8 @@ export const NetworkButton = styled.div<{
         display: flex;
         align-items: center;
       }
-    `
-    return soon || beta ? (soon ? css`
+    `;
+  return soon || beta ? (soon ? css`
       cursor: default;
       &::after {
         content: 'Soon';
@@ -102,7 +102,7 @@ export const NetworkButton = styled.div<{
     `) : css`
       cursor: pointer;
     `;
-  }}
+}}
 `;
 
 export const Network = styled.button`
@@ -166,8 +166,8 @@ export const Burger = styled.div<BurgerProps>`
   }
 
   ${({burgerOpen}) =>
-          burgerOpen &&
-          css`
+  burgerOpen &&
+  css`
             span:nth-child(1) {
               transform: translateX(40px);
               background-color: transparent;

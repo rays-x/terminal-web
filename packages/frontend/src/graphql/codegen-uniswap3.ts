@@ -3,9 +3,9 @@ import type {CodegenConfig} from '@graphql-codegen/cli';
 const config: CodegenConfig = {
   overwrite: true,
   schema: 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3',
-  documents: ["src/graphql/queries/uniswap/*.ts"],
+  documents: ['src/graphql/queries/uniswap/*.ts'],
   generates: {
-    "src/graphql/generated/schema-uniswap.tsx": {
+    'src/graphql/generated/schema-uniswap.tsx': {
       plugins: [
         'typescript',
         'typescript-operations',

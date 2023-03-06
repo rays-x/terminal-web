@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, {useEffect} from 'react';
 
 // @ts-ignore
-import { Fancybox as NativeFancybox } from "@fancyapps/ui/dist/fancybox.esm";
-import "@fancyapps/ui/dist/fancybox.css";
+import {Fancybox as NativeFancybox} from '@fancyapps/ui/dist/fancybox.esm';
+import '@fancyapps/ui/dist/fancybox.css';
 
 function Fancybox(props: { delegate?: any; options?: any; children?: any }) {
-  const delegate = props.delegate || "[data-fancybox]";
+  const delegate = props.delegate || '[data-fancybox]';
 
   useEffect(() => {
     const opts = props.options || {};

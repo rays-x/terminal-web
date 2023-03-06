@@ -23,8 +23,8 @@ const GridItem = styled(GridStyled.Item)`
 const Card = styled(CardStyled.Component)<{ $noPadding?: boolean }>`
   height: 100%;
   ${({$noPadding}) =>
-          $noPadding &&
-          css`
+  $noPadding &&
+  css`
             padding: 0;
           `};
 `;

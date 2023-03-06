@@ -1,5 +1,5 @@
-import { css } from 'styled-components';
-import { define } from '../../utils/types/define';
+import {css} from 'styled-components';
+import {define} from '../../utils/types/define';
 // @ts-ignore
 import vars from '../_export.module.scss';
 

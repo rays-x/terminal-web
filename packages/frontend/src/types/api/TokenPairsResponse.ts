@@ -16,7 +16,7 @@ interface Platform {
   id: string;
   chainId: number;
   cmc: number;
-  dexerTxHashFormat?: string
+  dexerTxHashFormat?: string;
 }
 
 interface Quote {

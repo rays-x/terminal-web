@@ -14,7 +14,6 @@ import {
   Token
 } from '../../../components/_old2/Table';
 import {PrototypePair, TableData} from '../types';
-import useWebSocket from 'react-use-websocket';
 import millify from 'millify';
 import {toFixedToken} from '../../../utils/diff';
 import {RowText} from '../../../components/_old2/Table/RowText/RowText';
@@ -26,10 +25,6 @@ import {JsonPrimitive} from 'react-use-websocket/dist/lib/types';
 import {useCmcSocket} from '../../../store/cmcSocket';
 import {Loader} from '../../../components/_old/ui/Loader/Loader';
 import SearchIcon from '../../../assets/icons/new/SearchIcon';
-import {
-  AnimatedGradientButton
-} from '../../../components/_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton';
-import {NavigationStyled} from '../../../components/_old/ui/Navigation/Navigation-styled';
 import {NetworkSelect} from '../../../components/_old2/NetworkSelect';
 
 enum Show {
@@ -85,7 +80,7 @@ const TokenList = React.memo(() => {
       withCredentials: false
     });
     React.useEffect(() => {
-      if (!data) {
+      if(!data) {
         return;
       }
       const tokens = data.tokens.map((token: PrototypePair) => {
@@ -106,7 +101,7 @@ const TokenList = React.memo(() => {
           platforms: token.platforms
         };
       });
-      if (tokens.length) {
+      if(tokens.length) {
         sendMessage({
           method: 'subscribe',
           id: 'price',
@@ -122,20 +117,20 @@ const TokenList = React.memo(() => {
       });
     }, [data]);
     React.useEffect(() => {
-      if (!lastMessage) {
+      if(!lastMessage) {
         return;
       }
       const {id, d} = lastMessage;
-      switch (id) {
+      switch(id) {
         case 'price': {
           const {cr} = d;
           setTableData(prev => {
             const tokenIndex = prev.tokens.findIndex(t => t.cmcId === cr.id);
-            if (tokenIndex === -1) {
+            if(tokenIndex === -1) {
               return prev;
             }
             Object.keys(cr).forEach(key => {
-              switch (key) {
+              switch(key) {
                 case 'p': {
                   prev.tokens[tokenIndex]['price'] = cr.p;
                   break;
@@ -189,7 +184,7 @@ const TokenList = React.memo(() => {
       isSorted: sortBy === column,
       sortDescending,
       onSort: () => {
-        if (sortBy === column) {
+        if(sortBy === column) {
           setSortDescending((sortDescending) => !sortDescending);
         } else {
           setSortBy(column);
@@ -290,17 +285,17 @@ const TokenList = React.memo(() => {
                             <RowText>{valueOrDash(millify(token.circulatingSupply))}</RowText>
                             <RowText>{valueOrDash(millify(token.marketCap))}</RowText>
                             {(() => {
-                              if (typeof token.price === 'number') {
+                              if(typeof token.price === 'number') {
                                 const regex = String(token.price).match(/.+\.0+[1-9]{1,2}(?<replace>.+)/);
                                 const replace = get(regex, 'groups.replace');
-                                if (replace) {
+                                if(replace) {
                                   token.price = String(token.price).replace(replace, '');
                                 } else {
                                   token.price = toFixedToken(Number(token.price), 2);
                                 }
                               }
                               const zeros = get(String(token.price).match(/.0+/), 0, []).length - 2;
-                              if (zeros > 1) {
+                              if(zeros > 1) {
                                 return (
                                   <RowText
                                     className={s.TokenListPage__tablePrice}

@@ -1,10 +1,6 @@
 import React, {useMemo} from 'react';
-import {XAxis, YAxis, CartesianGrid, XAxisProps, YAxisProps} from 'recharts';
-import {
-  chooseNumeralFormat,
-  formatNumeral,
-  NumeralFormatType
-} from '../../../../../../utils/numbers';
+import {CartesianGrid, XAxis, XAxisProps, YAxis, YAxisProps} from 'recharts';
+import {chooseNumeralFormat, formatNumeral, NumeralFormatType} from '../../../../../../utils/numbers';
 
 export interface AxesProps {
   data?: any[];
@@ -24,7 +20,7 @@ export const Axes = ({
                        yAxisProps
                      }: AxesProps = {}) => {
   const maxDataValue = useMemo(() => {
-    if (!data?.length) return 0;
+    if(!data?.length) return 0;
     const valueKeys = Array.isArray(dataValueKey)
       ? dataValueKey
       : [dataValueKey];

@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { colors, radius, spacing } from '../../../../presets/base';
+import {colors, radius, spacing} from '../../../../presets/base';
 
 export const Component = styled.div`
   background: ${colors.background['card']};

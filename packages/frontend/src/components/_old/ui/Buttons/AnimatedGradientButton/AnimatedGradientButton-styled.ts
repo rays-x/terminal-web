@@ -25,23 +25,23 @@ export const Component = styled.button<GradientButtonComponent>`
   cursor: pointer;
   background: transparent;
   ${({width}) =>
-          width &&
-          css`
+  width &&
+  css`
             width: ${typeof width === 'number' ? `${width}px` : width};
           `}
   ${({height}) =>
-          height &&
-          css`
+  height &&
+  css`
             height: ${height}px;
           `}
   ${({fullWidth}) =>
-          fullWidth &&
-          css`
+  fullWidth &&
+  css`
             width: inherit;
           `}
   ${({disabled}) =>
-          disabled &&
-          css`
+  disabled &&
+  css`
             pointer-events: none;
           `}
 `;

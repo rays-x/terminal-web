@@ -5,9 +5,7 @@ import {Loader} from '../../../../../components/_old/ui/Loader/Loader';
 import Helmet from '../../../../../components/Helmet';
 import {JsonValue} from 'react-use-websocket/src/lib/types';
 import {useCmcTokenSocket} from '../../../../../store/cmcTokenSocket';
-import TradingView, {
-  ResolutionString
-} from '../../../../../../public/charting_library/charting_library';
+import TradingView, {ResolutionString} from '../../../../../../public/charting_library/charting_library';
 import {ChartComponentProps} from '../types';
 
 export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
@@ -34,9 +32,9 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
   const DataFeeds = React.useCallback(() => {
     return {
       sendRequest(datafeedUrl, urlPath, params) {
-        if (params !== undefined) {
+        if(params !== undefined) {
           const paramKeys = Object.keys(params);
-          if (paramKeys.length !== 0) {
+          if(paramKeys.length !== 0) {
             urlPath += '?';
           }
           urlPath += paramKeys.map((key) => {
@@ -44,8 +42,8 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
           }).join('&');
         }
         return fetch(`${datafeedUrl}/${urlPath}`)
-          .then((response) => response.text())
-          .then((responseTest) => JSON.parse(responseTest));
+        .then((response) => response.text())
+        .then((responseTest) => JSON.parse(responseTest));
       },
       onReady: callback => {
         setTimeout(() => callback({
@@ -77,11 +75,11 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
           'reverse-order': pair.reverseOrder,
           usd: false
         };
-        if ((new Date().getTime() - (periodParams.to * 1000)) > 0) {
+        if((new Date().getTime() - (periodParams.to * 1000)) > 0) {
           requestParams['to'] = (periodParams.to * 1000);
         }
         requestParams['from'] = periodParams.from * 1000;
-        switch (resolution) {
+        switch(resolution) {
           case '1': {
             requestParams['type'] = '1m';
             break;
@@ -96,7 +94,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
             break;
           }
           default: {
-            if (isNaN(Number(resolution))) {
+            if(isNaN(Number(resolution))) {
               requestParams['type'] = '1d';
             } else {
               requestParams['type'] = '1h';
@@ -106,84 +104,84 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         }
         new Promise((resolve, reject) => {
           this.sendRequest(`${import.meta.env.VITE_BACKEND_PROXY_URL}/kline/v3/k-line/candles/1`, symbolInfo.ticker, requestParams)
-            .then((_response) => {
-              const response = {
-                s: _response.data.length ? 'ok' : 'no_data',
-                ..._response.data.reduce((prev, {
-                  time,
-                  open,
-                  high,
-                  low,
-                  close,
-                  volume
-                }) => {
-                  prev['c'].push(close);
-                  prev['h'].push(high);
-                  prev['l'].push(low);
-                  prev['o'].push(open);
-                  prev['t'].push(time / 1000);
-                  prev['v'].push(volume);
-                  return prev;
-                }, {
-                  c: [],
-                  h: [],
-                  l: [],
-                  o: [],
-                  t: [],
-                  v: []
-                })
-              };
-              if (response.s === 'no_data' && !requestParams['to']) {
-                const intervalKeys = Object.keys(intervals);
-                const findCurrentIntervalIndex = intervalKeys.indexOf(defaultInterval);
-                if (findCurrentIntervalIndex + 1 === intervalKeys.length) {
-                  return;
-                }
-                setDefaultInterval(intervalKeys[findCurrentIntervalIndex + 1]);
-              }
-              if (response.s !== 'ok' && response.s !== 'no_data') {
-                reject(response.errmsg);
+          .then((_response) => {
+            const response = {
+              s: _response.data.length ? 'ok' : 'no_data',
+              ..._response.data.reduce((prev, {
+                time,
+                open,
+                high,
+                low,
+                close,
+                volume
+              }) => {
+                prev['c'].push(close);
+                prev['h'].push(high);
+                prev['l'].push(low);
+                prev['o'].push(open);
+                prev['t'].push(time / 1000);
+                prev['v'].push(volume);
+                return prev;
+              }, {
+                c: [],
+                h: [],
+                l: [],
+                o: [],
+                t: [],
+                v: []
+              })
+            };
+            if(response.s === 'no_data' && !requestParams['to']) {
+              const intervalKeys = Object.keys(intervals);
+              const findCurrentIntervalIndex = intervalKeys.indexOf(defaultInterval);
+              if(findCurrentIntervalIndex + 1 === intervalKeys.length) {
                 return;
               }
-              const bars = [];
-              const meta = {
-                noData: false
-              };
-              if (response.s === 'no_data') {
-                meta.noData = true;
-                meta['nextTime'] = response.nextTime;
-              } else {
-                const volumePresent = response.v !== undefined;
-                const ohlPresent = response.o !== undefined;
-                for (let i = 0; i < response.t.length; ++i) {
-                  const barValue = {
-                    time: response.t[i] * 1000,
-                    close: parseFloat(response.c[i]),
-                    open: parseFloat(response.c[i]),
-                    high: parseFloat(response.c[i]),
-                    low: parseFloat(response.c[i])
-                  };
-                  if (ohlPresent) {
-                    barValue.open = parseFloat(response.o[i]);
-                    barValue.high = parseFloat(response.h[i]);
-                    barValue.low = parseFloat(response.l[i]);
-                  }
-                  if (volumePresent) {
-                    barValue['volume'] = parseFloat(response.v[i]);
-                  }
-                  bars.push(barValue);
+              setDefaultInterval(intervalKeys[findCurrentIntervalIndex + 1]);
+            }
+            if(response.s !== 'ok' && response.s !== 'no_data') {
+              reject(response.errmsg);
+              return;
+            }
+            const bars = [];
+            const meta = {
+              noData: false
+            };
+            if(response.s === 'no_data') {
+              meta.noData = true;
+              meta['nextTime'] = response.nextTime;
+            } else {
+              const volumePresent = response.v !== undefined;
+              const ohlPresent = response.o !== undefined;
+              for(let i = 0; i < response.t.length; ++i) {
+                const barValue = {
+                  time: response.t[i] * 1000,
+                  close: parseFloat(response.c[i]),
+                  open: parseFloat(response.c[i]),
+                  high: parseFloat(response.c[i]),
+                  low: parseFloat(response.c[i])
+                };
+                if(ohlPresent) {
+                  barValue.open = parseFloat(response.o[i]);
+                  barValue.high = parseFloat(response.h[i]);
+                  barValue.low = parseFloat(response.l[i]);
                 }
+                if(volumePresent) {
+                  barValue['volume'] = parseFloat(response.v[i]);
+                }
+                bars.push(barValue);
               }
-              resolve({
-                bars: bars,
-                meta: meta
-              });
-            })
-            .catch((reason) => {
-              const reasonString = `${reason}`;
-              console.warn(`HistoryProvider: getBars() failed, error=${reasonString}`);
-              reject(reasonString);
+            }
+            resolve({
+              bars: bars,
+              meta: meta
             });
+          })
+          .catch((reason) => {
+            const reasonString = `${reason}`;
+            console.warn(`HistoryProvider: getBars() failed, error=${reasonString}`);
+            reject(reasonString);
+          });
         }).then((result: any) => {
           onResult(result.bars, result.meta);
         }).catch(onError);
@@ -195,7 +193,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
           callback: newDataCallback
         };
         let widget = self.get(name);
-        if (widget) {
+        if(widget) {
           widget.handlers.push(handler);
         } else {
           widget = {
@@ -219,11 +217,11 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         const __$0 = self.keys()[Symbol.iterator]();
         try {
           let $__6;
-          for (; !(_n = ($__6 = __$0.next()).done); _n = true) {
+          for(; !(_n = ($__6 = __$0.next()).done); _n = true) {
             const item = $__6.value;
             const me = self.get(item);
             const foundIndex = me.handlers.findIndex(elem => elem.id === id);
-            if (
+            if(
               foundIndex > -1
               && (me.handlers.splice(foundIndex, 1) && me.handlers.length === 0)) {
               sendMessage({
@@ -234,16 +232,16 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
               break;
             }
           }
-        } catch (contactCapacity) {
+        } catch(contactCapacity) {
           n = true;
           i = contactCapacity;
         } finally {
           try {
-            if (!(_n || __$0.return == null)) {
+            if(!(_n || __$0.return == null)) {
               __$0.return();
             }
           } finally {
-            if (n) {
+            if(n) {
               throw i;
             }
           }
@@ -253,33 +251,33 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
         //
       }
     };
-  }, [pair.id,defaultInterval]);
+  }, [pair.id, defaultInterval]);
   React.useEffect(() => {
-    if (!lastMessage) {
+    if(!lastMessage) {
       return;
     }
     const vars = lastMessage;
-    if (!vars.d
+    if(!vars.d
       || !String(vars.c).includes('kline')) {
       return;
     }
     const {common, reverse, usdCommon, usdReverse} = JSON.parse(vars.d);
     const args = self.get(vars.c);
-    if (!args) {
+    if(!args) {
       return;
     }
     const {isUsd, reverseOder} = args;
     let item = null;
-    if (isUsd && !reverseOder) {
+    if(isUsd && !reverseOder) {
       item = usdCommon;
     } else {
-      if (isUsd && reverseOder) {
+      if(isUsd && reverseOder) {
         item = usdReverse;
       } else {
-        if (!isUsd && reverseOder) {
+        if(!isUsd && reverseOder) {
           item = reverse;
         } else {
-          if (!(isUsd || reverseOder)) {
+          if(!(isUsd || reverseOder)) {
             item = common;
           }
         }
@@ -288,11 +286,11 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
     args.handlers.forEach(ret => ret.callback(item));
   }, [lastMessage]);
   React.useEffect(() => {
-    if (window['TradingView']) {
+    if(window['TradingView']) {
       return setLoading(false);
     }
     const checkTWLoadedIntervalId = setInterval(() => {
-      if (!window['TradingView']) {
+      if(!window['TradingView']) {
         return;
       }
       setLoading(false);
@@ -303,7 +301,7 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(({
     };
   }, []);
   React.useEffect(() => {
-      if (loading) {
+      if(loading) {
         return;
       }
       new (window['TradingView'] as typeof TradingView).widget({

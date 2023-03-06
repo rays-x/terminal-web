@@ -1,9 +1,5 @@
 import React, {FC} from 'react';
 import {cellProps} from '../../../../../../presets/helpers/table';
-import {
-  formatNumeral,
-  NUMERAL_FORMAT_FLOAT
-} from '../../../../../../utils/numbers';
 import {EMDASH} from '../../../../../../utils/data/utf';
 import {RowStyled, SideVariant} from '../../../../../../components/_old/ui/Table/components/Row/Row-styled';
 import {formatDate} from '../../../../../../hooks/useFormatDate';
@@ -16,7 +12,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
   return (
     <RowStyled.Component {...row.getRowProps()}>
       {row.cells?.map((cell) => {
-        if (cell.column.id === 'date') {
+        if(cell.column.id === 'date') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {formatDate(cell.value, 'yyyy-MM-dd HH:mm:ss')}
@@ -24,7 +20,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'side') {
+        if(cell.column.id === 'side') {
           return (
             <RowStyled.Side
               {...cell.getCellProps(cellProps)}
@@ -37,7 +33,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'price_usd') {
+        if(cell.column.id === 'price_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : String(cell.value).replace('-', '')}
@@ -45,7 +41,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'amount') {
+        if(cell.column.id === 'amount') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : cell.value}
@@ -53,7 +49,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'total_usd') {
+        if(cell.column.id === 'total_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '$0'].includes(cell.value) ? EMDASH : cell.value}
@@ -61,7 +57,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'maker') {
+        if(cell.column.id === 'maker') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {cell.value &&
@@ -70,7 +66,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (
+        if(
           cell.column.id === 'exchange_image'
         ) {
           return (
@@ -80,7 +76,7 @@ export const TransactionRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (
+        if(
           cell.column.id === 'explorer_link'
         ) {
           return (

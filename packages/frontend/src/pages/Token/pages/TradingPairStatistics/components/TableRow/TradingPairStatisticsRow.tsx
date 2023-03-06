@@ -1,23 +1,17 @@
 import React, {FC} from 'react';
 import {cellProps} from '../../../../../../presets/helpers/table';
-import {
-  formatNumeral,
-  NUMERAL_FORMAT_FLOAT
-} from '../../../../../../utils/numbers';
 import {EMDASH} from '../../../../../../utils/data/utf';
-import {RowStyled, SideVariant} from '../../../../../../components/_old/ui/Table/components/Row/Row-styled';
-import {formatDate} from '../../../../../../hooks/useFormatDate';
+import {RowStyled} from '../../../../../../components/_old/ui/Table/components/Row/Row-styled';
 import {ImagePreview} from '../../../../../../components/_old/ui/Image/Image';
 import EtherScanIcon from '../../../../../../assets/icons/dex/etherscan.jpg';
 import BscScanIcon from '../../../../../../assets/icons/dex/bscscan.jpg';
-import {capitalize} from 'lodash';
 
 export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
   return (
     <RowStyled.Component {...row.getRowProps()}>
       {row.cells?.map((cell) => {
 
-        if (cell.column.id === 'price_usd') {
+        if(cell.column.id === 'price_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : String(cell.value).replace('-', '')}
@@ -25,7 +19,7 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'amount') {
+        if(cell.column.id === 'amount') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '0'].includes(cell.value) ? EMDASH : cell.value}
@@ -33,7 +27,7 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'total_usd') {
+        if(cell.column.id === 'total_usd') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {[undefined, 'NaN', 'Infinity', '$0'].includes(cell.value) ? EMDASH : cell.value}
@@ -41,7 +35,7 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (cell.column.id === 'maker') {
+        if(cell.column.id === 'maker') {
           return (
             <RowStyled.Text {...cell.getCellProps(cellProps)}>
               {cell.value &&
@@ -50,7 +44,7 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (
+        if(
           cell.column.id === 'exchange_image'
         ) {
           return (
@@ -60,7 +54,7 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
           );
         }
 
-        if (
+        if(
           cell.column.id === 'explorer_link'
         ) {
           return (

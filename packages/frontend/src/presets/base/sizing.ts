@@ -1,4 +1,4 @@
-import { PT } from '../types';
+import {PT} from '../types';
 
 export const sizing: PT = {
   64: '64px',

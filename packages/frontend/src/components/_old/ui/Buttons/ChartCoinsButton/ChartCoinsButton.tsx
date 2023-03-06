@@ -1,7 +1,5 @@
 import {FC} from 'react';
-import {colors} from '../../../../../presets/base';
 import {ChartCoinButtonStyled} from './ChartCoinsButton-styled';
-import CoinPairShare from '../../../../../assets/icons/CoinPairShare';
 
 export interface ChartCoinsButtonProps {
   readonly onClick: () => void;

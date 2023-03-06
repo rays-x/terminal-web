@@ -1,7 +1,6 @@
 import React from 'react';
 import 'normalize.css/normalize.css';
 import {PageLayout} from '../../components/_old/ui/PageLayout/PageLayout';
-import {SidebarLayout} from '../../components/_old/ui/SiderLayout/SidebarLayout';
 import './table.css';
 import {TokenList} from './components';
 import {Header} from '../../components/_old2/Header';

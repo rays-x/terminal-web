@@ -1,16 +1,18 @@
-import React, {FC} from 'react';
+import React from 'react';
 import {animated, config} from 'react-spring';
 import {useSpring} from '@react-spring/web';
-import {useLocation, useNavigate} from 'react-router';
+import {useNavigate} from 'react-router';
 import {Logo} from '../PageLayout/components/logo';
 import Icons from '../../../../assets';
 // import {useStore} from '../../../../stores';
 import {
-  PageLinkIcon, SidebarLayoutStyled, SidebarLayoutStyledFooter,
-  SidebarLayoutStyledFooterLinks,
-  SidebarLayoutStyledFooterLink,
+  PageLinkIcon,
+  SidebarLayoutStyled,
+  SidebarLayoutStyledFooter,
+  SidebarLayoutStyledFooterIcon,
   SidebarLayoutStyledFooterIcons,
-  SidebarLayoutStyledFooterIcon
+  SidebarLayoutStyledFooterLink,
+  SidebarLayoutStyledFooterLinks
 } from './SidebarLayoutStyled';
 import Raxrank from '../../../../assets/icons/Raxrank';
 import Dex from '../../../../assets/icons/Dex';

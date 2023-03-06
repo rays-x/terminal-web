@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled, {css} from 'styled-components';
 
 export enum ColorVariant {
   fall = 'fall',
@@ -14,24 +14,24 @@ export interface TypographyArrowProps {
 export const Arrow = styled.div<TypographyArrowProps>`
   font-style: normal;
   font-weight: 600;
-  ${({ color }) =>
-    color === ColorVariant.rise
-      ? css`
+  ${({color}) =>
+  color === ColorVariant.rise
+    ? css`
           color: #30fd82;
         `
-      : css`
+    : css`
           color: #ff2640;
         `}
 
-  ${({ lineHeight }) =>
-    lineHeight &&
-    css`
+  ${({lineHeight}) =>
+  lineHeight &&
+  css`
       line-height: ${lineHeight}px;
     `}
   
-  ${({ fontSize }) =>
-    fontSize &&
-    css`
+  ${({fontSize}) =>
+  fontSize &&
+  css`
       font-size: ${fontSize}px;
     `}
 `;

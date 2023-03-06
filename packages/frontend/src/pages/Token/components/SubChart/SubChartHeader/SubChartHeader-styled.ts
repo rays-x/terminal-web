@@ -1,5 +1,5 @@
-import styled, { css } from 'styled-components';
-import { spacing } from '../../../../../presets/base';
+import styled, {css} from 'styled-components';
+import {spacing} from '../../../../../presets/base';
 
 export enum SubChartHeaderVariant {
   vertical = 'vertical',
@@ -14,8 +14,8 @@ const Component = styled.div<SubChartHeaderComponentProps>`
   display: flex;
   gap: ${spacing[10]};
 
-  ${({ $variant }) => {
-    switch ($variant) {
+  ${({$variant}) => {
+    switch($variant) {
       case SubChartHeaderVariant.vertical:
         return css`
           flex-direction: column;

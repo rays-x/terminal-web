@@ -1,4 +1,4 @@
-import { PT } from '../types';
+import {PT} from '../types';
 
 export const zindex: PT = {
   base: '0',

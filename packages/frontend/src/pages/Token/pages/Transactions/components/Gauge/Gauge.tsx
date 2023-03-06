@@ -57,8 +57,8 @@ export const Gauge: FC<GaugeProps> = React.memo(({status, buy, sell}) => {
       </GaugeStyled.SubTitle>
       <GaugeStyled.SubSubTitle>
         ${millify(fields.totalAmountUsd, {
-          precision: 2
-        })}
+        precision: 2
+      })}
       </GaugeStyled.SubSubTitle>
     </GaugeStyled.Wrapper>
   );

@@ -18,13 +18,13 @@ export const Component = styled.a<LinkButtonProps>`
   justify-content: center;
 
   ${({size}) => {
-    if (!size) return undefined;
-    const sizeStr = typeof size === 'string' ? size : `${size}px`;
-    return css`
+  if(!size) return undefined;
+  const sizeStr = typeof size === 'string' ? size : `${size}px`;
+  return css`
       width: ${sizeStr};
       height: ${sizeStr};
     `;
-  }}
+}}
 `;
 
 export const LinkButtonStyled = {

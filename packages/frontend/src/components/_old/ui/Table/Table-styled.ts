@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
-import { colors, gap, radius, spacing } from '../../../../presets/base';
-import { mixins } from '../../../../presets/mixins';
+import styled, {css} from 'styled-components';
+import {colors, gap, radius, spacing} from '../../../../presets/base';
+import {mixins} from '../../../../presets/mixins';
 
 const FilterGroupDefaults = styled.div`
   display: flex;
