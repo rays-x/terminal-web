@@ -1,9 +1,0 @@
-##################################
-###   bybit_perpetual config   ###
-##################################
-
-connector: bybit_perpetual
-
-bybit_perpetual_api_key:
-
-bybit_perpetual_secret_key:

@@ -1,9 +1,0 @@
-#########################
-###   bitmex config   ###
-#########################
-
-connector: bitmex
-
-bitmex_api_key:
-
-bitmex_api_secret:

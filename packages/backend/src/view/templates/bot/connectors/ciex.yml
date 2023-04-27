@@ -1,9 +1,0 @@
-#######################
-###   ciex config   ###
-#######################
-
-connector: ciex
-
-ciex_api_key:
-
-ciex_secret_key:

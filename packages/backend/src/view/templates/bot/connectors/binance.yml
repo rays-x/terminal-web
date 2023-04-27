@@ -1,9 +1,0 @@
-##########################
-###   binance config   ###
-##########################
-
-connector: binance
-
-binance_api_key:
-
-binance_api_secret:

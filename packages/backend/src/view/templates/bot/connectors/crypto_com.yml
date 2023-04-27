@@ -1,9 +1,0 @@
-#############################
-###   crypto_com config   ###
-#############################
-
-connector: crypto_com
-
-crypto_com_api_key:
-
-crypto_com_secret_key:

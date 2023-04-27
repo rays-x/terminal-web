@@ -1,9 +1,0 @@
-########################
-###   bybit config   ###
-########################
-
-connector: bybit
-
-bybit_api_key:
-
-bybit_api_secret:

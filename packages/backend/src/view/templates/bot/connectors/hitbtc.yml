@@ -1,9 +1,0 @@
-#########################
-###   hitbtc config   ###
-#########################
-
-connector: hitbtc
-
-hitbtc_api_key:
-
-hitbtc_secret_key:

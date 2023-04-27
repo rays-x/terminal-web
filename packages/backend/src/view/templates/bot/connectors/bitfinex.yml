@@ -1,9 +1,0 @@
-###########################
-###   bitfinex config   ###
-###########################
-
-connector: bitfinex
-
-bitfinex_api_key:
-
-bitfinex_secret_key:

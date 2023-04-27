@@ -1,9 +1,0 @@
-##############################
-###   btc_markets config   ###
-##############################
-
-connector: btc_markets
-
-btc_markets_api_key:
-
-btc_markets_api_secret:

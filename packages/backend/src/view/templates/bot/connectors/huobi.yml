@@ -1,9 +1,0 @@
-########################
-###   huobi config   ###
-########################
-
-connector: huobi
-
-huobi_api_key:
-
-huobi_secret_key:
