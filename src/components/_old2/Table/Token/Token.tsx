@@ -13,7 +13,7 @@ export function Token({children, icons, platforms}: {
   }[]
 }) {
   const {data} = useNetworkExchanges();
-  const platformIds = React.useMemo(() => platforms.flatMap(({platformId}) => platformId), [platforms]);
+  const platformIds = React.useMemo(() => platforms?.flatMap(({platformId}) => platformId) || [], [platforms]);
   const selectedPlatforms = React.useMemo(() => data.filter(({id}) => platformIds.includes(id)), [data, platformIds]);
   return (
     <div className={s.Token}>
