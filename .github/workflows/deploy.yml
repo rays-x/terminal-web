@@ -29,26 +29,13 @@ jobs:
         VITE_BACKEND_URL: https://stage.ray.sx/api/rest
         VITE_BACKEND_PROXY_URL: https://stage.ray.sx/api/rest/cmc/proxy
     - name: Deploy
-      uses: easingthemes/ssh-deploy@v2.2.0
-      with:
-        args: |
-          --exclude ".git/*"
-          --exclude "node_modules/*"
-          --exclude ".github/*"
-          --exclude "yarn.lock"
-          --exclude ".DS_Store"
-          --delete
-          --verbose
-        local_dir: ./build/
-        remote_dir: /var/www/terminal_stage/front/
-        ssh_private_key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-        ssh_user: deploy
-        ssh_host: ${{ env.SERVERNAME }}
-    - name: Restart Nginx
-      uses: easingthemes/ssh-deploy@v2.2.0
-      with:
-        args: |
+      uses: easingthemes/ssh-deploy@v2
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SOURCE: "dist/client/"
+        REMOTE_HOST: ${{ env.SERVERNAME }}
+        REMOTE_USER: ${{ env.SERVER_USER }}
+        TARGET: "/var/www/terminal_stage/front/"
+        ARGS: "-rltgoDzvO --delete"
+        SCRIPT_AFTER: |
           sudo systemctl restart nginx
-        ssh_private_key: ${{ secrets.SERVERNAME_SSH_PRIVATE_KEY }}
-        ssh_user: deploy
-        ssh_host: ${{ env.SERVERNAME }}
