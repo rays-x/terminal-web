@@ -30,11 +30,12 @@ jobs:
         VITE_BACKEND_PROXY_URL: https://stage.ray.sx/api/rest/cmc/proxy
     - name: Deploy
       uses: easingthemes/ssh-deploy@main
-      env:
+      with:
         SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-        SOURCE: "dist/client/"
         REMOTE_HOST: ${{ env.SERVERNAME }}
         REMOTE_USER: ${{ env.SERVER_USER }}
+      env:
+        SOURCE: "dist/client/"
         TARGET: "/var/www/terminal_stage/front/"
         ARGS: "-rltgoDzvO --delete"
         SCRIPT_AFTER: |
