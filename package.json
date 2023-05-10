@@ -10,6 +10,7 @@
     "dev:client": "vite --config vite.config.ts dev --host",
     "start": "yarn dev:client",
     "build": "rimraf dist && tsc -p tsconfig.prod.json && npm run build:client && npm run build:server && yarn docker:build && yarn docker:push",
+    "action": "rimraf dist && tsc -p tsconfig.prod.json && npm run build:client && npm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "prerender": "cross-env NODE_ENV=production yarn ts-node prerender.cts",
