@@ -1,0 +1,42 @@
+name: New release
+
+on:
+  push:
+    tags:
+      - 'v*' 
+
+env:
+  SERVERNAME: 65.108.145.32
+  SERVER_USER: deploy
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Use Node.js 
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+    - name: Install dependencies
+      run: yarn install
+    - name: Build
+      run: yarn action
+      env:
+        NODE_ENV: production
+        VITE_BACKEND_URL: https://dev.ray.sx/api/rest
+        VITE_BACKEND_PROXY_URL: https://dev.ray.sx/api/rest/cmc/proxy
+    - name: Deploy
+      uses: easingthemes/ssh-deploy@main
+      with:
+        SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+        REMOTE_HOST: ${{ env.SERVERNAME }}
+        REMOTE_USER: ${{ env.SERVER_USER }}
+      env:
+        SOURCE: "dist/client/"
+        TARGET: "/var/www/terminal/front/"
+        ARGS: "-rltgoDzvO --delete"
+        SCRIPT_AFTER: |
+          sudo systemctl restart nginx
