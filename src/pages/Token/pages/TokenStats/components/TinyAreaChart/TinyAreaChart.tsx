@@ -7,22 +7,43 @@ import {TinyAreaChartStyled} from './TinyAreaChart-styled';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
 import {useFetch} from '../../../../../../hooks';
-import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
+import { UniqStatsResponse } from './types';
+import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { gqlQuery } from './constants';
 
 export const TinyAreaChart = () => {
   const currentCoinData = React.useContext(CurrentCoinData);
 
-  const {data, loading} = useFetch<TokenTransfersResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
-    withCredentials: false
+  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
+  const toDate = useMemo(() => Date.now(), [])
+
+  const { data } = useFetch<UniqStatsResponse>({
+    url: 'https://graphql.bitquery.io/',
+    withCredentials: false,
+    method: 'POST',
+    headers: {
+      'X-Api-Key': BQ_API_KEY,
+    },
+    data: {
+      query: gqlQuery,
+      variables: {
+        limit: 20,
+        offset: 0,
+        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        token: currentCoinData?.platforms[0].address,
+        from: new Date(fromDate).toISOString(),
+        till: new Date(toDate).toISOString(),
+        dateFormat: "%Y-%m-%d"
+      }
+    }
   });
 
   const chartData = useMemo(() => {
     if(!data) {
       return [];
     }
-    return data.items.map(item => ({
-      date: item.date,
+    return data.data.ethereum.transfers.map(item => ({
+      date: new Date(item.date.date),
       transferCount: item.transferCount,
       uniqReceivers: item.uniqReceivers,
       uniqSenders: item.uniqSenders
@@ -30,9 +51,9 @@ export const TinyAreaChart = () => {
   }, [data]);
 
   const fields = chartData.reduce((prev, next) => {
-    prev['uniqReceivers'] = next['uniqReceivers'] + prev['uniqReceivers'];
-    prev['uniqSenders'] = next['uniqSenders'] + prev['uniqSenders'];
-    prev['transferCount'] = next['transferCount'] + prev['transferCount'];
+    prev['uniqReceivers'] = +next['uniqReceivers'] + +prev['uniqReceivers'];
+    prev['uniqSenders'] = +next['uniqSenders'] + +prev['uniqSenders'];
+    prev['transferCount'] = +next['transferCount'] + +prev['transferCount'];
     return prev;
   }, {
     uniqReceivers: 0,

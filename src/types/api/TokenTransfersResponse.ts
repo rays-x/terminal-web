@@ -1,18 +1,17 @@
-export interface Item {
-  id: string;
-  date: Date;
-  totalAmount: number;
-  totalAmountUsd: number;
-  medianTransferAmount: number;
-  medianTransferAmountUsd: number;
-  averageTransferAmount: number;
-  averageTransferAmountUsd: number;
-  uniqReceivers: number;
-  uniqSenders: number;
-  transferCount: number;
+export interface TokenTransfersResponse {
+  data: {
+    ethereum: {
+      transfers: Transfer[];
+    };
+  };
 }
 
-export interface TokenTransfersResponse {
-  items: Item[];
+export interface Transfer {
+  date: {
+    date: string;
+  };
+  median: number;
+  average: number;
+  sum: number;
   count: number;
 }

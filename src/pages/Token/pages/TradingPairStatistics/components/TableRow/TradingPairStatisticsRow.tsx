@@ -59,9 +59,10 @@ export const TradingPairStatisticsRow: FC<{ row }> = ({row}) => {
         ) {
           return (
             <RowStyled.Link {...cell.getCellProps(cellProps)} href={cell.value} target="_blank">
-              <ImagePreview imageSrc={cell.value.includes('ether')
+              {/* <ImagePreview imageSrc={cell.value.includes('ether')
                 ? EtherScanIcon
-                : BscScanIcon}/>
+                : BscScanIcon}/> */}
+                aboba
             </RowStyled.Link>
           );
         }

@@ -17,7 +17,6 @@ export enum SubPages {
   // Leaderboard = 'Leaderboard'
 }
 
-
 export interface Urls {
   website: string[];
   technical_doc: string[];
@@ -238,7 +237,7 @@ export interface CmcDetail {
 }
 
 export type CoinMainPage = {
-  cmc?: number
+  cmc?: number;
   circulation_supply?: number;
   daily_volume?: number;
   daily_volume_change?: number;
@@ -259,11 +258,9 @@ export type CoinMainPage = {
   platform_binance?: string;
   platform_ethereum?: string;
   platforms: {
-    id: string
-    icon?: string
-    decimals: number
-    address: string
-  }[]
+    coingecko_slug: string;
+    address: string;
+  }[];
   price_btc?: number;
   price_change_1h?: number;
   price_change_7d?: number;
@@ -278,32 +275,32 @@ export type CoinMainPage = {
 };
 
 export type TransactionType = {
-  id: string
-  date: Date
-  type: 'sell' | 'buy' | 'Add' | 'Remove' | string
-  totalValue: string
-  tokenValue0?: string
-  tokenValue0Price?: string
-  tokenValue1: string
-  maker: string
-  exchange?: string
-  tx: string
-}
+  id: string;
+  date: Date;
+  type: 'sell' | 'buy' | 'Add' | 'Remove' | string;
+  totalValue: string;
+  tokenValue0?: string;
+  tokenValue0Price?: string;
+  tokenValue1: string;
+  maker: string;
+  exchange?: string;
+  tx: string;
+};
 
 export type PoolType = {
-  pair: string,
-  icons: [string, string]
-  trades: number
-  buys: number
-  sells: number
-  traders: number
-  buyers: number
-  sellers: number
-  volume: number
-  volumeBuy: number
-  volumeSell: number
-  liquidity: number
-}
+  pair: string;
+  icons: [string, string];
+  trades: number;
+  buys: number;
+  sells: number;
+  traders: number;
+  buyers: number;
+  sellers: number;
+  volume: number;
+  volumeBuy: number;
+  volumeSell: number;
+  liquidity: number;
+};
 
 export interface Platform {
   id: number;
@@ -350,9 +347,9 @@ export interface TransactionsPairs {
 }
 
 export type TransactionsPairsResponse = {
-  ethPairs: TransactionsPairs[],
-  btcPairs: TransactionsPairs[]
-}
+  ethPairs: TransactionsPairs[];
+  btcPairs: TransactionsPairs[];
+};
 
 export interface TransactionsResponse {
   pairId: string;

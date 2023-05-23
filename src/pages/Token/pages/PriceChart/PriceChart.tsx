@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {createContext, useContext} from 'react';
 import {PriceChartStyled} from './PriceChert-styled';
 import {ChartComponent} from './chart/Chart';
 import {ChartCoinsButton} from '../../../../components/_old/ui/Buttons/ChartCoinsButton/ChartCoinsButton';
@@ -19,15 +19,7 @@ export const PriceChart: React.FC = React.memo(() => {
       return;
     }
     setPairs(data?.items.map(pair => {
-      return pair.base.id === currentCoinData.id ? {
-        ...pair,
-        reverseOrder: false
-      } : {
-        ...pair,
-        base: pair.quote,
-        quote: pair.base,
-        reverseOrder: true
-      };
+      return pair;
     }));
   }, [data]);
   return (
@@ -44,13 +36,12 @@ export const PriceChart: React.FC = React.memo(() => {
                       isSelected={pairSelected === index}
                       coinsPair={{
                         firstCoin: {
-                          label: btn.base.symbol,
                           src: btn.base.image
                         },
                         secondCoin: {
-                          label: btn.quote.symbol,
                           src: btn.quote.image
-                        }
+                        },
+                        name: btn.name
                       }}
                       onClick={() => setPairSelected(index)}
                     />

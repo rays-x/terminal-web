@@ -11,6 +11,8 @@ import {StackedAreaChartStyled} from './StackedAreaChart-styled';
 import {useFetch} from '../../../../../../hooks';
 import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
 import {avgBuy} from '../../../../../../utils/avg';
+import { bqGqlBody } from './constants';
+import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
 
 function getLineDefaults(fillColor, strokeColor) {
   return {
@@ -30,9 +32,29 @@ function getLineDefaults(fillColor, strokeColor) {
 
 export const StackedAreaChart = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
-  const {data, loading} = useFetch<TokenTransfersResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
-    withCredentials: false
+
+  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
+  const toDate = useMemo(() => Date.now(), [])
+  
+  const { data } = useFetch<TokenTransfersResponse>({
+    url: 'https://graphql.bitquery.io/',
+    withCredentials: false,
+    method: 'POST',
+    headers: {
+      'X-Api-Key': BQ_API_KEY,
+    },
+    data: {
+      query: bqGqlBody,
+      variables: {
+        limit: 20,
+        offset: 0,
+        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        token: currentCoinData?.platforms[0].address,
+      from: new Date(fromDate).toISOString(),
+        till: new Date(toDate).toISOString(),
+        dateFormat: "%Y-%m-%d",
+      },
+    }
   });
 
   const coinIndex = currentCoinData?.index?.toUpperCase();
@@ -41,22 +63,24 @@ export const StackedAreaChart = React.memo(() => {
     if(!data) {
       return [];
     }
-    return data.items.map(item => ({
-      date: item.date,
-      averageTransferAmount: item.averageTransferAmount,
-      medianTransferAmount: item.medianTransferAmount,
-      totalAmount: item.totalAmount,
-      averageTransferAmountUsd: item.averageTransferAmountUsd,
-      medianTransferAmountUsd: item.medianTransferAmountUsd,
-      totalAmountUsd: item.totalAmountUsd
-    })).map(dateMapF).reverse();
+    return data.data.ethereum.transfers?.map(item => ({
+      date: new Date(item.date.date),
+      averageTransferAmount: item.average,
+      medianTransferAmount: item.median,
+      totalAmount: item.sum,
+      averageTransferAmountUsd: item.average * +(currentCoinData?.price_usd || 0),
+      medianTransferAmountUsd: item.median * +(currentCoinData?.price_usd || 0),
+      totalAmountUsd: item.sum * +(currentCoinData?.price_usd || 0)
+    })).map(dateMapF).reverse() || [];
   }, [data]);
 
   const headerValues = useMemo(() => {
-    if(!data?.items) {
+    if(!data?.data.ethereum.transfers) {
       return [];
     }
-    const totalAmount = data.items.reduce((prev, next) => prev + next['totalAmount'], 0);
+
+    const totalAmount = data.data.ethereum.transfers.reduce((prev, next) => prev + next['sum'], 0);
+
     return [
       {
         title: 'Total Amount:',
@@ -72,9 +96,9 @@ export const StackedAreaChart = React.memo(() => {
       {
         title: 'Median Transfer Amount:',
         value: formatNumeral(
-          avgBuy(data.items.map(({medianTransferAmount, transferCount}) => ({
-            qty: transferCount,
-            price: medianTransferAmount
+          avgBuy(data.data.ethereum.transfers.map(({ median, count }) => ({
+            qty: count,
+            price: median
           }))),
           NUMERAL_FORMAT_FLOAT
         )
@@ -82,9 +106,9 @@ export const StackedAreaChart = React.memo(() => {
       {
         title: 'Average Transfer Amount:',
         value: formatNumeral(
-          avgBuy(data.items.map(({averageTransferAmount, transferCount}) => ({
-            qty: transferCount,
-            price: averageTransferAmount
+          avgBuy(data.data.ethereum.transfers.map(({ average, count }) => ({
+            qty: count,
+            price: average
           }))),
           NUMERAL_FORMAT_FLOAT
         )

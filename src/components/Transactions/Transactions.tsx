@@ -585,9 +585,6 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-bold text-[#9292ab] whitespace-nowrap">
                     Maker
                   </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-bold text-[#9292ab] whitespace-nowrap">
-                    Ex
-                  </th>
                   <th scope="col"
                       className="relative py-3.5 pl-3 pr-4 sm:pr-6 text-left text-sm font-bold text-[#9292ab] whitespace-nowrap">
                     Other
