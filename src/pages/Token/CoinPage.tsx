@@ -40,6 +40,7 @@ export const CoinPage: FC = React.memo(() => {
       fully_diluted_mc_change: data.statistics.fullyDilutedMarketCapChangePercentage24h,
       id: String(data.id),
       cmc: Number(data.cmc),
+      coingecko_slug: data.slug,
       image: data.logoURI,
       rank: String(data.statistics.rank || '') || undefined,
       index: data.symbol,

@@ -31,8 +31,13 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
   });*/
   const currentCoinData = React.useContext(CurrentCoinData);
   const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
-  const {data: _data, loading: loading} = useFetch<TokenVolumeResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/volume`,
+  const {data: _data } = useFetch<TokenVolumeResponse>({
+    url: `https://api.coingecko.com/api/v3/coins/${currentCoinData.coingecko_slug}/market_chart`,
+    params: {
+      vs_currency: 'usd',
+      days: 30,
+      interval: 'daily'
+    },
     withCredentials: false
   });
 
@@ -40,21 +45,20 @@ export const TradingVolumeChart: React.FC = React.memo(() => {
     if(!_data || !currentCoinData) {
       return;
     }
-    const items = get(_data, 'items', [])
-    .map(({date, volume}) => ({
-      date: format(new Date(date), 'yyyy-MM-dd'),
+    const items = _data.total_volumes
+    .map(([timestamp, volume]) => ({
+      date: format(new Date(timestamp), 'yyyy-MM-dd'),
       amount: volume
     }))/*.concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume})*/;
     setData(items);
   }, [currentCoinData, _data]);
 
   const chartData = React.useMemo(() => {
-    return data.reverse().map(dateMapF);
+    return data.map(dateMapF);
   }, [data]);
 
-  const totalValue = React.useMemo(() => {
-    return get(takeRight(chartData, 1), '0.amount', 0);
-  }, [chartData]);
+  const totalValue = chartData?.[chartData?.length - 1]?.amount || 0;
+
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({

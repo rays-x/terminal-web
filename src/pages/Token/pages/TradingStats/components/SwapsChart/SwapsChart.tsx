@@ -1,5 +1,5 @@
-import React from 'react';
-import {Area, AreaChart, ResponsiveContainer, Tooltip} from 'recharts';
+import React, { useMemo } from 'react';
+import {Area, AreaChart, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
 import {Gradients} from '../Gradients/Gradients';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Axes} from '../Axes/Axes';
@@ -13,7 +13,9 @@ import {SwapsChartStyled} from './SwapsChart-styled';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useFetch} from '../../../../../../hooks';
-import {TokenSwapsResponse} from '../../../../../../types/api/TokenSwapsResponse';
+import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { gqlQuery } from './constants';
+import { TradesResponse } from './types';
 
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -31,18 +33,38 @@ export const SwapsChart: React.FC = React.memo(() => {
     selectedOption: 10
   });*/
 
-  const {data, loading} = useFetch<TokenSwapsResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/swaps`,
-    withCredentials: false
+  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
+  const toDate = useMemo(() => Date.now(), [])
+
+  const { data } = useFetch<TradesResponse>({
+    url: 'https://graphql.bitquery.io/',
+    withCredentials: false,
+    method: 'POST',
+    headers: {
+      'X-Api-Key': BQ_API_KEY,
+    },
+    data: {
+      query: gqlQuery,
+      variables: {
+        from: new Date(fromDate).toISOString(),
+        till: new Date(toDate).toISOString(),
+        dateFormat: "%Y-%m-%d",
+        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        token: currentCoinData?.platforms[0].address,
+      },
+    }
   });
 
 
   const chartData = React.useMemo(() => {
-    return data?.items.map(dateMapF).reverse() ?? [];
+    return data?.data?.ethereum?.dexTrades.map((trade) => ({
+      date: trade.date.date,
+      trades: Number.parseInt(trade.trades, 10),
+    })) ?? [];
   }, [data]);
 
   const totalValue = React.useMemo(() => {
-    return data?.items.reduce((p, n) => p + n.countTxs, 0) || 0;
+    return data?.data?.ethereum?.dexTrades.reduce((p, n) => p + Number.parseInt(n.trades, 10), 0) || 0;
   }, [data]);
 
   const value = React.useMemo(() => {
@@ -77,7 +99,7 @@ export const SwapsChart: React.FC = React.memo(() => {
             {Gradients()}
             {Axes({
               data: chartData,
-              dataValueKey: 'countTxs',
+              dataValueKey: 'trades',
               yAxisProps: {
                 tickFormat: {
                   formatValue: _ => _
@@ -90,7 +112,7 @@ export const SwapsChart: React.FC = React.memo(() => {
             <Area
               name="Swaps"
               type="monotone"
-              dataKey="countTxs"
+              dataKey="trades"
               {...getLineDefaults('url(#colorful)', 'url(#colorful)')}
             />
           </AreaChart>

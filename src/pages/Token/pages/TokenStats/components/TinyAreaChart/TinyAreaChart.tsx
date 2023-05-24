@@ -39,7 +39,7 @@ export const TinyAreaChart = () => {
   });
 
   const chartData = useMemo(() => {
-    if(!data) {
+    if(!data?.data?.ethereum?.transfers) {
       return [];
     }
     return data.data.ethereum.transfers.map(item => ({

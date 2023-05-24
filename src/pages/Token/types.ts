@@ -272,6 +272,7 @@ export type CoinMainPage = {
   price_usd?: number;
   total_supply?: number;
   dateLaunched?: Date;
+  coingecko_slug: string;
 };
 
 export type TransactionType = {
@@ -380,7 +381,7 @@ export interface StatsTransfersResponse {
 export interface StatsSwapsResponse {
   date: string;
   tradeAmountUsd: number;
-  countTxs: number;
+  trades: number;
 }
 
 export interface StatsHoldersResponse {

@@ -81,8 +81,8 @@ export const Transactions: React.FC = React.memo(() => {
 
       setTxs(
         [
-          ...jsData.data.ethereum.transfers,
-          ...jsData2.data.ethereum.transfers,
+          ...(jsData.data.ethereum.transfers || []),
+          ...(jsData2.data.ethereum.transfers || []),
         ]
           .map((transfer) => ({
             id: transfer.transaction.hash, //string
