@@ -3,7 +3,6 @@ import {HeaderStyled} from '../../../../components/_old/ui/Header/Header-styled'
 import {HoldersChart} from './components/HoldersChart/HoldersChart';
 import {LiquidityChart} from './components/LiquidityChart/LiquidityChart';
 import {SwapsChart} from './components/SwapsChart/SwapsChart';
-import {TradersDistributionChart} from './components/TradersDistributionChart/TradersDistributionChart';
 import {TradesVolumeChart} from './components/TradesVolumeChart/TradesVolumeChart';
 import {TradingVolumeChart} from './components/TradingVolumeChart/TradingVolumeChart';
 import {UsersChart} from './components/UsersChart/UsersChart';
@@ -175,11 +174,6 @@ export const TradingStats = React.memo(() => {
           </TradingStatsStyled.Card>
         </TradingStatsStyled.GridItem>
 
-        <TradingStatsStyled.GridItem $colSpan={2}>
-          <TradingStatsStyled.Card>
-            <TradersDistributionChart/>
-          </TradingStatsStyled.Card>
-        </TradingStatsStyled.GridItem>
         <TradingStatsStyled.GridItem $colSpan={2}>
           <TradingStatsStyled.Card>
             <TradesVolumeChart/>

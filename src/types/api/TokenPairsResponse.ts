@@ -37,6 +37,11 @@ interface Item {
   platform: Platform;
   quote: Quote;
   name: string;
+  sellsCount: number;
+  sellersCount: number;
+  tradesCount: number;
+  buyersCount: number;
+  buysCount: number;
 }
 
 export interface TokenPairsResponse {
