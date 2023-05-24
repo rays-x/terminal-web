@@ -1,28 +1,25 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {Area, AreaChart, ResponsiveContainer, Tooltip} from 'recharts';
 import {getLineDefaults} from '../../TradingStats';
 import {Axes} from '../Axes/Axes';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Gradients} from '../Gradients/Gradients';
-import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
-import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
 import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
+import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
+import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {dateMapF, getValueChange} from '../../../../../../presets/helpers/charts';
-import {LiquidityChartStyled} from './LiquidityChart-styled';
-import {CurrentCoinData} from '../../../../CoinPage';
-import {StatsLiquidityResponse} from '../../../../types';
-import {get, takeRight} from 'lodash';
 import {useFetch} from '../../../../../../hooks';
+import {CurrentCoinData} from '../../../../CoinPage';
 import {format} from 'date-fns';
-// import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
-
+import { TokenVolumeResponse } from '../TradingVolumeChart/types';
+import { LiquidityChartStyled } from './LiquidityChart-styled';
 /*
 const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
 });*/
-
-export const LiquidityChart: React.FC = () => {
+const CMC_USD_ID = 2781;
+export const LiquidityChart: React.FC = React.memo(() => {
   /*const {
     options,
     selected: [selectedRow, setSelectedRow],
@@ -33,8 +30,13 @@ export const LiquidityChart: React.FC = () => {
   });*/
   const currentCoinData = React.useContext(CurrentCoinData);
   const [data, setData] = React.useState<{ date: string, amount: number }[]>([]);
-  const {data: _data, loading: loading} = useFetch<StatsLiquidityResponse[]>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/liquidity`,
+  const {data: _data } = useFetch<TokenVolumeResponse>({
+    url: `https://api.coingecko.com/api/v3/coins/${currentCoinData.coingecko_slug}/market_chart`,
+    params: {
+      vs_currency: 'usd',
+      days: 30,
+      interval: 'daily'
+    },
     withCredentials: false
   });
 
@@ -42,21 +44,19 @@ export const LiquidityChart: React.FC = () => {
     if(!_data || !currentCoinData) {
       return;
     }
-    const items = get(_data, 'items', [])
-    .map(({date, liquidity}) => ({
-      date: format(new Date(date), 'yyyy-MM-dd'),
-      amount: liquidity
-    }))/*.concat({date: format(new Date(), 'yyyy-MM-dd'), amount: currentCoinData.daily_volume})*/;
+    const items = _data.market_caps
+    .map(([timestamp, market_cap]) => ({
+      date: format(new Date(timestamp), 'yyyy-MM-dd'),
+      amount: market_cap
+    }))
     setData(items);
   }, [currentCoinData, _data]);
 
-  const chartData = useMemo<typeof data>(() => {
-    return data.reverse().map(dateMapF);
+  const chartData = React.useMemo(() => {
+    return data.map(dateMapF);
   }, [data]);
 
-  const totalValue = React.useMemo(() => {
-    return get(takeRight(chartData, 1), '0.amount', 0);
-  }, [chartData]);
+  const totalValue = chartData?.[chartData?.length - 1]?.amount || 0;
 
   const value = formatNumeral(
     totalValue,
@@ -66,7 +66,7 @@ export const LiquidityChart: React.FC = () => {
     })
   );
 
-  const valueChange = useMemo(() => {
+  const valueChange = React.useMemo(() => {
     return getValueChange(chartData, 'amount');
   }, [chartData]);
 
@@ -97,7 +97,10 @@ export const LiquidityChart: React.FC = () => {
         <ResponsiveContainer width="99%" height="100%" debounce={1}>
           <AreaChart data={chartData}>
             {Gradients()}
-            {Axes({data: chartData, dataValueKey: 'value'})}
+            {Axes({
+              data: chartData,
+              dataValueKey: 'amount'
+            })}
             <Tooltip content={CustomTooltip({shouldBeShortened: false})}/>
             <Area
               name="Liquidity"
@@ -110,4 +113,4 @@ export const LiquidityChart: React.FC = () => {
       </LiquidityChartStyled.Body>
     </LiquidityChartStyled.Component>
   );
-};
+});
