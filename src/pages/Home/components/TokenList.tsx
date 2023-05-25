@@ -70,7 +70,7 @@ const TokenList = React.memo(() => {
       }, {
         addQueryPrefix: true
       });
-      return `${import.meta.env.VITE_BACKEND_URL}/cmc/tokens/${params}`;
+      return `${import.meta.env.VITE_BACKEND_URL}/tokens/${params}`;
     }, [page, rowsShow, sortBy, sortDescending, search, networks]);
     const {sendMessage, lastMessage} = useCmcSocket();
     const [{data, loading}, getData] = useLazyFetch<{

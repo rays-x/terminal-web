@@ -85,3 +85,40 @@ export interface CmcPairInfo {
   data: Data;
   status: Status;
 }
+
+export interface CmcPairsResponse {
+  data: {
+    poolId: string;
+    platform: {
+      id: number;
+      name: string;
+      cryptoId: number;
+      dexerPlatformName: string;
+    };
+    baseToken: BaseToken;
+    quoteToken: QuoteToken;
+    dexerInfo: unknown;
+    priceUsd?: string;
+    volume24h?: string;
+    liquidity?: string;
+    priceChange24h?: string;
+    pairContractAddress: string;
+    updateDate: number;
+    liquidityScore?: string;
+    confidenceScore?: string;
+    isLiquidityAbnormal: number;
+  }[];
+  status: Status;
+}
+
+interface BaseToken {
+  name: string;
+  symbol: string;
+  address: string;
+}
+
+interface QuoteToken {
+  name: string;
+  symbol: string;
+  address: string;
+}

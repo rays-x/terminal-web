@@ -1,14 +1,27 @@
-interface TokenTransactionsItem {
-  time: string;
-  type: string;
-  priceUsd: string;
-  priceQuote: string;
-  amount: string;
-  totalUsd: string;
-  totalQuote: string;
-  txn: string;
+export interface TokenTransactionsResponse {
+  status: string;
+  message: string;
+  result: TokenTransactionItem[];
 }
 
-export interface TokenTransactionsResponse {
-  [k: string]: TokenTransactionsItem[];
+export interface TokenTransactionItem {
+  blockNumber: string;
+  timeStamp: string;
+  hash: string;
+  nonce: string;
+  blockHash: string;
+  from: string;
+  contractAddress: string;
+  to: string;
+  value: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenDecimal: string;
+  transactionIndex: string;
+  gas: string;
+  gasPrice: string;
+  gasUsed: string;
+  cumulativeGasUsed: string;
+  input: string;
+  confirmations: string;
 }

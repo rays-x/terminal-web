@@ -1,4 +1,4 @@
-import React, {FC} from 'react';
+import React, {FC, createContext} from 'react';
 import {Element, Link} from 'react-scroll';
 import {CoinPageStyled} from '../../Coin-styled';
 import {PriceChart} from '../../pages/PriceChart/PriceChart';

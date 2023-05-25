@@ -4,6 +4,7 @@ interface Base {
   cmc: number;
   symbol: string;
   image: string;
+  address: string;
 }
 
 interface Dex {
@@ -30,12 +31,17 @@ interface Quote {
 interface Item {
   id: string;
   base: Base;
-  cmc: string;
   address: string;
   dex: Dex;
   liquidity: string;
   platform: Platform;
   quote: Quote;
+  name: string;
+  sellsCount: number;
+  sellersCount: number;
+  tradesCount: number;
+  buyersCount: number;
+  buysCount: number;
 }
 
 export interface TokenPairsResponse {

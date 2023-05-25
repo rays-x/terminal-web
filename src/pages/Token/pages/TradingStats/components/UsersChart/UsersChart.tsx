@@ -17,6 +17,9 @@ import {get} from 'lodash';
 import {addDays} from 'date-fns';
 import {useFetch} from '../../../../../../hooks';
 import {TokenHoldersResponse} from '../../../../../../types/api/TokenHoldersResponse';
+import { UniqueReceiversResponse } from '../HoldersChart/types';
+import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { gqlQuery } from '../HoldersChart/constants';
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
   wrapperWidth: 64
@@ -32,33 +35,57 @@ export const UsersChart: React.FC = React.memo(() => {
   selectedOption: 10
 });*/
   const currentCoinData = React.useContext(CurrentCoinData);
-  const {data, loading} = useFetch<TokenHoldersResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/holders`,
-    withCredentials: false
-  });
+
+  const fromDate = useMemo(
+    () => Date.now() - 14 * 24 * 60 * 60 * 1000,
+    [],
+  );
+  const toDate = useMemo(() => Date.now(), []);
+
+  const { data } = useFetch<UniqueReceiversResponse>({
+    url: 'https://graphql.bitquery.io/',
+    withCredentials: false,
+    method: 'POST',
+    headers: {
+      'X-Api-Key': BQ_API_KEY,
+    },
+    data: {
+      query: gqlQuery,
+      variables: {
+        from: new Date(fromDate).toISOString(),
+        till: new Date(toDate).toISOString(),
+        dateFormat: '%Y-%m-%d',
+        network:
+          BqPlatformMapper[
+            currentCoinData?.platforms[0]?.coingecko_slug || ''
+          ],
+        token: currentCoinData?.platforms[0].address,
+      },
+    },
+  })
 
   const chartData = useMemo(() => {
-    const oldUsers = data?.items.reverse() ?? [];
+    const oldUsers = data?.data.ethereum.transfers ?? [];
     const newUsers = oldUsers.reduce((prev, {
-      date,
+      date: { date },
       count
     }) => {
-      const prevDate = addDays(new Date(date), -1).toISOString();
-      const foundPrevOldUsers = oldUsers.find(({date}) => date === prevDate);
+      const prevDate = addDays(new Date(date), -1).getTime();
+
+      const foundPrevOldUsers = oldUsers.find(({date: { date: d }}) => new Date(d).getTime() === prevDate);
+
       const replaceCount = foundPrevOldUsers ? count - foundPrevOldUsers.count : 0;
       return [...prev, {date, count: replaceCount}];
     }, []);
     return Array.from({length: oldUsers.length}).map((_, i) => dateMapF({
-      date: get(oldUsers, `${i}.date`, undefined),
+      date: get(oldUsers, `${i}.date.date`, undefined),
       oldUsers: get(oldUsers, `${i - 1}.count`, 0),
       newUsers: get(newUsers, `${i}.count`, 0)
     })).slice(1);
   }, [data]);
 
-  const totalValue = React.useMemo(() => {
-    const users = data?.items.reverse() ?? [];
-    return get(users, '0.count', 0);
-  }, [data]);
+  const totalValue = Number.parseInt(data?.data.ethereum.transfers[0].count || '0', 10);
+  
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({

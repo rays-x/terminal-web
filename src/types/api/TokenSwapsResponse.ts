@@ -1,7 +1,7 @@
 export interface Item {
   id: string;
   date: Date;
-  countTxs: number;
+  trades: number;
   tradeAmountUsd: number;
 }
 

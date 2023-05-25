@@ -1,49 +1,43 @@
 import React from 'react';
 import {TextInfoStyled} from './TextInfo-styled';
 import {CurrentCoinData} from '../../../../CoinPage';
-import {get} from 'lodash';
-import {differenceInDays, format} from 'date-fns';
 import {useFetch} from '../../../../../../hooks';
-import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
+import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { gqlQuery } from './constants';
+import { TransferDateStats } from './types';
 
 export const TextInfo = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData);
 
-  const {data, loading} = useFetch<TokenTransfersResponse>({
-    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/transfers`,
-    withCredentials: false
+  const { data } = useFetch<TransferDateStats>({
+    url: 'https://graphql.bitquery.io/',
+    withCredentials: false,
+    method: 'POST',
+    headers: {
+      'X-Api-Key': BQ_API_KEY,
+    },
+    data: {
+      query: gqlQuery,
+      variables: {
+        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        token: currentCoinData?.platforms[0].address,
+      },
+    }
   });
-
-  const dateTransferFirst = React.useMemo(() => {
-    if(!currentCoinData?.dateLaunched) {
-      return;
-    }
-    return format(currentCoinData.dateLaunched, 'yyyy-MM-dd');
-  }, [currentCoinData?.dateLaunched]);
-  const dateTransferLast = React.useMemo(() => {
-    const date = get(data, 'items.0.date');
-    return date ? format(new Date(date), 'yyyy-MM-dd') : undefined;
-  }, [data]);
-  const dateTransferDays = React.useMemo(() => {
-    if(!dateTransferLast || !dateTransferFirst) {
-      return;
-    }
-    return differenceInDays(new Date(dateTransferLast), new Date(dateTransferFirst));
-  }, [dateTransferLast, dateTransferFirst]);
 
   return (
     <TextInfoStyled.Component>
       <TextInfoStyled.Item>
         <div>First Transfer Date</div>
-        <div>{dateTransferFirst}</div>
+        <div>{data?.data?.ethereum?.transfers?.[0]?.minimum || 0}</div>
       </TextInfoStyled.Item>
       <TextInfoStyled.Item>
         <div>Last Transfer Date</div>
-        <div>{dateTransferLast}</div>
+        <div>{data?.data?.ethereum?.transfers?.[0]?.maximum || 0}</div>
       </TextInfoStyled.Item>
       <TextInfoStyled.Item>
         <div>Days Token transferred</div>
-        <div>{dateTransferDays}</div>
+        <div>{data?.data?.ethereum?.transfers?.[0]?.count || 0}</div>
       </TextInfoStyled.Item>
     </TextInfoStyled.Component>
   );

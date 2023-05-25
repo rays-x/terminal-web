@@ -43,33 +43,33 @@ const data = [
     wallet: mainnet,
     swapApi: 'https://api.0x.org'
   },
-  {
-    id: '63a1f86f2afa55c2295d5ba0',
-    name: 'avax',
-    label: 'AVAX Network',
-    logo_url: AVAXWalletIcon,
-    color: '#E84142',
-    wallet: avalanche,
-    swapApi: 'https://avalanche.api.0x.org'
-  },
-  {
-    id: '63a121a12afa55c2295c125b',
-    name: 'matic',
-    label: 'MATIC Network',
-    logo_url: MATICWalletIcon,
-    color: '#8247E5',
-    wallet: polygon,
-    swapApi: 'https://polygon.api.0x.org'
-  },
-  {
-    id: '63a121a12afa55c2295c125a',
-    name: 'fantom',
-    label: 'FTM Network',
-    logo_url: FantomIcon,
-    color: '#13B5EC',
-    wallet: fantom,
-    swapApi: 'https://fantom.api.0x.org'
-  }
+  // {
+  //   id: '63a1f86f2afa55c2295d5ba0',
+  //   name: 'avax',
+  //   label: 'AVAX Network',
+  //   logo_url: AVAXWalletIcon,
+  //   color: '#E84142',
+  //   wallet: avalanche,
+  //   swapApi: 'https://avalanche.api.0x.org'
+  // },
+  // {
+  //   id: '63a121a12afa55c2295c125b',
+  //   name: 'matic',
+  //   label: 'MATIC Network',
+  //   logo_url: MATICWalletIcon,
+  //   color: '#8247E5',
+  //   wallet: polygon,
+  //   swapApi: 'https://polygon.api.0x.org'
+  // },
+  // {
+  //   id: '63a121a12afa55c2295c125a',
+  //   name: 'fantom',
+  //   label: 'FTM Network',
+  //   logo_url: FantomIcon,
+  //   color: '#13B5EC',
+  //   wallet: fantom,
+  //   swapApi: 'https://fantom.api.0x.org'
+  // }
 ];
 
 const {chains, provider} = configureChains(
