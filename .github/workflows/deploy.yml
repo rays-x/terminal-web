@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  SERVERNAME: 65.108.145.32
+  SERVERNAME: 37.27.4.147
   SERVER_USER: deploy
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
         REMOTE_USER: ${{ env.SERVER_USER }}
       env:
         SOURCE: "dist/client/"
-        TARGET: "/var/www/terminal_stage/front/"
+        TARGET: "/var/www/stage.ray.sx/front/"
         ARGS: "-rltgoDzvO --delete"
         SCRIPT_AFTER: |
           sudo systemctl restart nginx
