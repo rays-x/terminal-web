@@ -33,7 +33,6 @@
   },
   "include": [
     "src/**/*",
-    "types/*",
     "server.ts",
     "prerender.cts",
     "node_modules/vite/types/*"
