@@ -238,7 +238,7 @@ export const TradingPairStatistics: React.FC = React.memo(
                                 <TableRowLink
                                   key={pool.name + i}
                                 >
-                                  <Pair icons={['', '']}>
+                                  <Pair icons={[pool.base.image, pool.quote.image]}>
                                     {pool.name}
                                   </Pair>
                                   <RowText>
