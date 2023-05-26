@@ -18,7 +18,7 @@ import {addDays} from 'date-fns';
 import {useFetch} from '../../../../../../hooks';
 import {TokenHoldersResponse} from '../../../../../../types/api/TokenHoldersResponse';
 import { UniqueReceiversResponse } from '../HoldersChart/types';
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { BQ_API_KEY } from '../../../../../../constants';
 import { gqlQuery } from '../HoldersChart/constants';
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -55,17 +55,14 @@ export const UsersChart: React.FC = React.memo(() => {
         from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
         dateFormat: '%Y-%m-%d',
-        network:
-          BqPlatformMapper[
-            currentCoinData?.platforms[0]?.coingecko_slug || ''
-          ],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
       },
     },
   })
 
   const chartData = useMemo(() => {
-    const oldUsers = data?.data.ethereum.transfers ?? [];
+    const oldUsers = data?.data?.ethereum?.transfers ?? [];
     const newUsers = oldUsers.reduce((prev, {
       date: { date },
       count
@@ -84,7 +81,7 @@ export const UsersChart: React.FC = React.memo(() => {
     })).slice(1);
   }, [data]);
 
-  const totalValue = Number.parseInt(data?.data.ethereum.transfers[0].count || '0', 10);
+  const totalValue = Number.parseInt(data?.data?.ethereum?.transfers[0].count || '0', 10);
   
   const value = formatNumeral(
     totalValue,

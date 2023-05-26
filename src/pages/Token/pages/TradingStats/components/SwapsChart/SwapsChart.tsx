@@ -13,7 +13,7 @@ import {SwapsChartStyled} from './SwapsChart-styled';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useFetch} from '../../../../../../hooks';
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { BQ_API_KEY } from '../../../../../../constants';
 import { gqlQuery } from './constants';
 import { TradesResponse } from './types';
 
@@ -49,7 +49,7 @@ export const SwapsChart: React.FC = React.memo(() => {
         from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
         dateFormat: "%Y-%m-%d",
-        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
       },
     }

@@ -25,7 +25,6 @@ import { useFetch } from '../../../../../../hooks'
 import { TokenHoldersResponse } from '../../../../../../types/api/TokenHoldersResponse'
 import {
   BQ_API_KEY,
-  BqPlatformMapper,
 } from '../../../../../../constants'
 import { gqlQuery } from './constants'
 import { UniqueReceiversResponse } from './types'
@@ -65,11 +64,7 @@ export const HoldersChart: React.FC = React.memo(() => {
         from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
         dateFormat: '%Y-%m-%d',
-        network:
-          BqPlatformMapper[
-            currentCoinData?.platforms[0]?.coingecko_slug ||
-              ''
-          ],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
       },
     },

@@ -26,7 +26,7 @@ import {
 
 const data = [
   {
-    id: '63a121a02afa55c2295c123d',
+    id: 'binance-smart-chain',
     name: 'bsc',
     label: 'BSC Network',
     logo_url: BSCWalletIcon,
@@ -35,7 +35,7 @@ const data = [
     swapApi: 'https://bsc.api.0x.org'
   },
   {
-    id: '63a121a12afa55c2295c1255',
+    id: 'ethereum',
     name: 'eth',
     label: 'ETH Network',
     logo_url: EthWalletIcon,

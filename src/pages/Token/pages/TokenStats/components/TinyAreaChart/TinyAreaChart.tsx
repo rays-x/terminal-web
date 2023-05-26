@@ -8,7 +8,7 @@ import {CurrentCoinData} from '../../../../CoinPage';
 import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
 import {useFetch} from '../../../../../../hooks';
 import { UniqStatsResponse } from './types';
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { BQ_API_KEY } from '../../../../../../constants';
 import { gqlQuery } from './constants';
 
 export const TinyAreaChart = () => {
@@ -29,7 +29,7 @@ export const TinyAreaChart = () => {
       variables: {
         limit: 20,
         offset: 0,
-        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
         from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),

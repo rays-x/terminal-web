@@ -28,7 +28,7 @@ import { toFixedToken } from '../../../../../../utils/diff'
 import { useFetch } from '../../../../../../hooks'
 import { TokenTradersResponse } from '../../../../../../types/api/TokenTradersResponse'
 import { gqlQuery } from './constants'
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants'
+import { BQ_API_KEY } from '../../../../../../constants'
 
 const borders = [1]
 
@@ -75,7 +75,7 @@ export const TradesVolumeChart: React.FC = React.memo(
               referrer: 'https://ide.bitquery.io/',
               referrerPolicy:
                 'strict-origin-when-cross-origin',
-              body: `{"query":"query ($network: EthereumNetwork!, $token: String!, $gte: Float, $lte: Float, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {\\n  ethereum(network: $network) {\\n    dexTrades(\\n      options: {limit: $limit, offset: $offset}\\n      baseCurrency: {is: $token}\\n      date: {since: $since, till: $till}\\n      tradeAmountUsd: {gteq: $gte, lteq: $lte}\\n    ) {\\n      count\\n    }\\n  }\\n}\\n","variables":"{\\n  \\"network\\": \\"${BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || '']}\\",\\n\\t\\"token\\": \\"${currentCoinData?.platforms[0].address}\\",\\n  \\"since\\": \\"${new Date(fromDate).toISOString()}\\",\\n  \\"till\\": \\"${new Date(toDate).toISOString()}\\",\\n  \\"gte\\": ${border},\\n  \\"lte\\": ${
+              body: `{"query":"query ($network: EthereumNetwork!, $token: String!, $gte: Float, $lte: Float, $since: ISO8601DateTime, $till: ISO8601DateTime, $limit: Int = 25000, $offset: Int = 0) {\\n  ethereum(network: $network) {\\n    dexTrades(\\n      options: {limit: $limit, offset: $offset}\\n      baseCurrency: {is: $token}\\n      date: {since: $since, till: $till}\\n      tradeAmountUsd: {gteq: $gte, lteq: $lte}\\n    ) {\\n      count\\n    }\\n  }\\n}\\n","variables":"{\\n  \\"network\\": \\"${currentCoinData?.platforms[0].blockchain.bqSlug}\\",\\n\\t\\"token\\": \\"${currentCoinData?.platforms[0].address}\\",\\n  \\"since\\": \\"${new Date(fromDate).toISOString()}\\",\\n  \\"till\\": \\"${new Date(toDate).toISOString()}\\",\\n  \\"gte\\": ${border},\\n  \\"lte\\": ${
                 arr[ind + 1]
               }\\n}"}`,
               method: 'POST',
@@ -85,6 +85,10 @@ export const TradesVolumeChart: React.FC = React.memo(
           )
 
           const parsed = await res.json() as TokenTradersResponse
+
+          if (!parsed?.data?.ethereum?.dexTrades) {
+            return;
+          }
 
           setData((prev) => [
             ...prev,
