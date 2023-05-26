@@ -1,39 +1,27 @@
 export interface TransactionsResponse {
-  data: Data;
-}
-
-export interface Data {
-  ethereum: Ethereum;
-}
-
-export interface Ethereum {
-  transfers: Transfer[];
-}
-
-export interface Transfer {
-  transaction: Transaction;
-  amount: number;
-  receiver: Receiver;
-  sender: Sender;
-  block: Block;
-}
-
-export interface Transaction {
-  hash: string;
-}
-
-export interface Receiver {
-  address: string;
-}
-
-export interface Sender {
-  address: string;
-}
-
-export interface Block {
-  timestamp: Timestamp;
-}
-
-export interface Timestamp {
-  unixtime: number;
+  status: string;
+  message: string;
+  result:
+    | {
+        blockNumber: string;
+        timeStamp: string;
+        hash: string;
+        nonce: string;
+        blockHash: string;
+        from: string;
+        contractAddress: string;
+        to: string;
+        value: string;
+        tokenName: string;
+        tokenSymbol: string;
+        tokenDecimal: string;
+        transactionIndex: string;
+        gas: string;
+        gasPrice: string;
+        gasUsed: string;
+        cumulativeGasUsed: string;
+        input: string;
+        confirmations: string;
+      }[]
+    | string;
 }

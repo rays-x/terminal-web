@@ -32,7 +32,7 @@ export const PriceChart: React.FC = React.memo(() => {
                 <PriceChartStyled.CoinPairs>
                   {pairs.map((btn, index) => (
                     <ChartCoinsButton
-                      key={btn.id}
+                      key={`${btn.base.address}_${btn.quote.address}_${btn.platform.id}_${btn.dex.id}`}
                       isSelected={pairSelected === index}
                       coinsPair={{
                         firstCoin: {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import pThrottle from 'p-throttle';
 import { CoinPageStyled } from '../../Coin-styled'
 import { CurrentCoinData } from '../../CoinPage'
 import { TransactionRow } from './components/TableRow/TransactionRow'
@@ -23,7 +24,7 @@ import {
 export const Transactions: React.FC = React.memo(() => {
   const currentCoinData = React.useContext(CurrentCoinData)
 
-  const [txs, setTxs] = useState([])
+  const [txs, setTxs] = useState<Record<string, string | Date>[]>([])
 
   useEffect(() => {
     const as = async () => {
@@ -34,85 +35,63 @@ export const Transactions: React.FC = React.memo(() => {
       )
 
       const { items } =
-        (await pairs.json()) as TokenPairsResponse
+        (await pairs.json()) as TokenPairsResponse;
 
-      const supportedPools = items
-        .filter(
-          (item) =>
-            item.coingeckoPoolId.split('_')[0] === 'bsc',
-        )
-        .map((item) => item.coingeckoPoolId.split('_')[1])
-      const supportedPoolsSet = new Set(supportedPools)
-
-      const responses = await Promise.all(
-        [gqlRecievingRequests, gqlSendingRequests].map(
-          async (query) =>
-            fetch('https://graphql.bitquery.io/', {
-              headers: gqlHeaders,
-              referrer: 'https://ide.bitquery.io/',
-              referrerPolicy:
-                'strict-origin-when-cross-origin',
-              method: 'POST',
-              mode: 'cors',
-              credentials: 'omit',
-              body: JSON.stringify({
-                query,
-                variables: {
-                  contracts: supportedPools.slice(0, 1),
-                  limit: 20,
-                  network: 'bsc',
-                  baseCurrency:
-                    currentCoinData?.platforms.find(
-                      (v) =>
-                        v.coingecko_slug ===
-                        'binance-smart-chain',
-                    )?.address,
-                },
-              }),
-            }),
+      const throttledFunc = pThrottle({ limit: 1, interval: 5000 })(
+        async (explorerAddr: string, contractAddress: string, address: string) => fetch(
+          `${explorerAddr}?module=account&action=tokentx&contractaddress=${contractAddress}&address=${address}&page=1&offset=10&sort=desc`,
         ),
-      )
+      );
 
-      const [jsData, jsData2] = await Promise.all(
-          responses.map(
-            async (res): Promise<TransactionsResponse> => res.json()
+      await Promise.all(
+        items.map(async (pair) => {
+          const [network, address] =
+            pair.coingeckoPoolId.split('_');
+          const explorerAddr =
+            network === 'bsc'
+              ? 'https://api.bscscan.com/api'
+              : 'https://api.etherscan.io/api'
+
+          const contractAddress =
+            Number.parseInt(pair.base.id, 10) === Number.parseInt(currentCoinData?.id, 10)
+              ? pair.base.address
+              : pair.quote.address;
+
+          const response = await throttledFunc(explorerAddr, contractAddress, address);
+
+          const parsed =
+            await response.json() as unknown as TransactionsResponse;
+
+          const txst = (
+            (!!Number.parseInt(parsed.status, 10) &&
+              typeof parsed.result !== 'string' &&
+              parsed.result?.map((transfer) => ({
+                id: transfer.hash,
+                date: new Date(Number.parseInt(transfer.timeStamp, 10) * 1000),
+                side:
+                  transfer.from.toLowerCase() ===
+                  address.toLowerCase()
+                    ? 'Buy'
+                    : 'Sell',
+                amount: new BigNumber(
+                  transfer.value,
+                ).shiftedBy(-+transfer.tokenDecimal).toFixed(Math.min(+transfer.tokenDecimal, 4)),
+                price_usd: '1',
+                total_usd: '1',
+                exchange_image: '',
+                explorer_link:
+                  network === 'bsc'
+                    ? `https://bscscan.com/tx/${transfer.hash}`
+                    : `https://etherscan.com/tx/${transfer.hash}`,
+              }))) ||
+            []
           )
-        )
 
-      setTxs(
-        [
-          ...(jsData.data.ethereum.transfers || []),
-          ...(jsData2.data.ethereum.transfers || []),
-        ]
-          .map((transfer) => ({
-            id: transfer.transaction.hash, //string
-            date: new Date(
-              Number.parseInt(
-                transfer.block.timestamp.unixtime,
-                10,
-              ) * 1000,
-            ), //Date
-            side: supportedPoolsSet.has(
-              transfer.sender.address,
-            )
-              ? 'Buy'
-              : 'Sell', //'Sell' | 'Buy' | 'Add' | 'Remove'
-            price_usd: new BigNumber(
-              currentCoinData.price_usd,
-            ).toFixed(2),
-            amount: new BigNumber(transfer.amount).toFixed(
-              2,
-            ),
-            total_usd: new BigNumber(
-              currentCoinData.price_usd,
-            )
-              .multipliedBy(transfer.amount)
-              .toFixed(2),
-            // maker: _.maker,
-            exchange_image: '',
-            explorer_link: `https://bscscan.com/tx/${transfer.transaction.hash}`,
-          }))
-          .sort((a, b) => b.date - a.date),
+          setTxs(
+            (transactions) => [...transactions, ...txst]
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          )
+        }),
       )
     }
 
@@ -128,11 +107,11 @@ export const Transactions: React.FC = React.memo(() => {
         justify: 'center',
       },
       { Header: 'Side', accessor: 'side', width: 10 },
-      {
-        Header: 'Price USD',
-        accessor: 'price_usd',
-        width: 45,
-      },
+      // {
+      //   Header: 'Price USD',
+      //   accessor: 'price_usd',
+      //   width: 45,
+      // },
       {
         Header: `Amount ${
           currentCoinData.symbol?.toUpperCase() || ''
@@ -140,11 +119,11 @@ export const Transactions: React.FC = React.memo(() => {
         accessor: 'amount',
         width: 45,
       },
-      {
-        Header: 'Total USD',
-        accessor: 'total_usd',
-        width: 45,
-      },
+      // {
+      //   Header: 'Total USD',
+      //   accessor: 'total_usd',
+      //   width: 45,
+      // },
       // {Header: 'Maker', accessor: 'maker', width: 60},
       // {Header: 'Ex', accessor: 'exchange_image', width: 10, justify: 'center'},
       {

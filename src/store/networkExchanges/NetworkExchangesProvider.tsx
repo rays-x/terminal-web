@@ -8,7 +8,7 @@ import FantomIcon from '../../assets/icons/new/FantomIcon.svg';
 
 const data = [
   {
-    id: '63a121a02afa55c2295c123d',
+    id: 'binance-smart-chain',
     name: 'bsc',
     label: 'BSC',
     logo: BSCIcon,
@@ -17,7 +17,7 @@ const data = [
     tableBackground: '#FF9D49'
   },
   {
-    id: '63a121a12afa55c2295c1255',
+    id: 'ethereum',
     name: 'eth',
     label: 'ETH',
     logo: ETHIcon,

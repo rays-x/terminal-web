@@ -1,19 +1,18 @@
-import React, { useContext } from 'react';
-import { JsonValue } from 'react-use-websocket/src/lib/types';
-import { ChartStyled } from './Chart-styled';
-import { LoaderPositions } from '../../../../../components/_old/ui/Loader/Loader-styled';
-import { Loader } from '../../../../../components/_old/ui/Loader/Loader';
-import Helmet from '../../../../../components/Helmet';
-import { useCmcTokenSocket } from '../../../../../store/cmcTokenSocket';
+import React from 'react'
+import { ChartStyled } from './Chart-styled'
+import { LoaderPositions } from '../../../../../components/_old/ui/Loader/Loader-styled'
+import { Loader } from '../../../../../components/_old/ui/Loader/Loader'
+import Helmet from '../../../../../components/Helmet'
 import TradingView, {
   ResolutionString,
-} from '../../../../../../public/charting_library/charting_library';
-import { ChartComponentProps } from '../types';
+} from '../../../../../../public/charting_library/charting_library'
+import { ChartComponentProps } from '../types'
 
-export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
-  ({ pair, height = 500 }) => {
-    const [loading, setLoading] = React.useState(true);
-    const [defaultInterval, setDefaultInterval] = React.useState<any>('60');
+export const ChartComponent: React.FC<ChartComponentProps> =
+  React.memo(({ pair, height = 500 }) => {
+    const [loading, setLoading] = React.useState(true)
+    const [defaultInterval, setDefaultInterval] =
+      React.useState<any>('1D')
     const intervals = {
       '1': { timeframe: 'minute', aggregate: '1' },
       '5': { timeframe: 'minute', aggregate: '5' },
@@ -26,26 +25,25 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
       '1D': { timeframe: 'day', aggregate: '1' },
       '1W': { timeframe: 'day', aggregate: '1' },
       '1M': { timeframe: 'day', aggregate: '1' },
-    };
-  
+    }
+
     const DataFeeds = React.useCallback(
       () => ({
         onReady: (callback) => {
           setTimeout(() =>
             callback({
-              supported_resolutions: [
-                '1D',
-              ],
+              supported_resolutions: Object.keys(intervals),
               supports_time: false,
-            })
-          );
+            }),
+          )
         },
         resolveSymbol: (symbolName, onResolve) => {
           setTimeout(() =>
             onResolve({
-              ticker: pair.cmc,
+              ticker: pair.coingeckoPoolId,
               name: pair.name,
               description: `${pair.name} - ${pair.dex.name}`,
+              exchange: pair.dex.name,
               session: '24x7',
               data_status: 'streaming',
               minmov: 1,
@@ -57,102 +55,130 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
               has_empty_bars: true,
               type: 'crypto',
               timezone: 'Etc/UTC',
-            })
-          );
+            }),
+          )
         },
-        getBars(symbolInfo, resolution, periodParams, onResult, onError) {
+        getBars(
+          symbolInfo,
+          resolution,
+          periodParams,
+          onResult,
+          onError,
+        ) {
           const fetchPair = async () => {
             try {
-              const [network, addr] = pair.coingeckoPoolId.split('_');
+              const [network, addr] =
+                pair.coingeckoPoolId.split('_')
 
-              const { aggregate, timeframe } = intervals[resolution]
+              const { aggregate, timeframe } =
+                intervals[resolution]
 
-              const res = await fetch(
-                `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${addr}/ohlcv/${timeframe}?limit=500&before_timestamp=${periodParams.to * 1000 < Date.now() ? periodParams.to * 1000: periodParams.to}&aggregate=${aggregate}`,
-              ).catch(() => undefined);
-              const body = await res?.json() || { body: { data: { attributes: {ohlcv_list : []}}}};
-
-              const response = {
-                s: body.data.attributes.ohlcv_list.length ? 'ok' : 'no_data',
-                ...body.data.attributes.ohlcv_list.sort(([lTime], [rTime]) => lTime - rTime ).reduce(
-                  (prev, [time, open, high, low, close, volume]) => {
-                    prev.c.push(close);
-                    prev.h.push(high);
-                    prev.l.push(low);
-                    prev.o.push(open);
-                    prev.t.push(time * 1000);
-                    prev.v.push(volume);
-                    return prev;
+              if (periodParams.to <= 0) {
+                return {
+                  bars: [],
+                  meta: {
+                    noData: true,
                   },
-                  {
-                    c: [],
-                    h: [],
-                    l: [],
-                    o: [],
-                    t: [],
-                    v: [],
-                  }
-                ),
-              };
-
-              if (response.s === 'no_data') {
-                const intervalKeys = Object.keys(intervals);
-                const findCurrentIntervalIndex =
-                  intervalKeys.indexOf(defaultInterval);
-                if (findCurrentIntervalIndex + 1 === intervalKeys.length) {
-                  return {};
                 }
-                setDefaultInterval(intervalKeys[findCurrentIntervalIndex + 1]);
               }
 
-              const bars = [];
-              const meta = {
-                noData: false,
-              };
-              if (response.s === 'no_data') {
-                meta.noData = true;
-                // meta.nextTime = response.nextTime;
-              } else {
-                const volumePresent = response.v !== undefined;
-                const ohlPresent = response.o !== undefined;
-                for (let i = 0; i < response.t.length; ++i) {
-                  const barValue = {
-                    time: response.t[i],
-                    close: parseFloat(response.c[i]),
-                    open: parseFloat(response.c[i]),
-                    high: parseFloat(response.c[i]),
-                    low: parseFloat(response.c[i]),
-                  };
-                  if (ohlPresent) {
-                    barValue.open = parseFloat(response.o[i]);
-                    barValue.high = parseFloat(response.h[i]);
-                    barValue.low = parseFloat(response.l[i]);
-                  }
-                  if (volumePresent) {
-                    barValue.volume = parseFloat(response.v[i]);
-                  }
-                  bars.push(barValue);
+              const res = await fetch(
+                `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${addr}/ohlcv/${timeframe}?limit=500&before_timestamp=${periodParams.to}&aggregate=${aggregate}`,
+              ).catch(() => undefined)
+              const body = (await res?.json()) || {
+                body: {
+                  data: { attributes: { ohlcv_list: [] } },
+                },
+              }
+
+              if (!body.data.attributes.ohlcv_list.length) {
+                return {
+                  bars: [],
+                  meta: {
+                    noData: true,
+                  },
                 }
+              }
+
+              const response =
+                body.data.attributes.ohlcv_list
+                  .sort(([lTime], [rTime]) => lTime - rTime)
+                  .reduce(
+                    (
+                      prev,
+                      [
+                        time,
+                        open,
+                        high,
+                        low,
+                        close,
+                        volume,
+                      ],
+                    ) => {
+                      prev.c.push(close)
+                      prev.h.push(high)
+                      prev.l.push(low)
+                      prev.o.push(open)
+                      prev.t.push(time * 1000)
+                      prev.v.push(volume)
+                      return prev
+                    },
+                    {
+                      c: [],
+                      h: [],
+                      l: [],
+                      o: [],
+                      t: [],
+                      v: [],
+                    },
+                  )
+
+              const bars = []
+
+              const volumePresent = response.v !== undefined
+              const ohlPresent = response.o !== undefined
+              for (let i = 0; i < response.t.length; ++i) {
+                const barValue = {
+                  time: response.t[i],
+                  close: parseFloat(response.c[i]),
+                  open: parseFloat(response.c[i]),
+                  high: parseFloat(response.c[i]),
+                  low: parseFloat(response.c[i]),
+                }
+                if (ohlPresent) {
+                  barValue.open = parseFloat(response.o[i])
+                  barValue.high = parseFloat(response.h[i])
+                  barValue.low = parseFloat(response.l[i])
+                }
+                if (volumePresent) {
+                  barValue.volume = parseFloat(
+                    response.v[i],
+                  )
+                }
+                bars.push(barValue)
               }
 
               return {
                 bars,
-                meta,
-              };
+                meta: {
+                  noData: false,
+                },
+              }
             } catch (err) {
-              const reasonString = `${err}`;
+              const reasonString = `${err}`
               console.warn(
-                `HistoryProvider: getBars() failed, error=${reasonString}`
-              );
-              throw new Error(reasonString);
+                `HistoryProvider: getBars() failed, error=${reasonString}`,
+              )
+              throw new Error(reasonString)
             }
-          };
+          }
 
-          fetchPair.bind(this)()
+          fetchPair
+            .bind(this)()
             .then((result: any) => {
-              onResult(result.bars, result.meta);
+              onResult(result.bars, result.meta)
             })
-            .catch(onError);
+            .catch(onError)
         },
         subscribeBars: () => {
           //
@@ -164,44 +190,47 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
           //
         },
       }),
-      [pair, defaultInterval]
-    );
+      [pair, defaultInterval],
+    )
 
     React.useEffect(() => {
       if (window.TradingView) {
-        return setLoading(false);
+        return setLoading(false)
       }
       const checkTWLoadedIntervalId = setInterval(() => {
         if (!window.TradingView) {
-          return;
+          return
         }
-        setLoading(false);
-        clearInterval(checkTWLoadedIntervalId);
-      }, 1000);
+        setLoading(false)
+        clearInterval(checkTWLoadedIntervalId)
+      }, 1000)
       return () => {
-        clearInterval(checkTWLoadedIntervalId);
-      };
-    }, []);
+        clearInterval(checkTWLoadedIntervalId)
+      }
+    }, [])
     React.useEffect(() => {
       if (loading) {
-        return;
+        return
       }
-      new (window.TradingView as typeof TradingView).widget({
-        symbol: pair.coingeckoPoolId,
-        interval: defaultInterval as unknown as ResolutionString,
-        container: 'tv_chart_container',
-        datafeed: DataFeeds(),
-        library_path: '/charting_library/charting_library/',
-        // custom_css_url: 'themed.css',
-        disabled_features: [
-          'use_localstorage_for_settings',
-          'header_symbol_search',
-          'show_object_tree',
-          'go_to_date',
-          'timeframes_toolbar',
-          'header_compare',
-        ],
-        /* overrides: {
+      new (window.TradingView as typeof TradingView).widget(
+        {
+          symbol: pair.coingeckoPoolId,
+          interval:
+            defaultInterval as unknown as ResolutionString,
+          container: 'tv_chart_container',
+          datafeed: DataFeeds(),
+          library_path:
+            '/charting_library/charting_library/',
+          // custom_css_url: 'themed.css',
+          disabled_features: [
+            'use_localstorage_for_settings',
+            'header_symbol_search',
+            'show_object_tree',
+            'go_to_date',
+            'timeframes_toolbar',
+            'header_compare',
+          ],
+          /* overrides: {
           'mainSeriesProperties.candleStyle.upColor': '#26a69a',
           'mainSeriesProperties.candleStyle.downColor': '#ef5350',
           'mainSeriesProperties.candleStyle.drawWick': true,
@@ -223,16 +252,18 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
           'mainSeriesProperties.priceAxisProperties.autoScale': true,
           'mainSeriesProperties.priceAxisProperties.log': false
         }, */
-        theme: 'Dark',
-        fullscreen: false,
-        autosize: true,
-        charts_storage_url: 'https://saveload.tradingview.com',
-        charts_storage_api_version: '1.1',
-        load_last_chart: true,
-        auto_save_delay: 5,
-        locale: 'en',
-      });
-    }, [loading, pair, defaultInterval]);
+          theme: 'Dark',
+          fullscreen: false,
+          autosize: true,
+          charts_storage_url:
+            'https://saveload.tradingview.com',
+          charts_storage_api_version: '1.1',
+          load_last_chart: true,
+          auto_save_delay: 5,
+          locale: 'en',
+        },
+      )
+    }, [loading, pair, defaultInterval])
 
     return (
       <>
@@ -258,6 +289,5 @@ export const ChartComponent: React.FC<ChartComponentProps> = React.memo(
           )}
         </ChartStyled.Component>
       </>
-    );
-  }
-);
+    )
+  })

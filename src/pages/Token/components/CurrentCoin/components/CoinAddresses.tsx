@@ -8,49 +8,34 @@ import s from '../../../../../components/_old2/Dropdown/DropdownItem.module.scss
 import copy from 'copy-to-clipboard';
 
 const addressFormat = (address: string) =>
-  `${address.slice(0, 5)}...${address.slice(-3)}`;
+  `${address.slice(0, 11)}...${address.slice(-5)}`;
 
 export const CoinAddresses: FC = () => {
   const currentCoinData = useContext(CurrentCoinData);
+
   return (
     <CoinPageStyled.CurrentCoinAddresses>
-      {currentCoinData?.platform_binance && (
-        <CoinPageStyled.CoinAddress>
+      {currentCoinData?.platforms.length && currentCoinData.platforms.map((platform) => (
+        <CoinPageStyled.CoinAddress key={platform.address + platform.blockchain.name}>
           <img
-            src={BSCImage}
+            src={platform.blockchain.image}
             style={{width: 20, height: 20}}
             alt={''}
           />
           <div>
-            <span>BSC:</span> {addressFormat(currentCoinData?.platform_binance)}
+            <a href={platform.blockchain.url} style={{ textDecoration : "none"}}>
+              <span>{platform.blockchain.name}</span>{' '}
+              {addressFormat(platform.address)}
+            </a>
           </div>
           {/*<MetaMask/>*/}
           <CoinPairShare className={s.CopyToBuffer} color={'#ffffffb3'}
                          onClick={() => {
-                           copy(currentCoinData?.platform_binance);
+                           copy(platform.address);
                          }}
           />
         </CoinPageStyled.CoinAddress>
-      )}
-      {currentCoinData?.platform_ethereum && (
-        <CoinPageStyled.CoinAddress>
-          <img
-            src={ETHImage}
-            style={{width: 20, height: 20}}
-            alt={''}
-          />
-          <div>
-            <span>ETH:</span>{' '}
-            {addressFormat(currentCoinData?.platform_ethereum)}
-          </div>
-          {/*<MetaMask/>*/}
-          <CoinPairShare className={s.CopyToBuffer} color={'#ffffffb3'}
-                         onClick={() => {
-                           copy(currentCoinData?.platform_ethereum);
-                         }}
-          />
-        </CoinPageStyled.CoinAddress>
-      )}
+      ))}
     </CoinPageStyled.CurrentCoinAddresses>
   );
 };

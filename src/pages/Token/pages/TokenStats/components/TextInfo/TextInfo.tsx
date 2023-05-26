@@ -2,7 +2,7 @@ import React from 'react';
 import {TextInfoStyled} from './TextInfo-styled';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useFetch} from '../../../../../../hooks';
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { BQ_API_KEY } from '../../../../../../constants';
 import { gqlQuery } from './constants';
 import { TransferDateStats } from './types';
 
@@ -19,7 +19,7 @@ export const TextInfo = React.memo(() => {
     data: {
       query: gqlQuery,
       variables: {
-        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
       },
     }

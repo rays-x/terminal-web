@@ -333,7 +333,7 @@ export const TradingPairStatistics: React.FC = React.memo(
                   }
                 />
               </div>
-              <TotalLiquidity liquidity={0} />
+              <TotalLiquidity liquidity={currentCoinData.fully_diluted_mc} />
             </PairPageStyled.TransactionGroup>
           </TableStyled.Component>
         </TableStyled.Wrapper>

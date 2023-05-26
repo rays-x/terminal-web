@@ -32,6 +32,10 @@ export interface Urls {
 
 export interface Statistics {
   price: number;
+  priceBtc: string;
+  priceEth: string;
+  priceBtcChangePercentage24h: number;
+  priceEthChangePercentage24h: number;
   priceChangePercentage1h: number;
   priceChangePercentage24h: number;
   priceChangePercentage7d: number;
@@ -189,7 +193,7 @@ export interface Holders {
 
 export interface Data {
   id: number;
-  cmc: number;
+  cmcSlug?: string;
   name: string;
   symbol: string;
   slug: string;
@@ -258,8 +262,13 @@ export type CoinMainPage = {
   platform_binance?: string;
   platform_ethereum?: string;
   platforms: {
-    coingecko_slug: string;
     address: string;
+    blockchain: {
+      name: string;
+      image: string;
+      url: string;
+      bqSlug: string;
+    };
   }[];
   price_btc?: number;
   price_change_1h?: number;
@@ -304,10 +313,12 @@ export type PoolType = {
 };
 
 export interface Platform {
-  id: number;
-  name: string;
-  cryptoId: number;
-  dexerPlatformName: string;
+  address: string;
+  blockchain: {
+    image: string;
+    name: string;
+    url: string;
+  };
 }
 
 export interface BaseToken {

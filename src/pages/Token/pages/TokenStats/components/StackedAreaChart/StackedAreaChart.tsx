@@ -12,7 +12,7 @@ import {useFetch} from '../../../../../../hooks';
 import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
 import {avgBuy} from '../../../../../../utils/avg';
 import { bqGqlBody } from './constants';
-import { BQ_API_KEY, BqPlatformMapper } from '../../../../../../constants';
+import { BQ_API_KEY } from '../../../../../../constants';
 
 function getLineDefaults(fillColor, strokeColor) {
   return {
@@ -48,7 +48,7 @@ export const StackedAreaChart = React.memo(() => {
       variables: {
         limit: 20,
         offset: 0,
-        network: BqPlatformMapper[currentCoinData?.platforms[0]?.coingecko_slug || ''],
+        network: currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
       from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
@@ -60,7 +60,7 @@ export const StackedAreaChart = React.memo(() => {
   const coinIndex = currentCoinData?.index?.toUpperCase();
 
   const chartData = useMemo(() => {
-    if(!data) {
+    if(!data?.data?.ethereum?.transfers) {
       return [];
     }
     return data.data.ethereum.transfers?.map(item => ({
@@ -75,7 +75,7 @@ export const StackedAreaChart = React.memo(() => {
   }, [data]);
 
   const headerValues = useMemo(() => {
-    if(!data?.data.ethereum.transfers) {
+    if(!data?.data?.ethereum?.transfers) {
       return [];
     }
 
