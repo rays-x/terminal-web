@@ -19,14 +19,8 @@ import { SubChartValue } from '../../../../components/SubChart/SubChartValue/Sub
 import { HoldersChartStyled } from './HoldersChart-styled'
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import { CurrentCoinData } from '../../../../CoinPage'
-import { get } from 'lodash'
 import { useFetch } from '../../../../../../hooks'
-import { TokenHoldersResponse } from '../../../../../../types/api/TokenHoldersResponse'
-import {
-  BQ_API_KEY,
-} from '../../../../../../constants'
-import { gqlQuery } from './constants'
-import { HoldersResponse, UniqueReceiversResponse } from './types'
+import { BaseChartResponse } from './types'
 import { getFormattedDateStr } from '../../../../../../utils/date/date'
 
 /*const [dropDownState, DropDown] = dropDown<number>({
@@ -45,7 +39,7 @@ export const HoldersChart: React.FC = React.memo(() => {
 });*/
   const currentCoinData = React.useContext(CurrentCoinData)
 
-  const { data } = useFetch<HoldersResponse>({
+  const { data } = useFetch<BaseChartResponse>({
     url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/holders`,
     withCredentials: false,
     method: 'GET',

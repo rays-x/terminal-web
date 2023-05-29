@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {Area, AreaChart, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
 import {Gradients} from '../Gradients/Gradients';
 import {CustomTooltip} from '../CustomTooltip/CustomTooltip';
 import {Axes} from '../Axes/Axes';
 import {getLineDefaults} from '../../TradingStats';
-import {dateMapF} from '../../../../../../presets/helpers/charts';
 import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
 import {SubChartHeader} from '../../../../components/SubChart/SubChartHeader/SubChartHeader';
 import {SubChartValue} from '../../../../components/SubChart/SubChartValue/SubChartValue';
@@ -13,9 +12,8 @@ import {SwapsChartStyled} from './SwapsChart-styled';
 // import {dropDown} from '../../../../../../components/_old/ui/Dropdown/DropDown';
 import {CurrentCoinData} from '../../../../CoinPage';
 import {useFetch} from '../../../../../../hooks';
-import { BQ_API_KEY } from '../../../../../../constants';
-import { gqlQuery } from './constants';
-import { TradesResponse } from './types';
+import { BaseChartResponse } from '../HoldersChart/types';
+import { getFormattedDateStr } from '../../../../../../utils/date/date';
 
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -33,38 +31,24 @@ export const SwapsChart: React.FC = React.memo(() => {
     selectedOption: 10
   });*/
 
-  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
-  const toDate = useMemo(() => Date.now(), [])
-
-  const { data } = useFetch<TradesResponse>({
-    url: 'https://graphql.bitquery.io/',
+  const { data } = useFetch<BaseChartResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/swaps`,
     withCredentials: false,
-    method: 'POST',
-    headers: {
-      'X-Api-Key': BQ_API_KEY,
-    },
-    data: {
-      query: gqlQuery,
-      variables: {
-        from: new Date(fromDate).toISOString(),
-        till: new Date(toDate).toISOString(),
-        dateFormat: "%Y-%m-%d",
-        network: currentCoinData?.platforms[0].blockchain.bqSlug,
-        token: currentCoinData?.platforms[0].address,
-      },
-    }
+    method: 'GET',
   });
 
 
   const chartData = React.useMemo(() => {
-    return data?.data?.ethereum?.dexTrades.map((trade) => ({
-      date: trade.date.date,
-      trades: Number.parseInt(trade.trades, 10),
-    })) ?? [];
+    return (
+      data?.map((point) => ({
+          date: getFormattedDateStr(new Date(point.t)),
+          trades: point.v,
+        })) ?? []
+    )
   }, [data]);
 
   const totalValue = React.useMemo(() => {
-    return data?.data?.ethereum?.dexTrades.reduce((p, n) => p + Number.parseInt(n.trades, 10), 0) || 0;
+    return data?.reduce((p, n) => p + Number.parseInt(n.v, 10), 0) || 0;
   }, [data]);
 
   const value = React.useMemo(() => {

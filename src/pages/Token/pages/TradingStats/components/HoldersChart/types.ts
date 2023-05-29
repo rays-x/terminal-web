@@ -12,4 +12,4 @@ export interface UniqueReceiversResponse {
   };
 }
 
-export type HoldersResponse = { t: number; v: number }[];
+export type BaseChartResponse = { t: number; v: number }[];
