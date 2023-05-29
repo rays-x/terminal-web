@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import {
   Area,
   AreaChart,
@@ -10,7 +10,6 @@ import { Gradients } from '../Gradients/Gradients'
 import { CustomTooltip } from '../CustomTooltip/CustomTooltip'
 import { Axes } from '../Axes/Axes'
 import { getLineDefaults } from '../../TradingStats'
-import { dateMapF } from '../../../../../../presets/helpers/charts'
 import {
   chooseNumeralFormat,
   formatNumeral,
@@ -27,7 +26,8 @@ import {
   BQ_API_KEY,
 } from '../../../../../../constants'
 import { gqlQuery } from './constants'
-import { UniqueReceiversResponse } from './types'
+import { HoldersResponse, UniqueReceiversResponse } from './types'
+import { getFormattedDateStr } from '../../../../../../utils/date/date'
 
 /*const [dropDownState, DropDown] = dropDown<number>({
   width: 100,
@@ -45,46 +45,26 @@ export const HoldersChart: React.FC = React.memo(() => {
 });*/
   const currentCoinData = React.useContext(CurrentCoinData)
 
-  const fromDate = useMemo(
-    () => Date.now() - 14 * 24 * 60 * 60 * 1000,
-    [],
-  )
-  const toDate = useMemo(() => Date.now(), [])
-
-  const { data } = useFetch<UniqueReceiversResponse>({
-    url: 'https://graphql.bitquery.io/',
+  const { data } = useFetch<HoldersResponse>({
+    url: `${import.meta.env.VITE_BACKEND_URL}/token/${currentCoinData?.id}/holders`,
     withCredentials: false,
-    method: 'POST',
-    headers: {
-      'X-Api-Key': BQ_API_KEY,
-    },
-    data: {
-      query: gqlQuery,
-      variables: {
-        from: new Date(fromDate).toISOString(),
-        till: new Date(toDate).toISOString(),
-        dateFormat: '%Y-%m-%d',
-        network: currentCoinData?.platforms[0].blockchain.bqSlug,
-        token: currentCoinData?.platforms[0].address,
-      },
-    },
+    method: 'GET',
   })
 
   const chartData = React.useMemo(() => {
     return (
-      data?.data?.ethereum.transfers
-        .map((transfer) => ({
-          date: transfer.date.date,
-          count: Number.parseInt(transfer.count, 10),
+      data?.map((point) => ({
+          date: getFormattedDateStr(new Date(point.t)),
+          count: point.v,
         })) ?? []
     )
   }, [data])
 
-  const totalValue = data?.data?.ethereum.transfers[0].count;
+  const totalValue = data?.[data?.length - 1].v;
   const value = formatNumeral(
     totalValue,
     chooseNumeralFormat({
-      value: totalValue,
+      value: totalValue?.toString() || '0',
     }),
   )
 

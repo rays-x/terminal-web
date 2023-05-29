@@ -11,3 +11,5 @@ export interface UniqueReceiversResponse {
     };
   };
 }
+
+export type HoldersResponse = { t: number; v: number }[];
