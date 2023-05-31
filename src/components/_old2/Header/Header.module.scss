@@ -22,19 +22,20 @@
   font-weight: 700;
   font-size: 15px;
   line-height: 20px;
-  color: #FFFFFF;
+  color: #ffffff;
   position: relative;
   z-index: 1;
 }
 
 .Header__navLinkText {
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .Header__navLink_active::before {
   display: block;
   content: '';
-  background: #1E1F2A;
+  background: #1e1f2a;
   border-radius: 12px;
   position: absolute;
   width: calc(100% + 32px);
@@ -84,7 +85,6 @@
     margin-bottom: 24px;
   }
 }
-
 
 @media (min-width: 1024px) {
   .Header {

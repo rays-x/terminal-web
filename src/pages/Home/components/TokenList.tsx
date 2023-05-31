@@ -193,7 +193,7 @@ const TokenList = React.memo(() => {
       }
     }), [sortBy, sortDescending]);
     return (
-      <>
+      <div className={s.TokenListPage__Container}>
         <div className={s.TokenListPage__headingContainer}>
           <h1 className={s.TokenListPage__heading}>DEX Rank</h1>
           <div className={s.TokenListPage__headingInputContainer}>
@@ -330,7 +330,7 @@ const TokenList = React.memo(() => {
           onNextPage={() => pages && pages > page && setPage((page) => page + 1)}
           onLastPage={() => pages && pages > page && setPage(pages)}
         />
-      </>
+      </div>
     );
   })
 ;

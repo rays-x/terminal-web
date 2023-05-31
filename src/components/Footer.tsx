@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from './_old2/LogoLink/logo';
 
 const FooterComponentHtml = React.memo(() => {
   return (
@@ -7,37 +8,30 @@ const FooterComponentHtml = React.memo(() => {
         <div className="footer__wrapper">
           <div className="footer__info-block">
             <div className="footer__logo">
-              <a href="/" className="logo">
-                <img src="images/content/logo.svg" alt="Logo" className="logo__img"/>
-              </a>
+              <Logo/>
             </div>
             <div className="footer__socials">
               <ul className="socials socials_footer">
                 <li className="socials__item">
                   <a href="https://twitter.com/Ray__sX" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_twitter">
-                      <use xlinkHref="images/icons.svg#twitter-icon"></use>
+                      <use xlinkHref="/images/icons.svg#twitter-icon"></use>
                     </svg>
                   </a>
                 </li>
                 <li className="socials__item">
                   <a href="https://t.me/raysx_global" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_telegram">
-                      <use xlinkHref="images/icons.svg#telegram-icon"></use>
+                      <use xlinkHref="/images/icons.svg#telegram-icon"></use>
                     </svg>
                   </a>
                 </li>
                 <li className="socials__item">
                   <a href=" https://medium.com/@raysx" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_m">
-                      <use xlinkHref="images/icons.svg#m-icon"></use>
+                      <use xlinkHref="/images/icons.svg#m-icon"></use>
                     </svg>
                   </a>
-                </li>
-                <li className="socials__dots">
-                  <div className="socials__dot"></div>
-                  <div className="socials__dot"></div>
-                  <div className="socials__dot"></div>
                 </li>
               </ul>
             </div>
@@ -49,7 +43,7 @@ const FooterComponentHtml = React.memo(() => {
                 in any way prohibit or restrict using our services via investments in RAX Token.
               </p>
             </div>
-            <div className="footer__copyright">© 2022 RaysX Foundation</div>
+            <div className="footer__copyright">© {new Date().getFullYear().toString()} RaysX Foundation</div>
           </div>
           <div className="footer__links-block">
             <ul className="footer__links">
@@ -64,7 +58,7 @@ const FooterComponentHtml = React.memo(() => {
                 </a>
               </li>
               <li className="footer__item">
-                <a href="#tokenomics" className="footer__link">
+                <a href="https://ray.sx/#tokenomics" className="footer__link">
                   Tokenomics
                 </a>
               </li>

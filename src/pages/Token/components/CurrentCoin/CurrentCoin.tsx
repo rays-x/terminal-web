@@ -8,10 +8,6 @@ import {CoinAddresses} from './components/CoinAddresses';
 import {Card} from '../../../../components/_old/ui/Card/Card';
 import {TypographyArrow} from '../../../../components/_old/ui/Typography/Typography';
 import {ColorVariant} from '../../../../components/_old/ui/Typography/Typography-styled';
-import {LinkButton} from '../../../../components/_old/ui/Buttons/LinkButton/LinkButton';
-import Star from '../../../../assets/icons/Star';
-import Share from '../../../../assets/icons/Share';
-import Bell from '../../../../assets/icons/Bell';
 import Fall from '../../../../assets/icons/fall';
 import Rise from '../../../../assets/icons/rise';
 import {CMC_ID_ETH} from '../../../../constants/coinmarketcap';
@@ -27,26 +23,17 @@ export const CurrentCoin = React.memo(() => {
           <CoinPageStyled.CurrentCoinImage src={currentCoinData?.image!}/>
           <div>{currentCoinData?.name || EMDASH}</div>
         </CoinPageStyled.CurrentCoinTitle>
-        <CoinPageStyled.CurrentCoinLinks>
-          <LinkButton>
-            <Star height={18} width={18}/>
-          </LinkButton>
-          <LinkButton>
-            <Share height={18} width={18}/>
-          </LinkButton>
-          <LinkButton>
-            <Bell height={18} width={18}/>
-          </LinkButton>
           {
             currentCoinData?.rank
               ? (
-                <CoinPageStyled.CoinRangButton>
-                  Rax Rank #{currentCoinData?.rank}
-                </CoinPageStyled.CoinRangButton>
+                <CoinPageStyled.CurrentCoinLinks>
+                  <CoinPageStyled.CoinRangButton>
+                    Rax Rank #{currentCoinData?.rank}
+                  </CoinPageStyled.CoinRangButton>
+                </CoinPageStyled.CurrentCoinLinks>
               )
               : null
           }
-        </CoinPageStyled.CurrentCoinLinks>
         <CoinLinks/>
         <CoinAddresses/>
       </CoinPageStyled.CurrentCoinNavigation>
