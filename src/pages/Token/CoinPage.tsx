@@ -44,7 +44,7 @@ export const CoinPage: FC = React.memo(() => {
       cmc: Number(data.cmc),
       coingecko_slug: data.slug,
       image: data.logoURI,
-      rank: String(data.statistics.rank || '') || undefined,
+      rank: String(data.rank || '') || undefined,
       index: data.symbol,
       link_binance: undefined,
       link_coinGecko: `https://www.coingecko.com/en/coins/${data.slug}/`,
