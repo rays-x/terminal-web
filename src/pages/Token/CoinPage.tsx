@@ -15,6 +15,8 @@ import {useLazyFetch} from '../../hooks/useFetch';
 import {useAdaptiveTriggers} from '../../hooks/useAdaptiveTrigger';
 import Swap from './components/Swap/Swap';
 import {SubPage} from './components/SubPage/SubPage';
+import FooterComponentHtml from '../../components/Footer';
+import s from './CoinPage.module.scss';
 
 
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
@@ -78,6 +80,7 @@ export const CoinPage: FC = React.memo(() => {
   return (
     <CmcTokenSocketProvider>
       <CurrentCoinData.Provider value={{...token}}>
+        <div className={s.CoinPage__Container}>
         {
           !token
             ? (
@@ -95,7 +98,9 @@ export const CoinPage: FC = React.memo(() => {
               </>
             )
         }
+        </div>
       </CurrentCoinData.Provider>
+      <FooterComponentHtml/>
     </CmcTokenSocketProvider>
   );
 });

@@ -1,3 +1,7 @@
+.TokenListPage__Container {
+  margin-bottom: 24px;
+}
+
 .TokenListPage__headingContainer {
   display: flex;
   gap: 8px;
@@ -6,14 +10,19 @@
 }
 
 .TokenListPage__headingInputContainer::before {
-  content: "";
+  content: '';
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(95.5deg, #27E65C 0.5%, #587BFF 50.22%, #B518FF 97.9%);
+  background: linear-gradient(
+    95.5deg,
+    #27e65c 0.5%,
+    #587bff 50.22%,
+    #b518ff 97.9%
+  );
   padding: 1px;
   border-radius: 12px;
-  mask: linear-gradient(95.5deg, #27E65C 0.5%, #587BFF 50.22%, #B518FF 97.9%);
+  mask: linear-gradient(95.5deg, #27e65c 0.5%, #587bff 50.22%, #b518ff 97.9%);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
@@ -27,7 +36,7 @@
   top: 2px;
   bottom: 2px;
   border-radius: 12px;
-  background: #0F1017;
+  background: #0f1017;
   z-index: 0;
 }
 
@@ -67,7 +76,7 @@
   background: transparent;
   font-family: 'Work Sans', sans-serif;
   font-style: normal;
-  color: #8E91A5;
+  color: #8e91a5;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
