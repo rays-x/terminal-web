@@ -15,21 +15,21 @@ const FooterComponentHtml = React.memo(() => {
                 <li className="socials__item">
                   <a href="https://twitter.com/Ray__sX" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_twitter">
-                      <use xlinkHref="images/icons.svg#twitter-icon"></use>
+                      <use xlinkHref="/images/icons.svg#twitter-icon"></use>
                     </svg>
                   </a>
                 </li>
                 <li className="socials__item">
                   <a href="https://t.me/raysx_global" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_telegram">
-                      <use xlinkHref="images/icons.svg#telegram-icon"></use>
+                      <use xlinkHref="/images/icons.svg#telegram-icon"></use>
                     </svg>
                   </a>
                 </li>
                 <li className="socials__item">
                   <a href=" https://medium.com/@raysx" target="_blank" className="socials__link">
                     <svg className="socials__icon socials__icon_m">
-                      <use xlinkHref="images/icons.svg#m-icon"></use>
+                      <use xlinkHref="/images/icons.svg#m-icon"></use>
                     </svg>
                   </a>
                 </li>
