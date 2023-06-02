@@ -9,7 +9,11 @@ import {
 import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json' assert { type: 'json' }
 import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json' assert { type: 'json' }
 
-import { BigNumber as EthersBN, ethers } from 'ethers'
+import {
+  BigNumberish,
+  BigNumber as EthersBN,
+  ethers,
+} from 'ethers'
 
 import BigNumber from 'bignumber.js'
 
@@ -39,9 +43,15 @@ import {
 import { ContractAddresses, NetworkParams } from './types'
 
 import { QUERY_TOKENS_UNISWAP } from '../../../../../../graphql/queries/uniswap3/tokens'
-import { TokensUniswapQuery, TokensUniswapQueryVariables } from '../../../../../../graphql/generated/schema-uniswap'
+import {
+  TokensUniswapQuery,
+  TokensUniswapQueryVariables,
+} from '../../../../../../graphql/generated/schema-uniswap'
 import { clientUniswap } from '../../../../../../graphql/clients/client-uniswap'
-import { FeeAmount, computePoolAddress } from '@uniswap/v3-sdk'
+import {
+  FeeAmount,
+  computePoolAddress,
+} from '@uniswap/v3-sdk'
 
 export default class UniswapV3ExchangeProvider
   implements ExchangeProvider
@@ -62,10 +72,30 @@ export default class UniswapV3ExchangeProvider
     this.contractAddresses = contractAddresses
   }
 
-  public async getInfo(): Promise<ExchangeInfo> {
+  public getInfo(): ExchangeInfo {
     return {
       name: 'Uniswap V3',
+      logoURI: 'https://uniswap.org/favicon.ico'
     }
+  }
+
+  public async getErc20TokenBalance(
+    tokenInfo: TokenInfo,
+    address: string,
+  ): Promise<string> {
+    const tokenContract = new ethers.Contract(
+      web3Utils.toChecksumAddress(tokenInfo.address),
+      ERC20_ABI,
+      this.provider,
+    )
+
+    const balance = (await tokenContract.balanceOf(
+      address,
+    )) as BigNumberish
+
+    return new BigNumber(balance.toString())
+      .shiftedBy(-tokenInfo.decimals)
+      .toFixed()
   }
 
   public async getAvailableTokens(): Promise<AvailableTokens> {
@@ -74,7 +104,7 @@ export default class UniswapV3ExchangeProvider
       TokensUniswapQueryVariables
     >({
       query: QUERY_TOKENS_UNISWAP,
-    });
+    })
 
     return {
       tokens: res.data.tokens.map((token) => ({
@@ -84,10 +114,10 @@ export default class UniswapV3ExchangeProvider
         address: token.id,
         decimals: Number.parseInt(token.decimals, 10),
         logoURI: `https://raw.githubusercontent.com/Uniswap/assets/master/blockchains/ethereum/assets/${web3Utils.toChecksumAddress(
-          token.id
+          token.id,
         )}/logo.png`,
       })),
-    };
+    }
   }
 
   public async estimate(

@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 import web3Utils from 'web3-utils'
@@ -34,12 +35,14 @@ import {
 } from '@0x/utils'
 import {
   AvailableTokens,
+  ExchangeProvider,
   TokenInfo,
   TransactionRequestWithRecipient,
 } from './providers/interface'
 import { TokenList } from './components/TokenList'
 import { exchangeProviders } from './providers'
 import { addressFormat } from '../../../../utils/addressFormat'
+import { TailSpin } from 'react-loader-spinner'
 
 const INIT_AMOUNT = '0.00'
 const DEBOUNCE_TIMEOUT = 1500
@@ -80,12 +83,16 @@ export const Swap = React.memo(() => {
   }, [])
   const { network } = useNetworkWallet()
   const { address } = useAccount()
+  const [balance, setBalance] =
+    useState<string>(INIT_AMOUNT)
 
   useEffect(() => {
     ;(async () => {
       if (!network?.id || !exchangeProviders[network.id]) {
         return
       }
+
+      setLoading(true)
 
       const availableTokens =
         // @ts-ignore
@@ -99,8 +106,10 @@ export const Swap = React.memo(() => {
         from: availableTokens.tokens[0],
         to: availableTokens.tokens[1],
       })
+
+      setLoading(false)
     })()
-  }, [])
+  }, [network?.id])
 
   const switchTokens = React.useCallback(() => {
     setTokens(({ from, to }) => ({
@@ -117,6 +126,18 @@ export const Swap = React.memo(() => {
     'prepare',
   )
 
+  const [loading, setLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (!tokens.from || !network?.id || !address) {
+      return
+    }
+    // @ts-ignore
+    exchangeProviders[network.id]
+      ?.getErc20TokenBalance(tokens.from, address)
+      .then((balance) => setBalance(balance))
+  }, [tokens.from?.address])
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (
@@ -129,19 +150,26 @@ export const Swap = React.memo(() => {
         return
       }
 
-      // @ts-ignore
-      exchangeProviders[network.id]
-        .estimate(tokens.from, tokens.to, amountFrom)
-        .then(({ quoteTokenAmount }) =>
-          setAmountTo(quoteTokenAmount),
-        )
+      setLoading(true)
 
-      // @ts-ignore
-      exchangeProviders[network.id]
-        ?.prepareSwap(tokens.from, amountFrom, address)
-        .then((res) => {
-          setRequest(res)
-        })
+      Promise.all([
+        // @ts-ignore
+        exchangeProviders[network.id]
+          .estimate(tokens.from, tokens.to, amountFrom)
+          .then(({ quoteTokenAmount }) =>
+            setAmountTo(quoteTokenAmount),
+          ),
+        // @ts-ignore
+        exchangeProviders[network.id]
+          ?.prepareSwap(tokens.from, amountFrom, address)
+          .then((res) => {
+            setRequest(res)
+          }),
+        // @ts-ignore
+        exchangeProviders[network.id]
+          ?.getErc20TokenBalance(tokens.from, address)
+          .then((balance) => setBalance(balance)),
+      ]).finally(() => setLoading(false))
     }, DEBOUNCE_TIMEOUT)
 
     return () => clearTimeout(delayDebounceFn)
@@ -174,7 +202,17 @@ export const Swap = React.memo(() => {
 
   const { config } = usePrepareSendTransaction({ request })
 
-  const { sendTransaction } = useSendTransaction(config)
+  const {
+    sendTransaction,
+    data: sendedTxData,
+    isError,
+  } = useSendTransaction(config)
+
+  const info = useMemo(
+    () =>
+      network && exchangeProviders[network.id]?.getInfo(),
+    [exchangeProviders, network],
+  )
 
   return (
     <SwapStyled.Container>
@@ -185,7 +223,9 @@ export const Swap = React.memo(() => {
               Powered by
             </div>
             <div className="sale__exchange_header_logo_chain">
-              {network?.label}
+              {info
+                ? <div><span>{info.name}</span><img width={14} height={14} src={info.logoURI}/></div>
+                : 'Network not supported'}
             </div>
           </div>
           <div className="sale__exchange_header_heading">
@@ -210,13 +250,15 @@ export const Swap = React.memo(() => {
           <div className="sale__exchange_body_container">
             <div className="sale__field">
               <div className="sale__field-content">
-                <div
-                  className="sale__field-select"
-                  onClick={() => setModalOpened('from')}
-                >
+                <div className="sale__field-select">
                   <div className="select">
-                    <div className="select__select">
-                      <span>{tokens.from?.symbol.toUpperCase()}</span>
+                    <div
+                      className="select__select"
+                      onClick={() => setModalOpened('from')}
+                    >
+                      <span>
+                        {tokens.from?.symbol.toUpperCase()}
+                      </span>
                       <span
                         className="select__select_arrow"
                         style={{
@@ -230,6 +272,19 @@ export const Swap = React.memo(() => {
                         {addressFormat(address, 26)}
                       </div>
                     )}
+                    <div className="select__sub_select">
+                      Balance: {balance}{' '}
+                      <span
+                        className="sale__link-info"
+                        onClick={() => {
+                          if (step === 'prepare') {
+                            setAmountFrom(balance)
+                          }
+                        }}
+                      >
+                        MAX
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="sale__input-wrapper">
@@ -247,16 +302,27 @@ export const Swap = React.memo(() => {
                 </div>
               </div>
             </div>
-            <div
-              className="sale__arrow-wrapper"
-              onClick={switchTokens}
-            >
-              <div
-                className="sale__swap_arrow"
-                style={{
-                  backgroundImage: `url(${IconSwapArrow})`,
-                }}
-              />
+            <div className="sale__arrow-wrapper">
+              {loading ? (
+                <TailSpin
+                  height="46"
+                  width="46"
+                  color="white"
+                  ariaLabel="tail-spin-loading"
+                  radius="1"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                  visible={true}
+                />
+              ) : (
+                <div
+                  className="sale__swap_arrow"
+                  onClick={switchTokens}
+                  style={{
+                    backgroundImage: `url(${IconSwapArrow})`,
+                  }}
+                />
+              )}
             </div>
             <div className="sale__field">
               <div className="sale__field-content">
@@ -266,7 +332,9 @@ export const Swap = React.memo(() => {
                 >
                   <div className="select">
                     <div className="select__select">
-                      <span>{tokens.to?.symbol.toUpperCase()}</span>
+                      <span>
+                        {tokens.to?.symbol.toUpperCase()}
+                      </span>
                       <span
                         className="select__select_arrow"
                         style={{
@@ -361,12 +429,18 @@ export const Swap = React.memo(() => {
                         selected
                         onClick={() => {
                           sendTransaction?.()
-                          setStep((step) => step === 'swap' ? 'prepare' : 'swap')
+                          setStep((step) =>
+                            step === 'swap'
+                              ? 'prepare'
+                              : 'swap',
+                          )
                         }}
                         width="100%"
                         height={51}
                       >
-                        {step === 'swap' ? 'Swap' : `Enable ${tokens.from?.symbol.toUpperCase()}`}
+                        {step === 'swap'
+                          ? 'Swap'
+                          : `Enable ${tokens.from?.symbol.toUpperCase()}`}
                       </AnimatedGradientButton>
                       {account.balanceFormatted && (
                         <span className="sale__exchange-title">

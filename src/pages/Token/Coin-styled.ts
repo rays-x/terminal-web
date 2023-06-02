@@ -8,17 +8,17 @@ export const Component = styled.div``;
 export const Group = styled.div`
   @media (min-width: 1120px) {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2fr 2fr;
     grid-template-areas: '. .';
   }
 
 
   @media (min-width: 1240px) {
-    grid-template-columns: 2.25fr 1fr;
+    grid-template-columns: 2.25fr 2fr;
   }
 
   @media (min-width: 1560px) {
-    grid-template-columns: 2.5fr 1fr;
+    grid-template-columns: 2.5fr 2fr;
   }
 
   ${mixins.isMobile(css`

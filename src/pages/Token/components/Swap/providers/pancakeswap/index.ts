@@ -44,9 +44,10 @@ import {
 } from '../../../../../../graphql/generated/schema-pancake'
 
 export default class PancakeswapExchangeProvider extends UniswapV3ExchangeProvider {
-  public async getInfo(): Promise<ExchangeInfo> {
+  public getInfo(): ExchangeInfo {
     return {
       name: 'PancakeSwap V3',
+      logoURI: 'https://pancakeswap.finance/favicon.ico',
     }
   }
 
@@ -59,7 +60,9 @@ export default class PancakeswapExchangeProvider extends UniswapV3ExchangeProvid
     })
 
     return {
-      tokens: res.data.tokens.map((token) => ({
+      tokens: res.data.tokens
+      .filter((token) => !!token.id)
+      .map((token) => ({
         id: token.id,
         name: token.name,
         symbol: token.symbol,

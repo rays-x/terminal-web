@@ -18,6 +18,7 @@ export interface EstimationResult {
 
 export interface ExchangeInfo {
   name: string;
+  logoURI: string;
 }
 
 export interface AvailableTokens {
@@ -25,7 +26,7 @@ export interface AvailableTokens {
 }
 
 export interface ExchangeProvider {
-  getInfo(): Promise<ExchangeInfo>;
+  getInfo(): ExchangeInfo;
   getAvailableTokens(): Promise<AvailableTokens>;
   estimate(
     baseToken: TokenInfo,
@@ -43,4 +44,8 @@ export interface ExchangeProvider {
     baseTokenAmount: string,
     addressFrom: string,
   ): Promise<TransactionRequestWithRecipient>;
+  getErc20TokenBalance(
+    baseTokenInfo: TokenInfo,
+    address: string,
+  ): Promise<string>;
 }
