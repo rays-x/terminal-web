@@ -6,9 +6,8 @@ import ETHImage from '../../../../../assets/icons/ETHImage.png';
 import CoinPairShare from '../../../../../assets/icons/CoinPairShare';
 import s from '../../../../../components/_old2/Dropdown/DropdownItem.module.scss';
 import copy from 'copy-to-clipboard';
+import { addressFormat } from '../../../../../utils/addressFormat';
 
-const addressFormat = (address: string) =>
-  `${address.slice(0, 11)}...${address.slice(-5)}`;
 
 export const CoinAddresses: FC = () => {
   const currentCoinData = useContext(CurrentCoinData);

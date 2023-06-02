@@ -17,6 +17,8 @@ import Swap from './components/Swap/Swap';
 import {SubPage} from './components/SubPage/SubPage';
 import FooterComponentHtml from '../../components/Footer';
 import s from './CoinPage.module.scss';
+import { ApolloProvider, useApolloClient } from '@apollo/client';
+import { clientUniswap } from '../../graphql/clients/client-uniswap';
 
 
 export const CurrentCoinData = createContext<CoinMainPage | undefined | null>(undefined);
@@ -92,7 +94,7 @@ export const CoinPage: FC = React.memo(() => {
                     <CurrentCoin/>
                     <Statistic/>
                   </CoinPageStyled.VerticalGroup>
-                  {!isMobile && <Swap/>}
+                  <ApolloProvider client={clientUniswap}><Swap/></ApolloProvider>
                 </CoinPageStyled.Group>
                 <SubPage/>
               </>

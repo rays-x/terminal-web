@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export const QUERY_TOKENS_UNISWAP = gql`
+export const QUERY_TOKENS_PANCAKESWAP = gql`
   query tokensUniswap(
     $block: Block_height
     $first: Int = 100

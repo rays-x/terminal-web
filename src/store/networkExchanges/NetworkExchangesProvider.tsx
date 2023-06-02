@@ -8,15 +8,6 @@ import FantomIcon from '../../assets/icons/new/FantomIcon.svg';
 
 const data = [
   {
-    id: 'binance-smart-chain',
-    name: 'bsc',
-    label: 'BSC',
-    logo: BSCIcon,
-    color: '#F0B90B',
-    tableColor: '#161824',
-    tableBackground: '#FF9D49'
-  },
-  {
     id: 'ethereum',
     name: 'eth',
     label: 'ETH',
@@ -24,6 +15,15 @@ const data = [
     color: '#FFFFFF',
     tableColor: '#FFFFFF',
     tableBackground: '#5A7FF2'
+  },
+  {
+    id: 'binance-smart-chain',
+    name: 'bsc',
+    label: 'BSC',
+    logo: BSCIcon,
+    color: '#F0B90B',
+    tableColor: '#161824',
+    tableBackground: '#FF9D49'
   },
   // {
   //   id: '63a1f86f2afa55c2295d5ba0',
