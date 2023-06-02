@@ -66,7 +66,12 @@
   border-radius: 12px;
   width: 40px;
   height: 18px;
-  background: linear-gradient(110deg, #27e65c 0.5%, #587bff 50.22%, #b518ff 97.9%);
+  background: linear-gradient(
+    110deg,
+    #27e65c 0.5%,
+    #587bff 50.22%,
+    #b518ff 97.9%
+  );
 }
 
 .sale__input {
@@ -276,6 +281,36 @@
   font-family: 'Work Sans', sans-serif;
   font-weight: 500;
   font-size: 12px;
+}
+
+.sale__input-retry_button {
+  cursor: pointer;
+  width: 100%;
+  height: 51px;
+  border: none;
+  background-color: #ff495f;
+  color: white;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 24px;
+  text-align: center;
+  padding: 12px;
+}
+
+.sale__input-success_button {
+  cursor: pointer;
+  width: 100%;
+  height: 51px;
+  border: none;
+  background-color: #4bb543;
+  color: white;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 24px;
+  text-align: center;
+  padding: 12px;
 }
 
 .sale__button {

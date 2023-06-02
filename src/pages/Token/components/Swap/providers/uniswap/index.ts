@@ -75,7 +75,7 @@ export default class UniswapV3ExchangeProvider
   public getInfo(): ExchangeInfo {
     return {
       name: 'Uniswap V3',
-      logoURI: 'https://uniswap.org/favicon.ico'
+      logoURI: 'https://uniswap.org/favicon.ico',
     }
   }
 
@@ -89,13 +89,24 @@ export default class UniswapV3ExchangeProvider
       this.provider,
     )
 
-    const balance = (await tokenContract.balanceOf(
-      address,
-    )) as BigNumberish
+    try {
+      const balance = (await tokenContract.balanceOf(
+        address,
+      )) as BigNumberish
 
-    return new BigNumber(balance.toString())
-      .shiftedBy(-tokenInfo.decimals)
-      .toFixed()
+      return new BigNumber(balance.toString())
+        .shiftedBy(-tokenInfo.decimals)
+        .toFixed()
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes('call revert exception')
+      ) {
+        throw new Error("Address doesn't have that token")
+      }
+
+      throw err
+    }
   }
 
   public async getAvailableTokens(): Promise<AvailableTokens> {
@@ -160,6 +171,8 @@ export default class UniswapV3ExchangeProvider
       IUniswapV3PoolABI.abi,
       this.provider,
     )
+
+    console.log({ currentPoolAddress })
 
     const quotedAmountOut =
       // @ts-ignore

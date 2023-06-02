@@ -53,7 +53,12 @@ interface TokensState {
 }
 
 export const Swap = React.memo(() => {
-  const [data, setData] = useState<AvailableTokens>()
+  const [step, setStep] = useState<number>(0)
+
+  const [loading, setLoading] = useState<boolean>(false)
+
+  const [availableTokens, setAvailableTokens] =
+    useState<AvailableTokens>()
 
   const [amountFrom, setAmountFrom] =
     useState<string>(INIT_AMOUNT)
@@ -64,14 +69,16 @@ export const Swap = React.memo(() => {
     'from' | 'to' | undefined
   >()
 
-  const [search, setSearch] = React.useState<string>('')
+  const [modalSearch, setModalSearch] =
+    React.useState<string>('')
 
+  /* TODO */
   const [swapData, setSwapData] = React.useState({
     price: undefined,
     guaranteedPrice: undefined,
   })
 
-  const [tokens, setTokens] = React.useState<TokensState>({
+  const [pair, setPair] = React.useState<TokensState>({
     from: undefined,
     to: undefined,
   })
@@ -79,8 +86,9 @@ export const Swap = React.memo(() => {
   const refModal = React.useRef(null)
   const close = React.useCallback(() => {
     setModalOpened(undefined)
-    setSearch('')
+    setModalSearch('')
   }, [])
+
   const { network } = useNetworkWallet()
   const { address } = useAccount()
   const [balance, setBalance] =
@@ -100,49 +108,48 @@ export const Swap = React.memo(() => {
           network.id
         ].getAvailableTokens()
 
-      setData(availableTokens)
+      setAvailableTokens(availableTokens)
 
-      setTokens({
+      setPair({
         from: availableTokens.tokens[0],
         to: availableTokens.tokens[1],
       })
+
+      setStep(0)
 
       setLoading(false)
     })()
   }, [network?.id])
 
   const switchTokens = React.useCallback(() => {
-    setTokens(({ from, to }) => ({
+    setPair(({ from, to }) => ({
       from: to,
       to: from,
     }))
   }, [])
 
-  const [request, setRequest] = useState<
+  const [txBody, setTxBody] = useState<
     TransactionRequestWithRecipient | undefined
   >()
 
-  const [step, setStep] = useState<'prepare' | 'swap'>(
-    'prepare',
-  )
-
-  const [loading, setLoading] = useState<boolean>(false)
-
   useEffect(() => {
-    if (!tokens.from || !network?.id || !address) {
+    if (!pair.from || !network?.id || !address) {
       return
     }
     // @ts-ignore
     exchangeProviders[network.id]
-      ?.getErc20TokenBalance(tokens.from, address)
-      .then((balance) => setBalance(balance))
-  }, [tokens.from?.address])
+      ?.getErc20TokenBalance(pair.from, address)
+      .then((balance) =>
+        setBalance(+balance ? balance : INIT_AMOUNT),
+      )
+      .catch(() => setBalance(INIT_AMOUNT))
+  }, [pair.from?.address])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (
-        !tokens.from ||
-        !tokens.to ||
+        !pair.from ||
+        !pair.to ||
         !network?.id ||
         !address ||
         !Number.parseFloat(amountFrom)
@@ -155,58 +162,73 @@ export const Swap = React.memo(() => {
       Promise.all([
         // @ts-ignore
         exchangeProviders[network.id]
-          .estimate(tokens.from, tokens.to, amountFrom)
+          .estimate(pair.from, pair.to, amountFrom)
           .then(({ quoteTokenAmount }) =>
             setAmountTo(quoteTokenAmount),
           ),
         // @ts-ignore
         exchangeProviders[network.id]
-          ?.prepareSwap(tokens.from, amountFrom, address)
+          ?.prepareSwap(pair.from, amountFrom, address)
           .then((res) => {
-            setRequest(res)
+            setTxBody(res)
           }),
         // @ts-ignore
         exchangeProviders[network.id]
-          ?.getErc20TokenBalance(tokens.from, address)
-          .then((balance) => setBalance(balance)),
+          ?.getErc20TokenBalance(pair.from, address)
+          .then((balance) =>
+            setBalance(+balance ? balance : INIT_AMOUNT),
+          )
+          .catch(() => setBalance(INIT_AMOUNT)),
       ]).finally(() => setLoading(false))
     }, DEBOUNCE_TIMEOUT)
 
     return () => clearTimeout(delayDebounceFn)
-  }, [amountFrom, tokens.from?.address, tokens.to?.address])
+  }, [amountFrom, pair.from?.address, pair.to?.address])
 
   useEffect(() => {
     if (
-      step === 'swap' &&
-      tokens.from &&
-      tokens.to &&
+      step === 1 &&
+      pair.from &&
+      pair.to &&
       address &&
       Number.parseFloat(amountFrom)
     ) {
       // @ts-ignore
       exchangeProviders[network.id]
-        ?.swap(tokens.from, tokens.to, amountFrom, address)
+        ?.swap(pair.from, pair.to, amountFrom, address)
         .then((res) => {
-          setRequest(res)
+          reset()
+          setTxBody(res)
         })
     }
   }, [step])
 
   const isInitAmount = React.useMemo(
     () =>
-      !tokens.from || !tokens.to
+      !pair.from || !pair.to
         ? true
         : amountTo === INIT_AMOUNT,
     [amountFrom, amountTo],
   )
 
-  const { config } = usePrepareSendTransaction({ request })
+  const { config } = usePrepareSendTransaction({
+    request: txBody,
+  })
 
   const {
     sendTransaction,
     data: sendedTxData,
     isError,
+    isSuccess,
+    isLoading,
+    reset,
   } = useSendTransaction(config)
+
+  useEffect(() => {
+    if (isSuccess) {
+      setStep((_step) => _step + 1)
+    }
+  }, [isSuccess, sendedTxData?.hash])
 
   const info = useMemo(
     () =>
@@ -223,9 +245,18 @@ export const Swap = React.memo(() => {
               Powered by
             </div>
             <div className="sale__exchange_header_logo_chain">
-              {info
-                ? <div><span>{info.name}</span><img width={14} height={14} src={info.logoURI}/></div>
-                : 'Network not supported'}
+              {info ? (
+                <div>
+                  <span>{info.name}</span>
+                  <img
+                    width={14}
+                    height={14}
+                    src={info.logoURI}
+                  />
+                </div>
+              ) : (
+                'Network not supported'
+              )}
             </div>
           </div>
           <div className="sale__exchange_header_heading">
@@ -257,7 +288,7 @@ export const Swap = React.memo(() => {
                       onClick={() => setModalOpened('from')}
                     >
                       <span>
-                        {tokens.from?.symbol.toUpperCase()}
+                        {pair.from?.symbol.toUpperCase()}
                       </span>
                       <span
                         className="select__select_arrow"
@@ -277,7 +308,7 @@ export const Swap = React.memo(() => {
                       <span
                         className="sale__link-info"
                         onClick={() => {
-                          if (step === 'prepare') {
+                          if (step === 0) {
                             setAmountFrom(balance)
                           }
                         }}
@@ -303,7 +334,7 @@ export const Swap = React.memo(() => {
               </div>
             </div>
             <div className="sale__arrow-wrapper">
-              {loading ? (
+              {loading || isLoading ? (
                 <TailSpin
                   height="46"
                   width="46"
@@ -333,7 +364,7 @@ export const Swap = React.memo(() => {
                   <div className="select">
                     <div className="select__select">
                       <span>
-                        {tokens.to?.symbol.toUpperCase()}
+                        {pair.to?.symbol.toUpperCase()}
                       </span>
                       <span
                         className="select__select_arrow"
@@ -423,25 +454,65 @@ export const Swap = React.memo(() => {
                       </div>
                     )
                   }
+
+                  if (isError) {
+                    return (
+                      <div>
+                        <div
+                          className={
+                            'sale__input-retry_button'
+                          }
+                          onClick={() => {
+                            reset()
+                          }}
+                        >
+                          Retry
+                        </div>
+                        {account.balanceFormatted && (
+                          <span className="sale__exchange-title">
+                            Balance {account.displayBalance}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  }
+
+                  if (step < 2) {
+                    return (
+                      <div>
+                        <AnimatedGradientButton
+                          selected
+                          onClick={() => {
+                            sendTransaction?.()
+                          }}
+                          width="100%"
+                          height={51}
+                        >
+                          {step === 1
+                            ? 'Swap'
+                            : `Enable ${pair.from?.symbol.toUpperCase()}`}
+                        </AnimatedGradientButton>
+                        {account.balanceFormatted && (
+                          <span className="sale__exchange-title">
+                            Balance {account.displayBalance}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  }
+
                   return (
                     <div>
-                      <AnimatedGradientButton
-                        selected
+                      <div
+                        className={
+                          'sale__input-success_button'
+                        }
                         onClick={() => {
-                          sendTransaction?.()
-                          setStep((step) =>
-                            step === 'swap'
-                              ? 'prepare'
-                              : 'swap',
-                          )
+                          reset()
                         }}
-                        width="100%"
-                        height={51}
                       >
-                        {step === 'swap'
-                          ? 'Swap'
-                          : `Enable ${tokens.from?.symbol.toUpperCase()}`}
-                      </AnimatedGradientButton>
+                        Success
+                      </div>
                       {account.balanceFormatted && (
                         <span className="sale__exchange-title">
                           Balance {account.displayBalance}
@@ -464,7 +535,7 @@ export const Swap = React.memo(() => {
                       Price:
                     </span>{' '}
                     {web3ToZeros(swapData.price)}{' '}
-                    {tokens.to?.symbol}
+                    {pair.to?.symbol}
                   </>
                 )}
               </div>
@@ -477,7 +548,7 @@ export const Swap = React.memo(() => {
                       Guaranteed Price:
                     </span>{' '}
                     {web3ToZeros(swapData.guaranteedPrice)}{' '}
-                    {tokens.to?.symbol}
+                    {pair.to?.symbol}
                   </>
                 )}
               </div>
@@ -532,7 +603,7 @@ export const Swap = React.memo(() => {
               <div className="search-field">
                 <input
                   onChange={({ target: { value } }) => {
-                    setSearch(value)
+                    setModalSearch(value)
                   }}
                   type="text"
                   className="token-search-input token-search-design"
@@ -542,19 +613,20 @@ export const Swap = React.memo(() => {
                 />
               </div>
             </div>
-            {modalOpened && data?.tokens && (
+            {modalOpened && availableTokens?.tokens && (
               <TokenList
-                search={search}
+                search={modalSearch}
                 selectedTokenId={
-                  tokens[modalOpened]?.id || ''
+                  pair[modalOpened]?.id || ''
                 }
-                tokens={data.tokens}
+                tokens={availableTokens.tokens}
                 onTokenUpdated={(id) => {
-                  setTokens((_tokens) => ({
+                  setPair((_tokens) => ({
                     ..._tokens,
-                    [modalOpened]: data.tokens.find(
-                      (_t) => _t.id === id,
-                    ),
+                    [modalOpened]:
+                      availableTokens.tokens.find(
+                        (_t) => _t.id === id,
+                      ),
                   }))
                   close()
                 }}
