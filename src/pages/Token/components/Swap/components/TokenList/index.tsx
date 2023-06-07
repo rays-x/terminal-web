@@ -11,7 +11,12 @@ interface Props {
 }
 
 export const TokenList = memo(
-  ({ tokens, search, selectedTokenId, onTokenUpdated }: Props) => {
+  ({
+    tokens,
+    search,
+    selectedTokenId,
+    onTokenUpdated,
+  }: Props) => {
     const list = React.useMemo(() => {
       return (
         tokens.filter(({ address, name, symbol }) => {
@@ -28,12 +33,12 @@ export const TokenList = memo(
       ({ index, style }) => {
         const token = list[index]
         const selected = token.id === selectedTokenId
-    
+
         return (
           <div
             className="token-item"
             onClick={() => {
-              onTokenUpdated(token.id);
+              onTokenUpdated(token.id)
               close()
             }}
             key={token.id}
@@ -54,11 +59,16 @@ export const TokenList = memo(
               }}
             />
             <div className="token-item-text-wrapper">
-              <div className="token-item-text-title">
-                {token.name}
+              <div>
+                <span className="token-item-text-title">
+                  {token.name}
+                </span>
               </div>
               <div className="token-item-text-subtitle">
-                {token.symbol}
+                <span className="token-item-text-title-symbol">
+                  {token.symbol}
+                </span>
+                <span>From {token.source}</span>
               </div>
             </div>
             <div className="token-item-balance"></div>

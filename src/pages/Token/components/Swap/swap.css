@@ -573,6 +573,13 @@ input {
   text-overflow: ellipsis;
 }
 
+.token-item-text-title-symbol {
+  font-weight: 300;
+  font-size: 12px;
+  color: white;
+  margin-right: 6px;
+}
+
 .token-item-text-subtitle {
   font-weight: 300;
   font-size: 12px;
