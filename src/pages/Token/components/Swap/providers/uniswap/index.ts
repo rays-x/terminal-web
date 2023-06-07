@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import web3Utils from 'web3-utils'
 
-import { BigNumberish, ethers } from 'ethers'
+import { ethers } from 'ethers'
 
 import BigNumber from 'bignumber.js'
 
@@ -22,9 +22,7 @@ import {
 } from './constants'
 
 import {
-  ContractAddresses,
   GasPriceResponse,
-  NetworkParams,
   UniswapToken,
   UniswapTokens,
 } from './types'
@@ -54,68 +52,25 @@ import {
   Token,
   TradeType,
 } from '@uniswap/sdk-core'
-import { ERC20_ABI } from '../constants'
+
 import {
   QUERY_POOLS_UNISWAP,
   QUERY_POOLS_WITHOUT_TOKENS_UNISWAP,
 } from '../../../../../../graphql/queries/uniswap3/pools'
 
+import BaseUniswapLike from '../uniswapLike'
+
 export default class UniswapV3ExchangeProvider
+  extends BaseUniswapLike
   implements
     ExchangeProvider<
       Trade<Token, Token, TradeType.EXACT_INPUT>
     >
 {
-  protected readonly chainId: number
-  protected readonly provider: ethers.providers.JsonRpcProvider
-
-  protected readonly contractAddresses: ContractAddresses
-
-  public constructor(
-    networkParams: NetworkParams,
-    contractAddresses: ContractAddresses,
-  ) {
-    this.chainId = networkParams.chainId
-    this.provider = new ethers.providers.JsonRpcProvider(
-      networkParams.rpcUrl,
-    )
-    this.contractAddresses = contractAddresses
-  }
-
   public getInfo(): ExchangeInfo {
     return {
       name: 'Uniswap V3',
       logoURI: 'https://uniswap.org/favicon.ico',
-    }
-  }
-
-  public async getErc20TokenBalance(
-    tokenInfo: TokenInfo,
-    address: string,
-  ): Promise<string> {
-    const tokenContract = new ethers.Contract(
-      web3Utils.toChecksumAddress(tokenInfo.address),
-      ERC20_ABI,
-      this.provider,
-    )
-
-    try {
-      const balance = (await tokenContract.balanceOf(
-        address,
-      )) as BigNumberish
-
-      return new BigNumber(balance.toString())
-        .shiftedBy(-tokenInfo.decimals)
-        .toFixed()
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        err.message.includes('call revert exception')
-      ) {
-        throw new Error("Address doesn't have that token")
-      }
-
-      throw err
     }
   }
 
@@ -334,41 +289,6 @@ export default class UniswapV3ExchangeProvider
           pool.token1.address,
       })),
     }
-  }
-
-  public async prepareSwap(
-    estimationResult: EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >,
-    addressFrom: string,
-  ): Promise<TransactionRequestWithRecipient> {
-    const tokenContract = new ethers.Contract(
-      web3Utils.toChecksumAddress(
-        estimationResult.tradeData.swaps[0].inputAmount
-          .currency.address,
-      ),
-      ERC20_ABI,
-      this.provider,
-    )
-
-    const apprTx =
-      await tokenContract.populateTransaction.approve(
-        this.contractAddresses.v3SwapRouterAddress,
-        new BigNumber(
-          estimationResult.tradeData.inputAmount.toFixed(),
-        )
-          .shiftedBy(
-            estimationResult.tradeData.swaps[0].inputAmount
-              .currency.decimals,
-          )
-          .toFixed(),
-      )
-
-    if (!apprTx.to) {
-      throw new Error('Failed to prepare swap')
-    }
-
-    return { ...apprTx, to: apprTx.to, from: addressFrom }
   }
 
   public async swap(

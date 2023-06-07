@@ -77,12 +77,6 @@ export const Swap = memo(() => {
 
   const [modalSearch, setModalSearch] = useState<string>('')
 
-  /* TODO */
-  const [swapData, setSwapData] = useState({
-    price: undefined,
-    guaranteedPrice: undefined,
-  })
-
   const [pair, setPair] = useState<TokensState>({
     from: undefined,
     to: undefined,
@@ -556,12 +550,12 @@ export const Swap = memo(() => {
             </div>
             <div className="sale__exchange-item">
               <div className="sale__exchange-text">
-                {swapData?.price && (
+                {estimation?.price && (
                   <>
                     <span className="sale__exchange-title">
                       Price:
                     </span>{' '}
-                    {web3ToZeros(swapData.price)}{' '}
+                    {web3ToZeros(estimation.price)}{' '}
                     {pair.to?.symbol}
                   </>
                 )}
@@ -569,12 +563,12 @@ export const Swap = memo(() => {
             </div>
             <div className="sale__exchange-item">
               <div className="sale__exchange-text">
-                {swapData?.guaranteedPrice && (
+                {estimation?.guaranteedPrice && (
                   <>
                     <span className="sale__exchange-title">
                       Guaranteed Price:
                     </span>{' '}
-                    {web3ToZeros(swapData.guaranteedPrice)}{' '}
+                    {web3ToZeros(estimation.guaranteedPrice)}{' '}
                     {pair.to?.symbol}
                   </>
                 )}

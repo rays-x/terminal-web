@@ -52,35 +52,16 @@ import {
   POOLS_TO_LOAD,
   TICKS_PER_PAGE,
 } from './constants'
-import { BigNumberish, ethers } from 'ethers'
-import {
-  ContractAddresses,
-  NetworkParams,
-} from '../uniswap/types'
-import { ERC20_ABI } from '../constants'
 
-export default class PancakeswapV3ExchangeProvider
+import BaseUniswapLike from '../uniswapLike'
+
+export default class PancakeswapV3ExchangeProvide
+  extends BaseUniswapLike
   implements
     ExchangeProvider<
       Trade<Token, Token, TradeType.EXACT_INPUT>
     >
 {
-  protected readonly chainId: number
-  protected readonly provider: ethers.providers.JsonRpcProvider
-
-  protected readonly contractAddresses: ContractAddresses
-
-  public constructor(
-    networkParams: NetworkParams,
-    contractAddresses: ContractAddresses,
-  ) {
-    this.chainId = networkParams.chainId
-    this.provider = new ethers.providers.JsonRpcProvider(
-      networkParams.rpcUrl,
-    )
-    this.contractAddresses = contractAddresses
-  }
-
   public getInfo(): ExchangeInfo {
     return {
       name: 'PancakeSwap V3',
@@ -302,6 +283,12 @@ export default class PancakeswapV3ExchangeProvider
       throw new Error('Route not found!')
     }
 
+    const [slippageNum, slippageDenum] = new BigNumber(
+      settings.slippage,
+    )
+      .toFraction()
+      .map((bn) => BigInt(bn.toFixed()))
+
     return {
       quoteTokenAmount: bestTrade.outputAmount.toFixed(),
       tradeData: bestTrade,
@@ -313,6 +300,12 @@ export default class PancakeswapV3ExchangeProvider
           pool.token1.symbol?.toUpperCase() ||
           pool.token1.address,
       })),
+      price: bestTrade.executionPrice.toFixed(),
+      guaranteedPrice: bestTrade
+        .worstExecutionPrice(
+          new Percent(slippageNum, slippageDenum),
+        )
+        .toFixed(),
     }
   }
 
@@ -349,71 +342,6 @@ export default class PancakeswapV3ExchangeProvider
       value: methodParameters.value,
       gasLimit: DEFAULT_GAS_LIMIT,
       gasPrice: await this.provider.getGasPrice(),
-    }
-  }
-
-  public async prepareSwap(
-    estimationResult: EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >,
-    addressFrom: string,
-  ): Promise<TransactionRequestWithRecipient> {
-    const tokenContract = new ethers.Contract(
-      web3Utils.toChecksumAddress(
-        estimationResult.tradeData.swaps[0].inputAmount
-          .currency.address,
-      ),
-      ERC20_ABI,
-      this.provider,
-    )
-
-    const apprTx =
-      await tokenContract.populateTransaction.approve(
-        this.contractAddresses.v3SwapRouterAddress,
-        new BigNumber(
-          estimationResult.tradeData.inputAmount.toFixed(),
-        )
-          .shiftedBy(
-            estimationResult.tradeData.swaps[0].inputAmount
-              .currency.decimals,
-          )
-          .toFixed(),
-      )
-
-    if (!apprTx.to) {
-      throw new Error('Failed to prepare swap')
-    }
-
-    return { ...apprTx, to: apprTx.to, from: addressFrom }
-  }
-
-  public async getErc20TokenBalance(
-    tokenInfo: TokenInfo,
-    address: string,
-  ): Promise<string> {
-    const tokenContract = new ethers.Contract(
-      web3Utils.toChecksumAddress(tokenInfo.address),
-      ERC20_ABI,
-      this.provider,
-    )
-
-    try {
-      const balance = (await tokenContract.balanceOf(
-        address,
-      )) as BigNumberish
-
-      return new BigNumber(balance.toString())
-        .shiftedBy(-tokenInfo.decimals)
-        .toFixed()
-    } catch (err) {
-      if (
-        err instanceof Error &&
-        err.message.includes('call revert exception')
-      ) {
-        throw new Error("Address doesn't have that token")
-      }
-
-      throw err
     }
   }
 }

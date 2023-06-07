@@ -19,6 +19,8 @@ export interface EstimationResult<T> {
   quoteTokenAmount: string
   swaps: { baseSymbol?: string; quoteSymbol?: string }[]
   tradeData: T
+  price: string
+  guaranteedPrice: string
 }
 
 export interface ExchangeInfo {
@@ -30,7 +32,7 @@ export interface AvailableTokens {
   tokens: TokenInfo[]
 }
 
-export interface ExchangeProvider<T> {
+export interface ExchangeProvider<T = unknown> {
   getInfo(): ExchangeInfo
   getAvailableTokens(): Promise<AvailableTokens>
   estimate(
