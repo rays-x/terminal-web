@@ -19,13 +19,16 @@ export const TokenList = memo(
   }: Props) => {
     const list = React.useMemo(() => {
       return (
-        tokens.filter(({ address, name, symbol }) => {
-          return search
-            ? `${address}${name}${symbol}`
-                .toLowerCase()
-                .includes(search?.toLowerCase())
-            : true
-        }) || []
+        tokens
+          .filter(({ address, name, symbol }) => {
+            return search
+              ? `${address}${name}${symbol}`
+                  .toLowerCase()
+                  .includes(search?.toLowerCase())
+              : true
+          })
+          .sort((a, b) => a.name.localeCompare(b.name)) ||
+        []
       )
     }, [tokens, search])
 
