@@ -134,8 +134,8 @@ export const Swap = memo(() => {
   )
 
   const isInitAmount = useMemo(
-    () => !pair.from || !pair.to || !estimation,
-    [amountFrom, estimation],
+    () => !pair.from || !pair.to,
+    [amountFrom],
   )
 
   const {
@@ -420,7 +420,8 @@ export const Swap = memo(() => {
                       </AnimatedGradientButton>
                     )
                   }
-                  if (isInitAmount) {
+
+                  if (isInitAmount || loading) {
                     return (
                       <div>
                         <AnimatedGradientButton
@@ -448,9 +449,7 @@ export const Swap = memo(() => {
                           className={
                             'sale__input-retry_button'
                           }
-                          onClick={() => {
-                            reset()
-                          }}
+                          onClick={resetData}
                         >
                           {error ? `${error} ` : ''}Retry.
                         </div>
