@@ -102,7 +102,7 @@ export const Swap = memo(() => {
     setPair({
       from:
         availableTokens.tokens.find(
-          (token) => token.address === tokenAddress,
+          (token) => token.address.toLowerCase() === tokenAddress,
         ) || availableTokens.tokens[0],
       to: availableTokens.tokens[1],
     })
@@ -193,8 +193,6 @@ export const Swap = memo(() => {
     isLoading
 
   const error = errorEstimation || errorTokens || errorSteps
-
-  console.log({ loadingEstimation })
 
   return (
     <SwapStyled.Container>

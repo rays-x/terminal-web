@@ -187,8 +187,6 @@ export function useEstimation(
     pair.to?.address,
   ])
 
-  console.log({ loading })
-
   return {
     estimation,
     error,

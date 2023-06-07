@@ -120,8 +120,9 @@ export default class PancakeswapV3ExchangeProvide
     ].flatMap(({ tokens = [], source }) =>
       tokens.map((token) => ({
         ...token,
-        id: token.address,
+        id: token.address.toLowerCase(),
         source,
+        address: web3Utils.toChecksumAddress(token.address),
       })),
     )
 
@@ -280,7 +281,7 @@ export default class PancakeswapV3ExchangeProvide
     )
 
     if (!bestTrade) {
-      throw new Error('Route not found!')
+      throw new Error('Route not found! Try to increase Max hops.')
     }
 
     const [slippageNum, slippageDenum] = new BigNumber(
