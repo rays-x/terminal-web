@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import web3Utils from 'web3-utils'
 import { CurrentCoinData } from '../../CoinPage'
 import { SwapStyled } from './Swap-styled'
 import IconSwapArrow from '../../../../assets/icons/new/SwapArrow.svg'
@@ -16,32 +15,13 @@ import IconSwapSlippageButton from '../../../../assets/icons/new/SwapSlippageBut
 import './swap.css'
 import { AnimatedGradientButton } from '../../../../components/_old/ui/Buttons/AnimatedGradientButton/AnimatedGradientButton'
 import { useNetworkWallet } from '../../../../store/networkWallet'
-import { useLazyFetch } from '../../../../hooks/useFetch'
-import { debounce, get } from 'lodash'
-import { FixedSizeList as List } from 'react-window'
-import AutoSizer from 'react-virtualized-auto-sizer'
-import {
-  web3toDecimalsInputValue,
-  web3ToZeros,
-} from '../../../../utils/web3toDecimalsValue'
+import { web3ToZeros } from '../../../../utils/web3toDecimalsValue'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { SwapTokens0xPriceResponse } from '../../../../types/api/SwapTokens0xResponse'
 import {
   useAccount,
   usePrepareSendTransaction,
   useSendTransaction,
 } from 'wagmi'
-import {
-  fromTokenUnitAmount,
-  toTokenUnitAmount,
-} from '@0x/utils'
-import {
-  AvailableTokens,
-  EstimationResult,
-  ExchangeProvider,
-  TokenInfo,
-  TransactionRequestWithRecipient,
-} from './providers/interface'
 import { TokenList } from './components/TokenList'
 import { exchangeProviders } from './providers'
 import { addressFormat } from '../../../../utils/addressFormat'
@@ -213,6 +193,8 @@ export const Swap = memo(() => {
     isLoading
 
   const error = errorEstimation || errorTokens || errorSteps
+
+  console.log({ loadingEstimation })
 
   return (
     <SwapStyled.Container>
@@ -568,7 +550,9 @@ export const Swap = memo(() => {
                     <span className="sale__exchange-title">
                       Guaranteed Price:
                     </span>{' '}
-                    {web3ToZeros(estimation.guaranteedPrice)}{' '}
+                    {web3ToZeros(
+                      estimation.guaranteedPrice,
+                    )}{' '}
                     {pair.to?.symbol}
                   </>
                 )}

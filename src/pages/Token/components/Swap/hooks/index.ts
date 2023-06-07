@@ -14,7 +14,7 @@ import {
 import { TokensState } from '../types'
 import { SwapSettings } from '../components/Settings/types'
 
-const DEBOUNCE_TIMEOUT = 1500
+const DEBOUNCE_TIMEOUT = 1200
 
 const STEPS = ['prepareSwap', 'swap'] as const
 
@@ -132,12 +132,15 @@ export function useEstimation(
 ) {
   const [error, setError] = useState<string>('')
 
-  const [estimation, setEstimation] =
-    useState<EstimationResult<unknown>>()
+  const [estimation, setEstimation] = useState<
+    EstimationResult<unknown> | undefined
+  >()
 
   const [loading, setLoading] = useState<boolean>(false)
 
   const reload = useCallback(() => {
+    setLoading(true)
+
     const delayDebounceFn = setTimeout(() => {
       if (
         !pair.from ||
@@ -145,10 +148,9 @@ export function useEstimation(
         !exchangeProvider ||
         !Number.parseFloat(amountFrom)
       ) {
+        setLoading(false)
         return
       }
-
-      setLoading(true)
 
       exchangeProvider
         .estimate(pair.from, pair.to, amountFrom, settings)
@@ -157,6 +159,7 @@ export function useEstimation(
           setError('')
         })
         .catch((err) => {
+          setEstimation(undefined)
           setError(err?.message || '')
         })
         .finally(() => {
@@ -164,7 +167,10 @@ export function useEstimation(
         })
     }, DEBOUNCE_TIMEOUT)
 
-    return () => clearTimeout(delayDebounceFn)
+    return () => {
+      clearTimeout(delayDebounceFn)
+      setLoading(false)
+    }
   }, [
     settings,
     exchangeProvider,
@@ -180,6 +186,8 @@ export function useEstimation(
     pair.from?.address,
     pair.to?.address,
   ])
+
+  console.log({ loading })
 
   return {
     estimation,
