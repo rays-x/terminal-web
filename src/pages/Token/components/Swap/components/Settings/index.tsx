@@ -32,7 +32,7 @@ export const SettingsModal = memo(
                   aria-label="Left aligned"
                   key={slippage.toString()}
                 >
-                  {slippage}%
+                  {slippage * 100}%
                 </ToggleGroup.Item>
               ))}
             </ToggleGroup.Root>
