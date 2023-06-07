@@ -1,9 +1,9 @@
 import { ExchangeProvider } from './interface'
-import PancakeswapExchangeProvider from './pancakeswap'
+import PancakeswapV3ExchangeProvider from './pancakeswap'
 import UniswapV3ExchangeProvider from './uniswap'
 
 export const exchangeProviders = {
-  'binance-smart-chain': new PancakeswapExchangeProvider(
+  'bsc': new PancakeswapV3ExchangeProvider(
     {
       chainId: 56,
       rpcUrl: 'https://bsc-dataseed1.binance.org',

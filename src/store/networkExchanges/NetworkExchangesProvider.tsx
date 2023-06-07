@@ -17,7 +17,7 @@ const data = [
     tableBackground: '#5A7FF2'
   },
   {
-    id: 'binance-smart-chain',
+    id: 'bsc',
     name: 'bsc',
     label: 'BSC',
     logo: BSCIcon,

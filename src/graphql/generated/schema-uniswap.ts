@@ -5352,6 +5352,27 @@ export enum _SubgraphErrorPolicy_ {
   Deny = 'deny'
 }
 
+export type PoolUniswapQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Pool_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  firstTicks?: InputMaybe<Scalars['Int']>;
+  skipTicks?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type PoolUniswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, tick?: any | null, feeTier: any, sqrtPrice: any, liquidity: any, volumeUSD: any, token0: { __typename?: 'Token', id: string, symbol: string, decimals: any }, token1: { __typename?: 'Token', id: string, symbol: string, decimals: any }, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
+
+export type TicksUniswapQueryVariables = Exact<{
+  firstTicks?: InputMaybe<Scalars['Int']>;
+  skipTicks?: InputMaybe<Scalars['Int']>;
+  ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+}>;
+
+
+export type TicksUniswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
+
 export type TokensUniswapQueryVariables = Exact<{
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']>;
@@ -5369,33 +5390,6 @@ export type TokensUniswapQueryVariables = Exact<{
 
 
 export type TokensUniswapQuery = { __typename?: 'Query', tokens: Array<{ __typename?: 'Token', id: string, symbol: string, name: string, decimals: any, totalSupply: any, volumeUSD: any, untrackedVolumeUSD: any, totalValueLocked: any, totalValueLockedUSD: any, totalValueLockedUSDUntracked: any, derivedETH: any, tokenDayData: Array<{ __typename?: 'TokenDayData', id: string, date: number, volume: any, volumeUSD: any, untrackedVolumeUSD: any, totalValueLockedUSD: any, priceUSD: any }> }> };
-
-export type TransactionsSwapsUniswap3QueryVariables = Exact<{
-  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  first: Scalars['Int'];
-  skip: Scalars['Int'];
-}>;
-
-
-export type TransactionsSwapsUniswap3Query = { __typename?: 'Query', swaps: Array<{ __typename: 'Swap', id: string, timestamp: any, origin: any, amount0: any, amount1: any, amountUSD: any, transaction: { __typename: 'Transaction', id: string }, pool: { __typename: 'Pool', token0: { __typename: 'Token', id: string, symbol: string }, token1: { __typename: 'Token', id: string, symbol: string } } }> };
-
-export type TransactionsMintsUniswap3QueryVariables = Exact<{
-  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  first: Scalars['Int'];
-  skip: Scalars['Int'];
-}>;
-
-
-export type TransactionsMintsUniswap3Query = { __typename?: 'Query', mints: Array<{ __typename: 'Mint', id: string, timestamp: any, owner: any, sender?: any | null, origin: any, amount0: any, amount1: any, amountUSD?: any | null, transaction: { __typename: 'Transaction', id: string }, pool: { __typename: 'Pool', token0: { __typename: 'Token', id: string, symbol: string }, token1: { __typename: 'Token', id: string, symbol: string } } }> };
-
-export type TransactionsBurnsUniswap3QueryVariables = Exact<{
-  address?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
-  first: Scalars['Int'];
-  skip: Scalars['Int'];
-}>;
-
-
-export type TransactionsBurnsUniswap3Query = { __typename?: 'Query', burns: Array<{ __typename: 'Burn', id: string, timestamp: any, owner?: any | null, amount0: any, amount1: any, amountUSD?: any | null, transaction: { __typename: 'Transaction', id: string }, pool: { __typename: 'Pool', token0: { __typename: 'Token', id: string, symbol: string }, token1: { __typename: 'Token', id: string, symbol: string } } }> };
 
 export type BundleKeySpecifier = ('ethPriceUSD' | 'id' | BundleKeySpecifier)[];
 export type BundleFieldPolicy = {

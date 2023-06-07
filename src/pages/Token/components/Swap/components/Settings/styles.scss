@@ -1,0 +1,55 @@
+@import 'src/presets/vars';
+@import 'src/presets/colors';
+
+.settings-modal {
+  padding: 20px;
+}
+
+.settings-modal_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.ToggleGroup {
+  display: inline-flex;
+  background-color: white;
+  border-radius: 12px;
+}
+
+.ToggleGroupItem {
+  background-color: $col-background-secondary;
+  color: $col-text-secondary;
+  height: 35px;
+  width: 60px;
+  display: flex;
+  font-size: 15px;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+.ToggleGroupItem:first-child {
+  margin-left: 0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+.ToggleGroupItem:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+// .ToggleGroupItem:hover {
+  // background: $col-button-gradient;
+// }
+.ToggleGroupItem[data-state='on'] {
+  background-color: white;
+  color: $col-text-primary;
+}
+.ToggleGroupItem:focus {
+  position: relative;
+}
+
+.settings-modal_row_numeric {
+  max-width: 25%;
+}

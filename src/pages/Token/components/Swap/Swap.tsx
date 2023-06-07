@@ -1,8 +1,10 @@
 import React, {
+  memo,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import web3Utils from 'web3-utils'
@@ -35,6 +37,7 @@ import {
 } from '@0x/utils'
 import {
   AvailableTokens,
+  EstimationResult,
   ExchangeProvider,
   TokenInfo,
   TransactionRequestWithRecipient,
@@ -42,173 +45,135 @@ import {
 import { TokenList } from './components/TokenList'
 import { exchangeProviders } from './providers'
 import { addressFormat } from '../../../../utils/addressFormat'
-import { TailSpin } from 'react-loader-spinner'
+import { ThreeDots, TailSpin } from 'react-loader-spinner'
+import { TokensState } from './types'
+import {
+  useAvailableTokens,
+  useBalance,
+  useEstimation,
+  useSteps,
+} from './hooks'
+import { SettingsModal } from './components/Settings'
+import { SwapSettings } from './components/Settings/types'
+import { INIT_AMOUNT, SettingsConfig } from './constants'
 
-const INIT_AMOUNT = '0.00'
-const DEBOUNCE_TIMEOUT = 1500
+export const Swap = memo(() => {
+  const currentCoinData = useContext(CurrentCoinData)
 
-interface TokensState {
-  from?: TokenInfo
-  to?: TokenInfo
-}
-
-export const Swap = React.memo(() => {
   const [step, setStep] = useState<number>(0)
 
-  const [loading, setLoading] = useState<boolean>(false)
-
-  const [availableTokens, setAvailableTokens] =
-    useState<AvailableTokens>()
+  const [settings, setSettings] = useState<SwapSettings>({
+    slippage: SettingsConfig.slippages[0],
+    deadlineMins: SettingsConfig.defaultDeadlineMins,
+    maxHops: SettingsConfig.defaultMaxHops,
+  })
 
   const [amountFrom, setAmountFrom] =
     useState<string>(INIT_AMOUNT)
-  const [amountTo, setAmountTo] =
-    useState<string>(INIT_AMOUNT)
 
-  const [modalOpened, setModalOpened] = React.useState<
-    'from' | 'to' | undefined
+  const [modalOpened, setModalOpened] = useState<
+    'from' | 'to' | 'settings' | undefined
   >()
 
-  const [modalSearch, setModalSearch] =
-    React.useState<string>('')
+  const [modalSearch, setModalSearch] = useState<string>('')
 
   /* TODO */
-  const [swapData, setSwapData] = React.useState({
+  const [swapData, setSwapData] = useState({
     price: undefined,
     guaranteedPrice: undefined,
   })
 
-  const [pair, setPair] = React.useState<TokensState>({
+  const [pair, setPair] = useState<TokensState>({
     from: undefined,
     to: undefined,
   })
 
-  const refModal = React.useRef(null)
-  const close = React.useCallback(() => {
+  const refModal = useRef(null)
+  const close = useCallback(() => {
     setModalOpened(undefined)
     setModalSearch('')
   }, [])
 
   const { network } = useNetworkWallet()
   const { address } = useAccount()
-  const [balance, setBalance] =
-    useState<string>(INIT_AMOUNT)
 
-  useEffect(() => {
-    ;(async () => {
-      if (!network?.id || !exchangeProviders[network.id]) {
-        return
-      }
-
-      setLoading(true)
-
-      const availableTokens =
-        // @ts-ignore
-        await exchangeProviders[
-          network.id
-        ].getAvailableTokens()
-
-      setAvailableTokens(availableTokens)
-
-      setPair({
-        from: availableTokens.tokens[0],
-        to: availableTokens.tokens[1],
-      })
-
-      setStep(0)
-
-      setLoading(false)
-    })()
-  }, [network?.id])
-
-  const switchTokens = React.useCallback(() => {
+  const switchTokens = useCallback(() => {
     setPair(({ from, to }) => ({
       from: to,
       to: from,
     }))
   }, [])
 
-  const [txBody, setTxBody] = useState<
-    TransactionRequestWithRecipient | undefined
-  >()
+  const exchangeProvider = useMemo(
+    () =>
+      network ? exchangeProviders[network.id] : undefined,
+    [network],
+  )
+
+  const {
+    availableTokens,
+    loading: loadingTokens,
+    error: errorTokens,
+  } = useAvailableTokens(exchangeProvider)
 
   useEffect(() => {
-    if (!pair.from || !network?.id || !address) {
+    if (!availableTokens) {
       return
     }
-    // @ts-ignore
-    exchangeProviders[network.id]
-      ?.getErc20TokenBalance(pair.from, address)
-      .then((balance) =>
-        setBalance(+balance ? balance : INIT_AMOUNT),
-      )
-      .catch(() => setBalance(INIT_AMOUNT))
-  }, [pair.from?.address])
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (
-        !pair.from ||
-        !pair.to ||
-        !network?.id ||
-        !address ||
-        !Number.parseFloat(amountFrom)
-      ) {
-        return
-      }
+    const tokenAddress = currentCoinData?.platforms.find(
+      ({ blockchain }) => blockchain.bqSlug === network?.id,
+    )?.address
 
-      setLoading(true)
+    setPair({
+      from:
+        availableTokens.tokens.find(
+          (token) => token.address === tokenAddress,
+        ) || availableTokens.tokens[0],
+      to: availableTokens.tokens[1],
+    })
 
-      Promise.all([
-        // @ts-ignore
-        exchangeProviders[network.id]
-          .estimate(pair.from, pair.to, amountFrom)
-          .then(({ quoteTokenAmount }) =>
-            setAmountTo(quoteTokenAmount),
-          ),
-        // @ts-ignore
-        exchangeProviders[network.id]
-          ?.prepareSwap(pair.from, amountFrom, address)
-          .then((res) => {
-            setTxBody(res)
-          }),
-        // @ts-ignore
-        exchangeProviders[network.id]
-          ?.getErc20TokenBalance(pair.from, address)
-          .then((balance) =>
-            setBalance(+balance ? balance : INIT_AMOUNT),
-          )
-          .catch(() => setBalance(INIT_AMOUNT)),
-      ]).finally(() => setLoading(false))
-    }, DEBOUNCE_TIMEOUT)
+    setStep(0)
+  }, [
+    exchangeProvider,
+    availableTokens,
+    currentCoinData,
+    network?.id,
+  ])
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [amountFrom, pair.from?.address, pair.to?.address])
+  const {
+    balance,
+    loading: loadingBalance,
+    reload: reloadBalance,
+  } = useBalance(exchangeProvider, pair.from, address)
 
-  useEffect(() => {
-    if (
-      step === 1 &&
-      pair.from &&
-      pair.to &&
-      address &&
-      Number.parseFloat(amountFrom)
-    ) {
-      // @ts-ignore
-      exchangeProviders[network.id]
-        ?.swap(pair.from, pair.to, amountFrom, address)
-        .then((res) => {
-          reset()
-          setTxBody(res)
-        })
-    }
-  }, [step])
+  const {
+    estimation,
+    loading: loadingEstimation,
+    error: errorEstimation,
+    reload: reloadEstimation,
+  } = useEstimation(
+    pair,
+    amountFrom,
+    settings,
+    exchangeProvider,
+  )
 
-  const isInitAmount = React.useMemo(
-    () =>
-      !pair.from || !pair.to
-        ? true
-        : amountTo === INIT_AMOUNT,
-    [amountFrom, amountTo],
+  const isInitAmount = useMemo(
+    () => !pair.from || !pair.to || !estimation,
+    [amountFrom, estimation],
+  )
+
+  const {
+    txBody,
+    loading: loadingSteps,
+    error: errorSteps,
+  } = useSteps(
+    step,
+    settings,
+    exchangeProvider,
+    estimation,
+    address,
   )
 
   const { config } = usePrepareSendTransaction({
@@ -228,13 +193,32 @@ export const Swap = React.memo(() => {
     if (isSuccess) {
       setStep((_step) => _step + 1)
     }
-  }, [isSuccess, sendedTxData?.hash])
+  }, [sendedTxData?.hash])
+
+  const reload = useCallback(() => {
+    reloadBalance()
+    reloadEstimation()
+  }, [reloadBalance, reloadEstimation])
+
+  const resetData = useCallback(() => {
+    setStep(0)
+    reload()
+    reset?.()
+  }, [])
 
   const info = useMemo(
     () =>
       network && exchangeProviders[network.id]?.getInfo(),
     [exchangeProviders, network],
   )
+
+  const loading =
+    loadingSteps ||
+    loadingTokens ||
+    loadingEstimation ||
+    isLoading
+
+  const error = errorEstimation || errorTokens || errorSteps
 
   return (
     <SwapStyled.Container>
@@ -262,19 +246,29 @@ export const Swap = React.memo(() => {
           <div className="sale__exchange_header_heading">
             Swap
           </div>
-          <div className="sale__exchange_header_slippage">
-            <span className="sale__exchange_header_slippage_title">
-              Slippage:&nbsp;
-            </span>
-            <span className="sale__exchange_header_slippage_subtitle">
-              Auto
-            </span>
-            <span
-              className="sale__exchange_header_slippage_icon"
-              style={{
-                backgroundImage: `url(${IconSwapSlippageButton})`,
+          <div className="sale__exchange_header_items">
+            <div
+              className="sale__exchange_header_item"
+              onClick={reload}
+            >
+              <span>Reload</span>
+            </div>
+            <div
+              className="sale__exchange_header_item"
+              onClick={() => {
+                setModalOpened('settings')
               }}
-            />
+            >
+              <span className="sale__exchange_header_item_subtitle">
+                Swap settings
+              </span>
+              <span
+                className="sale__exchange_header_item_icon"
+                style={{
+                  backgroundImage: `url(${IconSwapSlippageButton})`,
+                }}
+              />
+            </div>
           </div>
         </div>
         <div className="sale__exchange_body">
@@ -304,7 +298,20 @@ export const Swap = React.memo(() => {
                       </div>
                     )}
                     <div className="select__sub_select">
-                      Balance: {balance}{' '}
+                      <span>Balance:</span>
+                      <div className="select__sub_select_balance">
+                        <ThreeDots
+                          width={18}
+                          height={18}
+                          wrapperStyle={{}}
+                          wrapperClass=""
+                          visible={loadingBalance}
+                          color="white"
+                        />
+                        {!loadingBalance && (
+                          <span>{balance}</span>
+                        )}
+                      </div>
                       <span
                         className="sale__link-info"
                         onClick={() => {
@@ -334,7 +341,7 @@ export const Swap = React.memo(() => {
               </div>
             </div>
             <div className="sale__arrow-wrapper">
-              {loading || isLoading ? (
+              {loading ? (
                 <TailSpin
                   height="46"
                   width="46"
@@ -382,7 +389,10 @@ export const Swap = React.memo(() => {
                     className="sale__input"
                     autoComplete="off"
                     aria-autocomplete="none"
-                    value={amountTo}
+                    value={
+                      estimation?.quoteTokenAmount ||
+                      INIT_AMOUNT
+                    }
                   />
                 </div>
               </div>
@@ -455,7 +465,7 @@ export const Swap = React.memo(() => {
                     )
                   }
 
-                  if (isError) {
+                  if (isError || error) {
                     return (
                       <div>
                         <div
@@ -466,7 +476,7 @@ export const Swap = React.memo(() => {
                             reset()
                           }}
                         >
-                          Retry
+                          {error ? `${error} ` : ''}Retry.
                         </div>
                         {account.balanceFormatted && (
                           <span className="sale__exchange-title">
@@ -483,7 +493,9 @@ export const Swap = React.memo(() => {
                         <AnimatedGradientButton
                           selected
                           onClick={() => {
-                            sendTransaction?.()
+                            if (!loading) {
+                              sendTransaction?.()
+                            }
                           }}
                           width="100%"
                           height={51}
@@ -507,9 +519,7 @@ export const Swap = React.memo(() => {
                         className={
                           'sale__input-success_button'
                         }
-                        onClick={() => {
-                          reset()
-                        }}
+                        onClick={resetData}
                       >
                         Success
                       </div>
@@ -527,6 +537,23 @@ export const Swap = React.memo(() => {
         </div>
         <div className="sale__exchange_footer">
           <div className="sale__exchange-info">
+            <div className="sale__exchange-item">
+              <div className="sale__exchange-text">
+                {estimation && (
+                  <>
+                    <span className="sale__exchange-title">
+                      Pools:
+                    </span>{' '}
+                    {estimation.swaps
+                      .map(
+                        (pool) =>
+                          `${pool.baseSymbol}/${pool.quoteSymbol}`,
+                      )
+                      .join(' > ')}
+                  </>
+                )}
+              </div>
+            </div>
             <div className="sale__exchange-item">
               <div className="sale__exchange-text">
                 {swapData?.price && (
@@ -556,10 +583,91 @@ export const Swap = React.memo(() => {
           </div>
         </div>
       </div>
-      {modalOpened && (
+      {modalOpened &&
+        ['from', 'to'].includes(modalOpened) && (
+          <div
+            className="modal-select-token"
+            ref={refModal}
+            onClick={({ target }) => {
+              if (target !== refModal.current) {
+                return
+              }
+              close()
+            }}
+          >
+            <div className="select-token">
+              <div className="headline">
+                <div className="headline-search">
+                  <div className="name">Select a token</div>
+                  <svg
+                    onClick={close}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    color="rgb(152, 161, 192)"
+                    cursor="pointer"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="sc-7yzmni-0 ezZlS"
+                  >
+                    <line
+                      x1="18"
+                      y1="6"
+                      x2="6"
+                      y2="18"
+                    ></line>
+                    <line
+                      x1="6"
+                      y1="6"
+                      x2="18"
+                      y2="18"
+                    ></line>
+                  </svg>
+                </div>
+                <div className="search-field">
+                  <input
+                    onChange={({ target: { value } }) => {
+                      setModalSearch(value)
+                    }}
+                    type="text"
+                    className="token-search-input token-search-design"
+                    placeholder="Search name or paste address"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              {availableTokens?.tokens && (
+                <TokenList
+                  search={modalSearch}
+                  selectedTokenId={
+                    pair[modalOpened as 'from' | 'to']
+                      ?.id || ''
+                  }
+                  tokens={availableTokens.tokens}
+                  onTokenUpdated={(id) => {
+                    setPair((_tokens) => ({
+                      ..._tokens,
+                      [modalOpened]:
+                        availableTokens.tokens.find(
+                          (_t) => _t.id === id,
+                        ),
+                    }))
+                    close()
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      {modalOpened === 'settings' && (
         <div
-          className="modal-select-token"
           ref={refModal}
+          className="modal-select-token"
           onClick={({ target }) => {
             if (target !== refModal.current) {
               return
@@ -568,70 +676,12 @@ export const Swap = React.memo(() => {
           }}
         >
           <div className="select-token">
-            <div className="headline">
-              <div className="headline-search">
-                <div className="name">Select a token</div>
-                <svg
-                  onClick={close}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  color="rgb(152, 161, 192)"
-                  cursor="pointer"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="sc-7yzmni-0 ezZlS"
-                >
-                  <line
-                    x1="18"
-                    y1="6"
-                    x2="6"
-                    y2="18"
-                  ></line>
-                  <line
-                    x1="6"
-                    y1="6"
-                    x2="18"
-                    y2="18"
-                  ></line>
-                </svg>
-              </div>
-              <div className="search-field">
-                <input
-                  onChange={({ target: { value } }) => {
-                    setModalSearch(value)
-                  }}
-                  type="text"
-                  className="token-search-input token-search-design"
-                  placeholder="Search name or paste address"
-                  autoComplete="off"
-                  autoFocus
-                />
-              </div>
-            </div>
-            {modalOpened && availableTokens?.tokens && (
-              <TokenList
-                search={modalSearch}
-                selectedTokenId={
-                  pair[modalOpened]?.id || ''
-                }
-                tokens={availableTokens.tokens}
-                onTokenUpdated={(id) => {
-                  setPair((_tokens) => ({
-                    ..._tokens,
-                    [modalOpened]:
-                      availableTokens.tokens.find(
-                        (_t) => _t.id === id,
-                      ),
-                  }))
-                  close()
-                }}
-              />
-            )}
+            <div className="headline">Settings</div>
+            <SettingsModal
+              settings={settings}
+              onChange={setSettings}
+              config={SettingsConfig}
+            />
           </div>
         </div>
       )}

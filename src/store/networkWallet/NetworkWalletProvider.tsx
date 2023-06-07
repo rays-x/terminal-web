@@ -34,7 +34,7 @@ const data = [
     wallet: goerli,
   },
   {
-    id: 'binance-smart-chain',
+    id: 'bsc',
     name: 'bsc',
     label: 'BSC Network',
     logo_url: BSCWalletIcon,

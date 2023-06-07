@@ -5353,11 +5353,25 @@ export enum _SubgraphErrorPolicy_ {
 }
 
 export type PoolPancakeswapQueryVariables = Exact<{
-  id: Scalars['ID'];
+  first?: InputMaybe<Scalars['Int']>;
+  skip?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Pool_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  firstTicks?: InputMaybe<Scalars['Int']>;
+  skipTicks?: InputMaybe<Scalars['Int']>;
 }>;
 
 
-export type PoolPancakeswapQuery = { __typename?: 'Query', pool?: { __typename?: 'Pool', liquidity: any, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> } | null };
+export type PoolPancakeswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, tick?: any | null, feeTier: any, sqrtPrice: any, liquidity: any, volumeUSD: any, token0: { __typename?: 'Token', id: string, symbol: string, decimals: any }, token1: { __typename?: 'Token', id: string, symbol: string, decimals: any }, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
+
+export type TicksPancakeswapQueryVariables = Exact<{
+  firstTicks?: InputMaybe<Scalars['Int']>;
+  skipTicks?: InputMaybe<Scalars['Int']>;
+  ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+}>;
+
+
+export type TicksPancakeswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
 
 export type TokensUniswapQueryVariables = Exact<{
   block?: InputMaybe<Block_Height>;
