@@ -45,7 +45,7 @@ import {
   QUERY_POOLS_PANCAKESWAP,
   QUERY_POOLS_WITHOUT_TOKENS_PANCAKESWAP,
 } from '../../../../../../graphql/queries/pancake/pools'
-import { SwapSettings } from '../../components/Settings/types'
+import { SwapSettings } from '../../components/settings/types'
 import {
   DEFAULT_GAS_LIMIT,
   POOLS_PER_PAGE,

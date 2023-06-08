@@ -1,6 +1,6 @@
 import { providers } from 'ethers'
 
-import { SwapSettings } from '../components/Settings/types'
+import { SwapSettings } from '../components/settings/types'
 
 export type TransactionRequestWithRecipient =
   providers.TransactionRequest & { to: string }

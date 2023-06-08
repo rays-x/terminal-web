@@ -26,15 +26,15 @@ import { TokenList } from './components/TokenList'
 import { exchangeProviders } from './providers'
 import { addressFormat } from '../../../../utils/addressFormat'
 import { ThreeDots, TailSpin } from 'react-loader-spinner'
-import { TokensState } from './types'
+import { ExchangePair } from './types'
 import {
   useAvailableTokens,
   useBalance,
   useEstimation,
   useSteps,
 } from './hooks'
-import { SettingsModal } from './components/Settings'
-import { SwapSettings } from './components/Settings/types'
+import { SettingsModal } from './components/settings'
+import { SwapSettings } from './components/settings/types'
 import { INIT_AMOUNT, SettingsConfig } from './constants'
 
 export const Swap = memo(() => {
@@ -57,7 +57,7 @@ export const Swap = memo(() => {
 
   const [modalSearch, setModalSearch] = useState<string>('')
 
-  const [pair, setPair] = useState<TokensState>({
+  const [pair, setPair] = useState<ExchangePair>({
     from: undefined,
     to: undefined,
   })

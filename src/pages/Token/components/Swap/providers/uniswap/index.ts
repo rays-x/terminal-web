@@ -34,7 +34,7 @@ import {
   SwapRoute,
   SwapType,
 } from '@uniswap/smart-order-router'
-import { SwapSettings } from '../../components/Settings/types'
+import { SwapSettings } from '../../components/settings/types'
 import axios from 'axios'
 import { uniqBy } from 'lodash'
 import {

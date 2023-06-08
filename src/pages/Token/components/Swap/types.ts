@@ -1,6 +1,6 @@
 import { TokenInfo } from './providers/interface'
 
-export interface TokensState {
+export interface ExchangePair {
   from?: TokenInfo
   to?: TokenInfo
 }
