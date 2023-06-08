@@ -26,23 +26,22 @@ import {
 
 const data = [
   {
-    id: 'binance-smart-chain',
-    name: 'bsc',
-    label: 'BSC Network',
-    logo_url: BSCWalletIcon,
-    color: 'rgb(240, 185, 11)',
-    wallet: bsc,
-    swapApi: 'https://bsc.api.0x.org'
-  },
-  {
     id: 'ethereum',
     name: 'eth',
     label: 'ETH Network',
     logo_url: EthWalletIcon,
     color: 'rgb(115, 138, 225)',
     wallet: mainnet,
-    swapApi: 'https://api.0x.org'
   },
+  {
+    id: 'bsc',
+    name: 'bsc',
+    label: 'BSC Network',
+    logo_url: BSCWalletIcon,
+    color: 'rgb(240, 185, 11)',
+    wallet: bsc,
+  },
+
   // {
   //   id: '63a1f86f2afa55c2295d5ba0',
   //   name: 'avax',

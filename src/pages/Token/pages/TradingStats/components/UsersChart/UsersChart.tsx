@@ -81,7 +81,7 @@ export const UsersChart: React.FC = React.memo(() => {
     })).slice(1);
   }, [data]);
 
-  const totalValue = Number.parseInt(data?.data?.ethereum?.transfers[0].count || '0', 10);
+  const totalValue = Number.parseInt(data?.data?.ethereum?.transfers?.[0].count || '0', 10);
   
   const value = formatNumeral(
     totalValue,

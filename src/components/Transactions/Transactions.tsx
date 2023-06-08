@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  TransactionsBurnsUniswapQuery,
-  TransactionsMintsUniswapQuery,
-  TransactionsSwapsUniswapQuery,
-  useTransactionsBurnsUniswapLazyQuery,
-  useTransactionsMintsUniswapLazyQuery,
-  useTransactionsSwapsUniswapLazyQuery
+  TransactionsBurnsUniswap3Query,
+  TransactionsMintsUniswap3Query,
+  TransactionsSwapsUniswap3Query,
+  useTransactionsBurnsUniswap3LazyQuery,
+  useTransactionsMintsUniswap3LazyQuery,
+  useTransactionsSwapsUniswap3LazyQuery
 } from '../../graphql/generated/schema-uniswap';
 import {clientUniswap} from '../../graphql/clients/client-uniswap';
 import {
@@ -60,17 +60,17 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
   const [pageBurnsPancake, setBurnsPagePancake] = React.useState<number | null>(1);
   const [getTransactionsSwapsUniswap,
     {data: dataSwapsUniswapReceived, loading: loadingSwapsUniswap}
-  ] = useTransactionsSwapsUniswapLazyQuery({
+  ] = useTransactionsSwapsUniswap3LazyQuery({
     client: clientUniswap
   });
   const [getTransactionsMintsUniswap,
     {data: dataMintsUniswapReceived, loading: loadingMintsUniswap}
-  ] = useTransactionsMintsUniswapLazyQuery({
+  ] = useTransactionsMintsUniswap3LazyQuery({
     client: clientUniswap
   });
   const [getTransactionsBurnsUniswap,
     {data: dataBurnsUniswapReceived, loading: loadingBurnsUniswap}
-  ] = useTransactionsBurnsUniswapLazyQuery({
+  ] = useTransactionsBurnsUniswap3LazyQuery({
     client: clientUniswap
   });
   const [
@@ -104,7 +104,7 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
     .flatMap<any>(_ => _)
     .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) === -1);
     const data = dataSwapsReceived
-    .reduce<TransactionType[]>((prev, _: TransactionsSwapsUniswapQuery['swaps'][0]) => {
+    .reduce<TransactionType[]>((prev, _: TransactionsSwapsUniswap3Query['swaps'][0]) => {
       switch(_['__typename']) {
         case 'Swap': {
           return [...prev, {
@@ -139,7 +139,7 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
     .flatMap<any>(_ => _)
     .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataBurnsReceived
-    .reduce<TransactionType[]>((prev, _: TransactionsBurnsUniswapQuery['burns'][0]) => {
+    .reduce<TransactionType[]>((prev, _: TransactionsBurnsUniswap3Query['burns'][0]) => {
       switch(_['__typename']) {
         case 'Burn': {
           return [...prev, {
@@ -174,7 +174,7 @@ const Transactions: React.FC<TransactionsProps> = React.memo<TransactionsProps>(
     .flatMap<any>(_ => _)
     .filter(_ => dataUniswap.findIndex(__ => _.id === __.id) == -1);
     const data = dataMintsReceived
-    .reduce<TransactionType[]>((prev, _: TransactionsMintsUniswapQuery['mints'][0]) => {
+    .reduce<TransactionType[]>((prev, _: TransactionsMintsUniswap3Query['mints'][0]) => {
       switch(_['__typename']) {
         case 'Mint': {
           return [...prev, {
