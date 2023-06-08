@@ -54,13 +54,14 @@ import {
 } from './constants'
 
 import BaseUniswapLike from '../uniswapLike'
+import { NOT_FOUND_ROUTE_ERROR } from '../constants'
 
 export default class PancakeswapV3ExchangeProvide
   extends BaseUniswapLike
   implements
-    ExchangeProvider<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >
+    ExchangeProvider<{
+      trade: Trade<Token, Token, TradeType.EXACT_INPUT>
+    }>
 {
   public getInfo(): ExchangeInfo {
     return {
@@ -133,11 +134,12 @@ export default class PancakeswapV3ExchangeProvide
     baseTokenInfo: TokenInfo,
     quoteTokenInfo: TokenInfo,
     baseTokenAmount: string,
+    _: string,
     settings: SwapSettings,
   ): Promise<
-    EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >
+    EstimationResult<{
+      trade: Trade<Token, Token, TradeType.EXACT_INPUT>
+    }>
   > {
     const baseToken = new Token(
       this.chainId,
@@ -281,7 +283,7 @@ export default class PancakeswapV3ExchangeProvide
     )
 
     if (!bestTrade) {
-      throw new Error('Route not found! Try to increase Max hops.')
+      throw new Error(NOT_FOUND_ROUTE_ERROR)
     }
 
     const [slippageNum, slippageDenum] = new BigNumber(
@@ -292,7 +294,7 @@ export default class PancakeswapV3ExchangeProvide
 
     return {
       quoteTokenAmount: bestTrade.outputAmount.toFixed(),
-      tradeData: bestTrade,
+      tradeData: { trade: bestTrade },
       swaps: bestTrade.swaps[0].route.pools.map((pool) => ({
         baseSymbol:
           pool.token0.symbol?.toUpperCase() ||
@@ -307,13 +309,15 @@ export default class PancakeswapV3ExchangeProvide
           new Percent(slippageNum, slippageDenum),
         )
         .toFixed(),
+      fromToken: baseTokenInfo,
+      toToken: quoteTokenInfo,
     }
   }
 
   public async swap(
-    estimationResult: EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >,
+    estimationResult: EstimationResult<{
+      trade: Trade<Token, Token, TradeType.EXACT_INPUT>
+    }>,
     addressFrom: string,
     settings: SwapSettings,
   ): Promise<TransactionRequestWithRecipient> {
@@ -324,7 +328,7 @@ export default class PancakeswapV3ExchangeProvide
       .map((bn) => BigInt(bn.toFixed()))
 
     const methodParameters = SwapRouter.swapCallParameters(
-      estimationResult.tradeData,
+      estimationResult.tradeData.trade,
       {
         recipient: web3Utils.toChecksumAddress(addressFrom),
         slippageTolerance: new Percent(

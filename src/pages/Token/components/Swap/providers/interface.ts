@@ -21,6 +21,8 @@ export interface EstimationResult<T> {
   tradeData: T
   price: string
   guaranteedPrice: string
+  fromToken: TokenInfo
+  toToken: TokenInfo
 }
 
 export interface ExchangeInfo {
@@ -39,6 +41,7 @@ export interface ExchangeProvider<T = unknown> {
     baseToken: TokenInfo,
     quoteToken: TokenInfo,
     baseTokenAmount: string,
+    addressFrom: string,
     settings: SwapSettings,
   ): Promise<EstimationResult<T>>
   swap(
@@ -49,7 +52,6 @@ export interface ExchangeProvider<T = unknown> {
   prepareSwap(
     estimationResult: EstimationResult<T>,
     addressFrom: string,
-    settings: SwapSettings,
   ): Promise<TransactionRequestWithRecipient>
   getErc20TokenBalance(
     baseTokenInfo: TokenInfo,

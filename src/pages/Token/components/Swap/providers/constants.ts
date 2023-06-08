@@ -11,3 +11,6 @@ export const ERC20_ABI = [
   // Events
   'event Transfer(address indexed from, address indexed to, uint amount)',
 ]
+
+export const NOT_FOUND_ROUTE_ERROR =
+  'Route not found! Try to increase Max hops.'

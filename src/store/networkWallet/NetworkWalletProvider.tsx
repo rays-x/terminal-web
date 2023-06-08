@@ -7,7 +7,7 @@ import MATICWalletIcon from '../../assets/icons/new/MATICWalletIcon.svg';
 import AVAXWalletIcon from '../../assets/icons/new/AVAXWalletIcon.svg';
 import FantomIcon from '../../assets/icons/new/FantomIcon.svg';
 import {configureChains, createClient, useNetwork, useSwitchNetwork, WagmiConfig} from 'wagmi';
-import {avalanche, bsc, fantom, goerli, polygon} from 'wagmi/chains';
+import {avalanche, bsc, fantom, mainnet, polygon} from 'wagmi/chains';
 import {publicProvider} from 'wagmi/providers/public';
 import {connectorsForWallets, darkTheme, RainbowKitProvider} from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
@@ -31,7 +31,7 @@ const data = [
     label: 'ETH Network',
     logo_url: EthWalletIcon,
     color: 'rgb(115, 138, 225)',
-    wallet: goerli,
+    wallet: mainnet,
   },
   {
     id: 'bsc',
@@ -72,7 +72,7 @@ const data = [
 ];
 
 const {chains, provider} = configureChains(
-  [goerli, bsc, avalanche, polygon, fantom],
+  [mainnet, bsc, avalanche, polygon, fantom],
   [
     publicProvider()
   ]

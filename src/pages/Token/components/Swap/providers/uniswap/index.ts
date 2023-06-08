@@ -14,18 +14,9 @@ import {
   TransactionRequestWithRecipient,
 } from '../interface'
 
-import {
-  DEFAULT_GAS_LIMIT,
-  POOLS_PER_PAGE,
-  POOLS_TO_LOAD,
-  TICKS_PER_PAGE,
-} from './constants'
+import { ESTIMATED_GAS_COEFF } from './constants'
 
-import {
-  GasPriceResponse,
-  UniswapToken,
-  UniswapTokens,
-} from './types'
+import { UniswapToken, UniswapTokens } from './types'
 
 import { QUERY_TOKENS_UNISWAP } from '../../../../../../graphql/queries/uniswap3/tokens'
 import {
@@ -38,34 +29,29 @@ import {
 } from '../../../../../../graphql/generated/schema-uniswap'
 import { clientUniswap } from '../../../../../../graphql/clients/client-uniswap'
 import {
-  Pool,
-  SwapRouter,
-  Tick,
-  Trade,
-} from '@uniswap/v3-sdk'
+  AlphaRouter,
+  SwapOptionsSwapRouter02,
+  SwapRoute,
+  SwapType,
+} from '@uniswap/smart-order-router'
 import { SwapSettings } from '../../components/Settings/types'
 import axios from 'axios'
 import { uniqBy } from 'lodash'
 import {
   CurrencyAmount,
+  Fraction,
   Percent,
+  Price,
   Token,
   TradeType,
 } from '@uniswap/sdk-core'
 
-import {
-  QUERY_POOLS_UNISWAP,
-  QUERY_POOLS_WITHOUT_TOKENS_UNISWAP,
-} from '../../../../../../graphql/queries/uniswap3/pools'
-
 import BaseUniswapLike from '../uniswapLike'
+import { NOT_FOUND_ROUTE_ERROR } from '../constants'
 
 export default class UniswapV3ExchangeProvider
   extends BaseUniswapLike
-  implements
-    ExchangeProvider<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >
+  implements ExchangeProvider<SwapRoute>
 {
   public getInfo(): ExchangeInfo {
     return {
@@ -127,12 +113,9 @@ export default class UniswapV3ExchangeProvider
     baseTokenInfo: TokenInfo,
     quoteTokenInfo: TokenInfo,
     baseTokenAmount: string,
+    addressFrom: string,
     settings: SwapSettings,
-  ): Promise<
-    EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >
-  > {
+  ): Promise<EstimationResult<SwapRoute>> {
     const baseToken = new Token(
       this.chainId,
       web3Utils.toChecksumAddress(baseTokenInfo.address),
@@ -149,187 +132,94 @@ export default class UniswapV3ExchangeProvider
       quoteTokenInfo.name,
     )
 
-    const poolResponses = await Promise.all(
-      Array.from(
-        {
-          length: Math.ceil(POOLS_TO_LOAD / POOLS_PER_PAGE),
-        },
-        (_, i) => i,
-      ).map(async (page) =>
-        clientUniswap.query<
-          PoolUniswapQuery,
-          PoolUniswapQueryVariables
-        >({
-          query: QUERY_POOLS_UNISWAP,
-          variables: {
-            skip: page * POOLS_PER_PAGE,
-            first: Math.min(
-              POOLS_TO_LOAD - page * POOLS_PER_PAGE,
-              POOLS_PER_PAGE,
-            ),
-            skipTicks: 0,
-            firstTicks: TICKS_PER_PAGE,
-            orderBy: Pool_OrderBy.VolumeUsd,
-            orderDirection: OrderDirection.Desc,
-          },
-        }),
-      ),
-    )
+    const amount = new BigNumber(baseTokenAmount)
+      .shiftedBy(baseTokenInfo.decimals)
+      .toFixed()
 
-    const pools = poolResponses.flatMap(
-      (res) => res.data.pools,
-    )
+    const router = new AlphaRouter({
+      chainId: this.chainId,
+      provider: this.provider,
+    })
 
-    const poolsNeedAdditionalTicksLoadMap = new Map<
-      string,
-      PoolUniswapQuery['pools'][0]['ticks']
-    >()
-
-    let poolsNeedAdditionalTicks = pools
-      .filter((pool) => pool.ticks.length >= TICKS_PER_PAGE)
-      .map((pool) => pool.id)
-
-    let page = 1
-
-    while (poolsNeedAdditionalTicks.length) {
-      const {
-        data: { pools: poolsWithManyTicks = [] },
-      } = await clientUniswap.query<
-        PoolUniswapQuery,
-        PoolUniswapQueryVariables & { ids: string[] }
-      >({
-        query: QUERY_POOLS_WITHOUT_TOKENS_UNISWAP,
-        variables: {
-          firstTicks: TICKS_PER_PAGE,
-          skipTicks: TICKS_PER_PAGE * page,
-          ids: poolsNeedAdditionalTicks,
-        },
-      })
-
-      poolsWithManyTicks.forEach((pool) =>
-        poolsNeedAdditionalTicksLoadMap.set(pool.id, [
-          ...(poolsNeedAdditionalTicksLoadMap.get(
-            pool.id,
-          ) || []),
-          ...pool.ticks,
-        ]),
-      )
-
-      poolsNeedAdditionalTicks = poolsWithManyTicks
-        .filter(
-          (pool) => pool.ticks.length >= TICKS_PER_PAGE,
-        )
-        .map((pool) => pool.id)
-
-      page += 1
-    }
-
-    const [bestTrade] = await Trade.bestTradeExactIn(
-      pools.map(
-        (pool) =>
-          new Pool(
-            new Token(
-              this.chainId,
-              web3Utils.toChecksumAddress(pool.token0.id),
-              Number.parseInt(pool.token0.decimals, 10),
-              pool.token0.symbol,
-            ),
-            new Token(
-              this.chainId,
-              web3Utils.toChecksumAddress(pool.token1.id),
-              Number.parseInt(pool.token1.decimals, 10),
-              pool.token1.symbol,
-            ),
-            Number.parseInt(pool.feeTier, 10),
-            pool.sqrtPrice,
-            pool.liquidity,
-            Number.parseInt(pool.tick, 10),
-            [
-              ...pool.ticks,
-              ...(poolsNeedAdditionalTicksLoadMap.get(
-                pool.id,
-              ) || []),
-            ]
-              .map(
-                (tick) =>
-                  new Tick({
-                    index: Number.parseInt(
-                      tick.tickIdx,
-                      10,
-                    ),
-                    liquidityGross: tick.liquidityGross,
-                    liquidityNet: tick.liquidityNet,
-                  }),
-              )
-              .sort((a, b) => a.index - b.index),
-          ),
-      ),
-      CurrencyAmount.fromRawAmount(
-        baseToken,
-        new BigNumber(baseTokenAmount)
-          .shiftedBy(baseTokenInfo.decimals)
-          .toFixed(),
-      ),
-      quoteToken,
-      { maxHops: settings.maxHops, maxNumResults: 1 },
-    )
-
-    if (!bestTrade) {
-      throw new Error('Route not found! Try to increase Max hops.')
-    }
-
-    return {
-      quoteTokenAmount: bestTrade.outputAmount.toFixed(),
-      tradeData: bestTrade,
-      swaps: bestTrade.swaps[0].route.pools.map((pool) => ({
-        baseSymbol:
-          pool.token0.symbol?.toUpperCase() ||
-          pool.token0.address,
-        quoteSymbol:
-          pool.token1.symbol?.toUpperCase() ||
-          pool.token1.address,
-      })),
-    }
-  }
-
-  public async swap(
-    estimationResult: EstimationResult<
-      Trade<Token, Token, TradeType.EXACT_INPUT>
-    >,
-    addressFrom: string,
-    settings: SwapSettings,
-  ): Promise<TransactionRequestWithRecipient> {
     const [slippageNum, slippageDenum] = new BigNumber(
       settings.slippage,
     )
       .toFraction()
-      .map((bn) => bn.toFixed())
+      .map((bn) => bn.toNumber())
 
-    const methodParameters = SwapRouter.swapCallParameters(
-      estimationResult.tradeData,
+    const slippageTolerance = new Percent(
+      slippageNum,
+      slippageDenum,
+    )
+
+    const route = await router.route(
+      CurrencyAmount.fromRawAmount(baseToken, amount),
+      quoteToken,
+      TradeType.EXACT_INPUT,
       {
         recipient: web3Utils.toChecksumAddress(addressFrom),
-        slippageTolerance: new Percent(
-          slippageNum,
-          slippageDenum,
-        ),
+        slippageTolerance,
         deadline: Math.floor(
           Date.now() / 1000 + settings.deadlineMins * 60,
         ),
+        type: SwapType.SWAP_ROUTER_02,
       },
+      { maxSplits: settings.maxHops },
     )
 
-    const { data } = await axios.get<GasPriceResponse>(
-      'https://ethgasstation.info/api/ethgasAPI.json',
-      { responseType: 'json' },
+    if (!route) {
+      throw new Error(NOT_FOUND_ROUTE_ERROR)
+    }
+
+    const slippageAdjustedAmountOut = new Fraction(1)
+      .add(slippageTolerance)
+      .invert()
+      .multiply(route.trade.outputAmount.quotient).quotient
+
+    const minimumAmountOut = CurrencyAmount.fromRawAmount(
+      route.trade.outputAmount.currency,
+      slippageAdjustedAmountOut,
+    )
+
+    /* calculating manually cause `route.trade.worstExecutionPrice()` throws an error (https://github.com/Uniswap/smart-order-router/issues/65) */
+    const worstExecutionPrice = new Price(
+      route.trade.inputAmount.currency,
+      route.trade.outputAmount.currency,
+      route.trade.inputAmount.quotient,
+      minimumAmountOut.quotient,
     )
 
     return {
-      data: methodParameters.calldata,
+      quoteTokenAmount: route.trade.outputAmount.toFixed(),
+      tradeData: route,
+      swaps: route.trade.swaps[0].route.pools.map(
+        (pool) => ({
+          baseSymbol:
+            pool.token0.symbol?.toUpperCase() ||
+            pool.token0.address,
+          quoteSymbol:
+            pool.token1.symbol?.toUpperCase() ||
+            pool.token1.address,
+        }),
+      ),
+      price: route.trade.executionPrice.toFixed(),
+      guaranteedPrice: worstExecutionPrice.toFixed(),
+      fromToken: baseTokenInfo,
+      toToken: quoteTokenInfo,
+    }
+  }
+
+  public async swap(
+    route: EstimationResult<SwapRoute>,
+  ): Promise<TransactionRequestWithRecipient> {
+    return {
+      data: route.tradeData.methodParameters?.calldata,
       to: this.contractAddresses.v3SwapRouterAddress,
-      value: methodParameters.value,
-      gasLimit: DEFAULT_GAS_LIMIT,
-      gasPrice: data?.average,
+      value: route.tradeData.methodParameters?.value,
+      gasLimit: Math.ceil(
+        route.tradeData.estimatedGasUsed.toNumber() *
+          ESTIMATED_GAS_COEFF,
+      ),
     }
   }
 }

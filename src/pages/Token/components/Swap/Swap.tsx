@@ -69,7 +69,7 @@ export const Swap = memo(() => {
   }, [])
 
   const { network } = useNetworkWallet()
-  const { address } = useAccount()
+  const { address = '' } = useAccount()
 
   const switchTokens = useCallback(() => {
     setPair(({ from, to }) => ({
@@ -129,6 +129,7 @@ export const Swap = memo(() => {
   } = useEstimation(
     pair,
     amountFrom,
+    address,
     settings,
     exchangeProvider,
   )

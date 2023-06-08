@@ -16,8 +16,8 @@ export const exchangeProviders = {
   ),
   ethereum: new UniswapV3ExchangeProvider(
     {
-      chainId: 5,
-      rpcUrl: 'https://rpc.ankr.com/eth_goerli',
+      chainId: 1,
+      rpcUrl: 'https://rpc.ankr.com/eth',
     },
     {
       quoterAddress: '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',

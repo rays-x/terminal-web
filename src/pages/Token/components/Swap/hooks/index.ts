@@ -127,6 +127,7 @@ export function useAvailableTokens(
 export function useEstimation(
   pair: TokensState,
   amountFrom: string,
+  addressFrom: string,
   settings: SwapSettings,
   exchangeProvider?: ExchangeProvider<unknown>,
 ) {
@@ -153,7 +154,13 @@ export function useEstimation(
       }
 
       exchangeProvider
-        .estimate(pair.from, pair.to, amountFrom, settings)
+        .estimate(
+          pair.from,
+          pair.to,
+          amountFrom,
+          addressFrom,
+          settings,
+        )
         .then((estimation) => {
           setEstimation(estimation)
           setError('')

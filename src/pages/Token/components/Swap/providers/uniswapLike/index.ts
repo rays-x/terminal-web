@@ -71,8 +71,7 @@ export default class BaseUniswapLike {
   ): Promise<TransactionRequestWithRecipient> {
     const tokenContract = new ethers.Contract(
       web3Utils.toChecksumAddress(
-        estimationResult.tradeData.swaps[0].inputAmount
-          .currency.address,
+        estimationResult.fromToken.address,
       ),
       ERC20_ABI,
       this.provider,
@@ -82,12 +81,9 @@ export default class BaseUniswapLike {
       await tokenContract.populateTransaction.approve(
         this.contractAddresses.v3SwapRouterAddress,
         new BigNumber(
-          estimationResult.tradeData.inputAmount.toFixed(),
+          estimationResult.tradeData.trade.inputAmount.toFixed(),
         )
-          .shiftedBy(
-            estimationResult.tradeData.swaps[0].inputAmount
-              .currency.decimals,
-          )
+          .shiftedBy(estimationResult.fromToken.decimals)
           .toFixed(),
       )
 

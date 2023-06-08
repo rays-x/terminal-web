@@ -10,12 +10,9 @@ export interface NetworkParams {
 }
 
 export interface PrepareSwapOptions {
-  inputAmount: {
-    toFixed: () => string
-  }
-  swaps: {
+  trade: {
     inputAmount: {
-      currency: { address: string; decimals: number }
+      toFixed: () => string
     }
-  }[]
+  }
 }
