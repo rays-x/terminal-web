@@ -75,8 +75,6 @@ export const Swap = memo(() => {
   const { network } = useNetworkWallet()
   const { address = SAMPLE_ADDRESS } = useAccount()
 
-  console.log({ address })
-
   const switchTokens = useCallback(() => {
     setPair(({ from, to }) => ({
       from: to,
@@ -201,8 +199,6 @@ export const Swap = memo(() => {
     isLoading
 
   const error = errorEstimation || errorTokens || errorSteps
-
-  console.log({ estimation })
 
   return (
     <SwapStyled.Container>
