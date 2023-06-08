@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, memo } from 'react'
+import React, { CSSProperties, memo } from 'react'
 import { TokenInfo } from '../../providers/interface'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { FixedSizeList } from 'react-window'
@@ -8,6 +8,11 @@ interface Props {
   search: string
   selectedTokenId: string
   onTokenUpdated: (id: string) => unknown
+}
+
+interface RowProps {
+  index: number
+  style: CSSProperties
 }
 
 export const TokenList = memo(
@@ -33,7 +38,7 @@ export const TokenList = memo(
     }, [tokens, search])
 
     const Row = React.useCallback(
-      ({ index, style }) => {
+      ({ index, style }: RowProps) => {
         const token = list[index]
         const selected = token.id === selectedTokenId
 
@@ -102,7 +107,7 @@ export const TokenList = memo(
     return (
       <div className="list-of-tokens">
         <AutoSizer>
-          {({ height, width }) => (
+          {({ height = 1, width = 1 }) => (
             <FixedSizeList
               width={width}
               height={height}

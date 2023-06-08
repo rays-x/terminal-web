@@ -22,7 +22,7 @@ import {
   usePrepareSendTransaction,
   useSendTransaction,
 } from 'wagmi'
-import { TokenList } from './components/TokenList'
+import { TokenList } from './components/tokenList'
 import { exchangeProviders } from './providers'
 import { addressFormat } from '../../../../utils/addressFormat'
 import { ThreeDots, TailSpin } from 'react-loader-spinner'
