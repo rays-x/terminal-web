@@ -35,7 +35,11 @@ import {
 } from './hooks'
 import { SettingsModal } from './components/settings'
 import { SwapSettings } from './components/settings/types'
-import { INIT_AMOUNT, SettingsConfig } from './constants'
+import {
+  INIT_AMOUNT,
+  SAMPLE_ADDRESS,
+  SettingsConfig,
+} from './constants'
 
 export const Swap = memo(() => {
   const currentCoinData = useContext(CurrentCoinData)
@@ -69,7 +73,9 @@ export const Swap = memo(() => {
   }, [])
 
   const { network } = useNetworkWallet()
-  const { address = '' } = useAccount()
+  const { address = SAMPLE_ADDRESS } = useAccount()
+
+  console.log({ address })
 
   const switchTokens = useCallback(() => {
     setPair(({ from, to }) => ({
@@ -102,7 +108,8 @@ export const Swap = memo(() => {
     setPair({
       from:
         availableTokens.tokens.find(
-          (token) => token.address.toLowerCase() === tokenAddress,
+          (token) =>
+            token.address.toLowerCase() === tokenAddress,
         ) || availableTokens.tokens[0],
       to: availableTokens.tokens[1],
     })
@@ -194,6 +201,8 @@ export const Swap = memo(() => {
     isLoading
 
   const error = errorEstimation || errorTokens || errorSteps
+
+  console.log({ estimation })
 
   return (
     <SwapStyled.Container>
