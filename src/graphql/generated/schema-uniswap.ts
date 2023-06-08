@@ -14,6 +14,7 @@ export type Scalars = {
   BigDecimal: any;
   BigInt: any;
   Bytes: any;
+  Int8: any;
 };
 
 export type BlockChangedFilter = {
@@ -5351,27 +5352,6 @@ export enum _SubgraphErrorPolicy_ {
   /** If the subgraph has indexing errors, data will be omitted. The default. */
   Deny = 'deny'
 }
-
-export type PoolUniswapQueryVariables = Exact<{
-  first?: InputMaybe<Scalars['Int']>;
-  skip?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Pool_OrderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  firstTicks?: InputMaybe<Scalars['Int']>;
-  skipTicks?: InputMaybe<Scalars['Int']>;
-}>;
-
-
-export type PoolUniswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, tick?: any | null, feeTier: any, sqrtPrice: any, liquidity: any, volumeUSD: any, token0: { __typename?: 'Token', id: string, symbol: string, decimals: any }, token1: { __typename?: 'Token', id: string, symbol: string, decimals: any }, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
-
-export type TicksUniswapQueryVariables = Exact<{
-  firstTicks?: InputMaybe<Scalars['Int']>;
-  skipTicks?: InputMaybe<Scalars['Int']>;
-  ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
-}>;
-
-
-export type TicksUniswapQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, ticks: Array<{ __typename?: 'Tick', tickIdx: any, liquidityNet: any, liquidityGross: any }> }> };
 
 export type TokensUniswapQueryVariables = Exact<{
   block?: InputMaybe<Block_Height>;
