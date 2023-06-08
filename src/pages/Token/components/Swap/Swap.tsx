@@ -124,7 +124,8 @@ export const Swap = memo(() => {
     balance,
     loading: loadingBalance,
     reload: reloadBalance,
-  } = useBalance(exchangeProvider, pair.from, address)
+    error: errorBalance,
+  } = useBalance(amountFrom, exchangeProvider, pair.from, address)
 
   const {
     estimation,
@@ -198,7 +199,7 @@ export const Swap = memo(() => {
     loadingEstimation ||
     isLoading
 
-  const error = errorEstimation || errorTokens || errorSteps
+  const error = errorBalance || errorEstimation || errorTokens || errorSteps
 
   return (
     <SwapStyled.Container>
