@@ -1,10 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
+import BigNumber from 'bignumber.js'
 
 import {
   ExchangeProvider,
   TokenInfo,
 } from '../../providers/interface'
-import BigNumber from 'bignumber.js'
+
+import { UseBalanceResponse } from './types'
 
 const INIT_AMOUNT = '0.00'
 
@@ -13,7 +21,7 @@ export default function useBalance(
   exchangeProvider?: ExchangeProvider<unknown>,
   token?: TokenInfo,
   address?: string,
-) {
+): UseBalanceResponse {
   const [balance, setBalance] =
     useState<string>(INIT_AMOUNT)
 

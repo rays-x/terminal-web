@@ -8,16 +8,20 @@ import {
 
 import { SwapSettings } from '../../components/settings/types'
 
+import { UseStepsResponse } from './types'
+
 const STEPS = ['prepareSwap', 'swap'] as const
 
 export default function useSteps(
   step: number,
   settings: SwapSettings,
-  exchangeProvider?: ExchangeProvider<unknown>,
+  exchangeProvider?: ExchangeProvider,
   estimationResult?: EstimationResult<unknown>,
   addressFrom?: string,
-) {
-  const [error, setError] = useState<string>('')
+): UseStepsResponse {
+  const [error, setError] = useState<string | undefined>(
+    undefined,
+  )
 
   const [txBody, setTxBody] = useState<
     TransactionRequestWithRecipient | undefined
@@ -44,9 +48,9 @@ export default function useSteps(
     )
       .then((body) => {
         setTxBody(body)
-        setError('')
+        setError(undefined)
       })
-      .catch((err) => setError(err?.message || ''))
+      .catch((err) => setError(err?.message))
       .finally(() => setLoading(false))
   }, [settings, estimationResult, step])
 

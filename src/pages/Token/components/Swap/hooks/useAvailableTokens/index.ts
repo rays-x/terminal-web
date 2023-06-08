@@ -5,10 +5,12 @@ import {
   ExchangeProvider,
 } from '../../providers/interface'
 
+import { UseAvailableTokensResponse } from './types'
+
 export default function useAvailableTokens(
   exchangeProvider?: ExchangeProvider<unknown>,
-) {
-  const [error, setError] = useState<string>('')
+): UseAvailableTokensResponse {
+  const [error, setError] = useState<string | undefined>()
 
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -26,7 +28,7 @@ export default function useAvailableTokens(
       .getAvailableTokens()
       .then((tokens) => {
         setAvailableTokens(tokens)
-        setError('')
+        setError(undefined)
       })
       .catch((err) => setError(err?.message || err))
       .finally(() => setLoading(false))

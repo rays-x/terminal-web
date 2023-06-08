@@ -5,6 +5,7 @@ import {
 } from '../../providers/interface'
 import { ExchangePair } from '../../types'
 import { SwapSettings } from '../../components/settings/types'
+import { UseEstimationResponse } from './types'
 
 const DEBOUNCE_TIMEOUT = 1200
 
@@ -14,8 +15,8 @@ export default function useEstimation(
   addressFrom: string,
   settings: SwapSettings,
   exchangeProvider?: ExchangeProvider<unknown>,
-) {
-  const [error, setError] = useState<string>('')
+): UseEstimationResponse {
+  const [error, setError] = useState<string | undefined>()
 
   const [estimation, setEstimation] = useState<
     EstimationResult<unknown> | undefined
@@ -47,11 +48,11 @@ export default function useEstimation(
         )
         .then((estimation) => {
           setEstimation(estimation)
-          setError('')
+          setError(undefined)
         })
         .catch((err) => {
           setEstimation(undefined)
-          setError(err?.message || '')
+          setError(err?.message)
         })
         .finally(() => {
           setLoading(false)
