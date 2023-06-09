@@ -1,18 +1,31 @@
-import React, {useMemo} from 'react';
-import {Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {throttle} from 'lodash-es';
-import {dateMapF} from '../../../../../../presets/helpers/charts';
+import React, { useMemo } from 'react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { throttle } from 'lodash-es'
+import { dateMapF } from '../../../../../../presets/helpers/charts'
 
-import {chooseNumeralFormat, formatNumeral, NUMERAL_FORMAT_FLOAT} from '../../../../../../utils/numbers';
-import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
-import {CurrentCoinData} from '../../../../CoinPage';
-import {EMDASH} from '../../../../../../utils/data/utf';
-import {StackedAreaChartStyled} from './StackedAreaChart-styled';
-import {useFetch} from '../../../../../../hooks';
-import {TokenTransfersResponse} from '../../../../../../types/api/TokenTransfersResponse';
-import {avgBuy} from '../../../../../../utils/avg';
-import { bqGqlBody } from './constants';
-import { BQ_API_KEY } from '../../../../../../constants';
+import {
+  chooseNumeralFormat,
+  formatNumeral,
+  NUMERAL_FORMAT_FLOAT,
+} from '../../../../../../utils/numbers'
+import { CustomTooltip } from '../../../TradingStats/components/CustomTooltip/CustomTooltip'
+import { CurrentCoinData } from '../../../../CoinPage'
+import { EMDASH } from '../../../../../../utils/data/utf'
+import { StackedAreaChartStyled } from './StackedAreaChart-styled'
+import { useFetch } from '../../../../../../hooks'
+import { TokenTransfersResponse } from '../../../../../../types/api/TokenTransfersResponse'
+import { avgBuy } from '../../../../../../utils/avg'
+import { bqGqlBody } from './constants'
+import { BQ_API_KEY } from '../../../../../../constants'
 
 function getLineDefaults(fillColor, strokeColor) {
   return {
@@ -25,17 +38,20 @@ function getLineDefaults(fillColor, strokeColor) {
       r: 6,
       fill: '#fff',
       stroke: strokeColor,
-      strokeWidth: 3
-    }
-  };
+      strokeWidth: 3,
+    },
+  }
 }
 
 export const StackedAreaChart = React.memo(() => {
-  const currentCoinData = React.useContext(CurrentCoinData);
+  const currentCoinData = React.useContext(CurrentCoinData)
 
-  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
+  const fromDate = useMemo(
+    () => Date.now() - 14 * 24 * 60 * 60 * 1000,
+    [],
+  )
   const toDate = useMemo(() => Date.now(), [])
-  
+
   const { data } = useFetch<TokenTransfersResponse>({
     url: 'https://graphql.bitquery.io/',
     withCredentials: false,
@@ -48,38 +64,51 @@ export const StackedAreaChart = React.memo(() => {
       variables: {
         limit: 20,
         offset: 0,
-        network: currentCoinData?.platforms[0].blockchain.bqSlug,
+        network:
+          currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
-      from: new Date(fromDate).toISOString(),
+        from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
-        dateFormat: "%Y-%m-%d",
+        dateFormat: '%Y-%m-%d',
       },
-    }
-  });
+    },
+  })
 
-  const coinIndex = currentCoinData?.index?.toUpperCase();
+  const coinIndex = currentCoinData?.index?.toUpperCase()
 
   const chartData = useMemo(() => {
-    if(!data?.data?.ethereum?.transfers) {
-      return [];
+    if (!data?.data?.ethereum?.transfers) {
+      return []
     }
-    return data.data.ethereum.transfers?.map(item => ({
-      date: new Date(item.date.date),
-      averageTransferAmount: item.average,
-      medianTransferAmount: item.median,
-      totalAmount: item.sum,
-      averageTransferAmountUsd: item.average * +(currentCoinData?.price_usd || 0),
-      medianTransferAmountUsd: item.median * +(currentCoinData?.price_usd || 0),
-      totalAmountUsd: item.sum * +(currentCoinData?.price_usd || 0)
-    })).map(dateMapF).reverse() || [];
-  }, [data]);
+    return (
+      data.data.ethereum.transfers
+        ?.map((item) => ({
+          date: new Date(item.date.date),
+          averageTransferAmount: item.average,
+          medianTransferAmount: item.median,
+          totalAmount: item.sum,
+          averageTransferAmountUsd:
+            item.average *
+            +(currentCoinData?.price_usd || 0),
+          medianTransferAmountUsd:
+            item.median *
+            +(currentCoinData?.price_usd || 0),
+          totalAmountUsd:
+            item.sum * +(currentCoinData?.price_usd || 0),
+        }))
+        .map(dateMapF) || []
+    )
+  }, [data])
 
   const headerValues = useMemo(() => {
-    if(!data?.data?.ethereum?.transfers) {
-      return [];
+    if (!data?.data?.ethereum?.transfers) {
+      return []
     }
 
-    const totalAmount = data.data.ethereum.transfers.reduce((prev, next) => prev + next['sum'], 0);
+    const totalAmount = data.data.ethereum.transfers.reduce(
+      (prev, next) => prev + next['sum'],
+      0,
+    )
 
     return [
       {
@@ -89,32 +118,40 @@ export const StackedAreaChart = React.memo(() => {
           chooseNumeralFormat({
             value: totalAmount,
             maxLength: 7,
-            hasDigits: false
-          })
-        )
+            hasDigits: false,
+          }),
+        ),
       },
       {
         title: 'Median Transfer Amount:',
         value: formatNumeral(
-          avgBuy(data.data.ethereum.transfers.map(({ median, count }) => ({
-            qty: count,
-            price: median
-          }))),
-          NUMERAL_FORMAT_FLOAT
-        )
+          avgBuy(
+            data.data.ethereum.transfers.map(
+              ({ median, count }) => ({
+                qty: count,
+                price: median,
+              }),
+            ),
+          ),
+          NUMERAL_FORMAT_FLOAT,
+        ),
       },
       {
         title: 'Average Transfer Amount:',
         value: formatNumeral(
-          avgBuy(data.data.ethereum.transfers.map(({ average, count }) => ({
-            qty: count,
-            price: average
-          }))),
-          NUMERAL_FORMAT_FLOAT
-        )
-      }
-    ];
-  }, [data]);
+          avgBuy(
+            data.data.ethereum.transfers.map(
+              ({ average, count }) => ({
+                qty: count,
+                price: average,
+              }),
+            ),
+          ),
+          NUMERAL_FORMAT_FLOAT,
+        ),
+      },
+    ]
+  }, [data])
 
   return (
     <StackedAreaChartStyled.Component>
@@ -140,9 +177,9 @@ export const StackedAreaChart = React.memo(() => {
                 x2="1"
                 y2="0"
               >
-                <stop offset="0.5%" stopColor="#27E65C"/>
-                <stop offset="50.22%" stopColor="#587BFF"/>
-                <stop offset="97.9%" stopColor="#B518FF"/>
+                <stop offset="0.5%" stopColor="#27E65C" />
+                <stop offset="50.22%" stopColor="#587BFF" />
+                <stop offset="97.9%" stopColor="#B518FF" />
               </linearGradient>
             </defs>
 
@@ -157,7 +194,7 @@ export const StackedAreaChart = React.memo(() => {
               tickLine={false}
               // tickCount={5}
               interval={'preserveStartEnd'}
-              tick={({x, y, payload}) => {
+              tick={({ x, y, payload }) => {
                 return (
                   <g transform={`translate(${x},${y})`}>
                     <text
@@ -172,7 +209,7 @@ export const StackedAreaChart = React.memo(() => {
                       {payload.value}
                     </text>
                   </g>
-                );
+                )
               }}
             />
             <YAxis
@@ -181,7 +218,7 @@ export const StackedAreaChart = React.memo(() => {
               width={55}
               axisLine={false}
               tickLine={false}
-              tick={({x, y, payload: {value}}) => (
+              tick={({ x, y, payload: { value } }) => (
                 <g transform={`translate(${x},${y})`}>
                   <text
                     x={15}
@@ -197,8 +234,8 @@ export const StackedAreaChart = React.memo(() => {
                       chooseNumeralFormat({
                         value,
                         maxLength: 4,
-                        type: 'currency'
-                      })
+                        type: 'currency',
+                      }),
                     )}
                   </text>
                 </g>
@@ -206,22 +243,24 @@ export const StackedAreaChart = React.memo(() => {
             />
             <Legend
               content={throttle(
-                ({key, payload}) => (
+                ({ key, payload }) => (
                   <StackedAreaChartStyled.Legend key={key}>
                     {payload?.map((entry, i) => (
-                      <StackedAreaChartStyled.LegendItem key={i}>
+                      <StackedAreaChartStyled.LegendItem
+                        key={i}
+                      >
                         {entry.value}
                       </StackedAreaChartStyled.LegendItem>
                     ))}
                   </StackedAreaChartStyled.Legend>
                 ),
-                100
+                100,
               )}
             />
             <Tooltip
               content={CustomTooltip({
                 showLegendDot: true,
-                shouldBeShortened: false
+                shouldBeShortened: false,
               })}
             />
             <Area
@@ -231,7 +270,7 @@ export const StackedAreaChart = React.memo(() => {
               // stackId="1"
               {...getLineDefaults(
                 'url(#totalAmountGradient)',
-                'url(#totalAmountGradient)'
+                'url(#totalAmountGradient)',
               )}
             />
             <Area
@@ -252,5 +291,5 @@ export const StackedAreaChart = React.memo(() => {
         </ResponsiveContainer>
       </StackedAreaChartStyled.Body>
     </StackedAreaChartStyled.Component>
-  );
-});
+  )
+})
