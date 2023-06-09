@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { CurrentCoinData } from '../../CoinPage'
 import { TotalLiquidity } from './components/TotalLiquidity/TotalLiquidity'
 import { HeaderStyled } from '../../../../components/_old/ui/Header/Header-styled'
@@ -20,6 +20,7 @@ import { EMDASH } from '../../../../utils/UTF'
 import { Pair } from '../../../../components/_old2/Table/Pair/Pair'
 import { PairPageStyled } from '../../Pair-styled'
 import { TokenPairsResponse } from '../../../../types/api/TokenPairsResponse'
+import BigNumber from 'bignumber.js'
 
 enum SortByColumn {
   PAIR = 'name',
@@ -36,7 +37,7 @@ enum SortByColumn {
 }
 
 enum Show {
-  SHOW5 = 5,
+  SHOW50 = 50,
 }
 
 const valueOrDash = (value) =>
@@ -56,7 +57,7 @@ export const TradingPairStatistics: React.FC = React.memo(
     })
 
     const [search, setSearch] = useState('')
-    const [rowsShow] = useState(Show.SHOW5)
+    const [rowsShow] = useState(Show.SHOW50)
     const [page, setPage] = useState(1)
     const pages = React.useMemo(
       () => Math.ceil(data?.count / rowsShow),
@@ -86,6 +87,18 @@ export const TradingPairStatistics: React.FC = React.memo(
         },
       }),
       [sortBy, sortDescending],
+    )
+
+    const totalLiquidity = useMemo(
+      () =>
+        (data?.items || [])
+          .reduce(
+            (summ, item) =>
+              new BigNumber(summ).plus(item.liquidity),
+            new BigNumber(0),
+          )
+          .toString(),
+      [data],
     )
 
     return (
@@ -238,7 +251,12 @@ export const TradingPairStatistics: React.FC = React.memo(
                                 <TableRowLink
                                   key={pool.name + i}
                                 >
-                                  <Pair icons={[pool.base.image, pool.quote.image]}>
+                                  <Pair
+                                    icons={[
+                                      pool.base.image,
+                                      pool.quote.image,
+                                    ]}
+                                  >
                                     {pool.name}
                                   </Pair>
                                   <RowText>
@@ -333,7 +351,7 @@ export const TradingPairStatistics: React.FC = React.memo(
                   }
                 />
               </div>
-              <TotalLiquidity liquidity={currentCoinData.fully_diluted_mc} />
+              <TotalLiquidity liquidity={totalLiquidity} />
             </PairPageStyled.TransactionGroup>
           </TableStyled.Component>
         </TableStyled.Wrapper>
