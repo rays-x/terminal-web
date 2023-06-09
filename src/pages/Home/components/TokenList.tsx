@@ -46,11 +46,12 @@ enum SortByColumn {
   PRICE_CHANGE_24H = 'priceChangePercentage24h',
 }
 
+const rowsShow = Show.SHOW100
+
 const valueOrDash = (value: unknown) =>
   value === '0' ? EMDASH : value
 
 const TokenList = React.memo(() => {
-  const [rowsShow, setRowsShow] = useState(Show.SHOW20)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState(
@@ -266,23 +267,6 @@ const TokenList = React.memo(() => {
         }
       >
         <NetworkSelect />
-        <div className={s.TokenListPage__selectContainer}>
-          <div className={s.TokenListPage__selectLabel}>
-            Show:
-          </div>
-          <Select
-            itemList={[
-              { id: Show.SHOW20, text: '20 rows' },
-              { id: Show.SHOW50, text: '50 rows' },
-              { id: Show.SHOW100, text: '100 rows' },
-            ]}
-            value={rowsShow}
-            onChange={(show) => {
-              setRowsShow(show)
-              setPage(1)
-            }}
-          />
-        </div>
       </div>
       <div className={s.TokenListPage__scrollContainer}>
         <Table
