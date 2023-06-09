@@ -1,36 +1,57 @@
-import React from 'react';
-import s from './Token.module.scss';
-import {Image} from '../../Image';
-import {useNetworkExchanges} from '../../../../store/networkExchanges';
+import React, { useMemo } from 'react'
 
-export function Token({children, icons, platforms}: {
-  children: string;
-  icons: string[];
+import s from './Token.module.scss'
+import { Image } from '../../Image'
+import { useNetworkExchanges } from '../../../../store/networkExchanges'
+
+export function Token({
+  children,
+  icons,
+  platforms,
+}: {
+  children: string
+  icons: string[]
   platforms?: {
-    id: string
     address: string
-    platformId: string
+    blockchain: {
+      bqSlug: string
+      name: string
+      image: string
+      url: string
+    }
   }[]
 }) {
-  const {data} = useNetworkExchanges();
-  const platformIds = React.useMemo(() => platforms?.flatMap(({platformId}) => platformId) || [], [platforms]);
-  const selectedPlatforms = React.useMemo(() => data.filter(({id}) => platformIds.includes(id)), [data, platformIds]);
+  const { data } = useNetworkExchanges()
+
+  const selectedPlatforms = useMemo(() => {
+    const platformsSet = new Set(
+      platforms?.map(({ blockchain }) => blockchain.bqSlug),
+    )
+
+    return data.filter((data) => platformsSet.has(data.id))
+  }, [data, platforms])
+
   return (
     <div className={s.Token}>
-      <Image className={s.Token__icon} sources={icons} altText={children} width={28}/>
+      <Image
+        className={s.Token__icon}
+        sources={icons}
+        altText={children}
+        width={28}
+      />
       <span className={s.Token__text}>{children}</span>
-      {selectedPlatforms
-      .filter((_, i) => i === 0)
-      .map(platform => (
+      {selectedPlatforms.map((platform) => (
         <span
           key={platform.id}
           className={s.Token__platform}
           style={{
             backgroundColor: platform.tableBackground,
-            color: platform.tableColor
+            color: platform.tableColor,
           }}
-        >{platform.label}</span>
+        >
+          {platform.label}
+        </span>
       ))}
     </div>
-  );
+  )
 }

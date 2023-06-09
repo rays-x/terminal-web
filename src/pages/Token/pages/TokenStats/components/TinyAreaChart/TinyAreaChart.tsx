@@ -1,20 +1,32 @@
-import React, {useMemo} from 'react';
-import {Area, AreaChart, ResponsiveContainer, Tooltip, XAxis} from 'recharts';
-import {dateMapF} from '../../../../../../presets/helpers/charts';
+import React, { useMemo } from 'react'
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+} from 'recharts'
+import { dateMapF } from '../../../../../../presets/helpers/charts'
 
-import {chooseNumeralFormat, formatNumeral} from '../../../../../../utils/numbers';
-import {TinyAreaChartStyled} from './TinyAreaChart-styled';
-import {CurrentCoinData} from '../../../../CoinPage';
-import {CustomTooltip} from '../../../TradingStats/components/CustomTooltip/CustomTooltip';
-import {useFetch} from '../../../../../../hooks';
-import { UniqStatsResponse } from './types';
-import { BQ_API_KEY } from '../../../../../../constants';
-import { gqlQuery } from './constants';
+import {
+  chooseNumeralFormat,
+  formatNumeral,
+} from '../../../../../../utils/numbers'
+import { TinyAreaChartStyled } from './TinyAreaChart-styled'
+import { CurrentCoinData } from '../../../../CoinPage'
+import { CustomTooltip } from '../../../TradingStats/components/CustomTooltip/CustomTooltip'
+import { useFetch } from '../../../../../../hooks'
+import { UniqStatsResponse } from './types'
+import { BQ_API_KEY } from '../../../../../../constants'
+import { gqlQuery } from './constants'
 
 export const TinyAreaChart = () => {
-  const currentCoinData = React.useContext(CurrentCoinData);
+  const currentCoinData = React.useContext(CurrentCoinData)
 
-  const fromDate = useMemo(() => Date.now() - 14 * 24 * 60 * 60 * 1000, []);
+  const fromDate = useMemo(
+    () => Date.now() - 14 * 24 * 60 * 60 * 1000,
+    [],
+  )
   const toDate = useMemo(() => Date.now(), [])
 
   const { data } = useFetch<UniqStatsResponse>({
@@ -29,37 +41,47 @@ export const TinyAreaChart = () => {
       variables: {
         limit: 20,
         offset: 0,
-        network: currentCoinData?.platforms[0].blockchain.bqSlug,
+        network:
+          currentCoinData?.platforms[0].blockchain.bqSlug,
         token: currentCoinData?.platforms[0].address,
         from: new Date(fromDate).toISOString(),
         till: new Date(toDate).toISOString(),
-        dateFormat: "%Y-%m-%d"
-      }
-    }
-  });
+        dateFormat: '%Y-%m-%d',
+      },
+    },
+  })
 
   const chartData = useMemo(() => {
-    if(!data?.data?.ethereum?.transfers) {
-      return [];
+    if (!data?.data?.ethereum?.transfers) {
+      return []
     }
-    return data.data.ethereum.transfers.map(item => ({
-      date: new Date(item.date.date),
-      transferCount: item.transferCount,
-      uniqReceivers: item.uniqReceivers,
-      uniqSenders: item.uniqSenders
-    })).map(dateMapF).reverse();
-  }, [data]);
+    return data.data.ethereum.transfers
+      .map((item) => ({
+        date: new Date(item.date.date),
+        transferCount: +item.transferCount,
+        uniqReceivers: +item.uniqReceivers,
+        uniqSenders: +item.uniqSenders,
+      }))
+      .map(dateMapF)
+      .reverse()
+  }, [data])
 
-  const fields = chartData.reduce((prev, next) => {
-    prev['uniqReceivers'] = +next['uniqReceivers'] + +prev['uniqReceivers'];
-    prev['uniqSenders'] = +next['uniqSenders'] + +prev['uniqSenders'];
-    prev['transferCount'] = +next['transferCount'] + +prev['transferCount'];
-    return prev;
-  }, {
-    uniqReceivers: 0,
-    uniqSenders: 0,
-    transferCount: 0
-  });
+  const fields = chartData.reduce(
+    (prev, next) => {
+      prev['uniqReceivers'] =
+        +next['uniqReceivers'] + +prev['uniqReceivers']
+      prev['uniqSenders'] =
+        +next['uniqSenders'] + +prev['uniqSenders']
+      prev['transferCount'] =
+        +next['transferCount'] + +prev['transferCount']
+      return prev
+    },
+    {
+      uniqReceivers: 0,
+      uniqSenders: 0,
+      transferCount: 0,
+    },
+  )
 
   return (
     <TinyAreaChartStyled.Component>
@@ -69,17 +91,34 @@ export const TinyAreaChart = () => {
           <span>
             {formatNumeral(
               fields?.uniqReceivers,
-              chooseNumeralFormat({value: fields?.uniqReceivers})
+              chooseNumeralFormat({
+                value: fields?.uniqReceivers,
+              }),
             )}
           </span>
         </TinyAreaChartStyled.Info>
         <TinyAreaChartStyled.Chart>
-          <ResponsiveContainer width={'99%'} height={'100%'}>
+          <ResponsiveContainer
+            width={'99%'}
+            height={'100%'}
+          >
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="gradientBlue" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0.5%" stopColor="rgba(57, 208, 255, 0.5)"/>
-                  <stop offset="97.9%" stopColor="rgba(131, 255, 248, 0.5)"/>
+                <linearGradient
+                  id="gradientBlue"
+                  x1="0"
+                  y1="1"
+                  x2="1"
+                  y2="0"
+                >
+                  <stop
+                    offset="0.5%"
+                    stopColor="rgba(57, 208, 255, 0.5)"
+                  />
+                  <stop
+                    offset="97.9%"
+                    stopColor="rgba(131, 255, 248, 0.5)"
+                  />
                 </linearGradient>
               </defs>
               <Tooltip
@@ -87,7 +126,7 @@ export const TinyAreaChart = () => {
                   showLegendDot: false,
                   shouldBeShortened: false,
                   showValueLabel: false,
-                  valueFormatter: (value) => value
+                  valueFormatter: (value) => value,
                 })}
               />
               <Area
@@ -106,7 +145,7 @@ export const TinyAreaChart = () => {
                 tickLine={false}
                 // tickCount={5}
                 interval={'preserveStartEnd'}
-                tick={({x, y, payload}) => {
+                tick={({ x, y, payload }) => {
                   return (
                     <g transform={`translate(${x},${y})`}>
                       <text
@@ -121,7 +160,7 @@ export const TinyAreaChart = () => {
                         {payload.value}
                       </text>
                     </g>
-                  );
+                  )
                 }}
               />
             </AreaChart>
@@ -135,19 +174,21 @@ export const TinyAreaChart = () => {
           <span>
             {formatNumeral(
               fields?.uniqSenders,
-              chooseNumeralFormat({value: fields?.uniqSenders})
+              chooseNumeralFormat({
+                value: fields?.uniqSenders,
+              }),
             )}
           </span>
         </TinyAreaChartStyled.Info>
         <TinyAreaChartStyled.Chart>
           <ResponsiveContainer width="99%" height="100%">
-            <AreaChart data={chartData}>
+            <AreaChart data={chartData} height={200}>
               <Tooltip
                 content={CustomTooltip({
                   showLegendDot: false,
                   shouldBeShortened: false,
                   showValueLabel: false,
-                  valueFormatter: (value) => value
+                  valueFormatter: (value) => value,
                 })}
               />
               <Area
@@ -166,7 +207,7 @@ export const TinyAreaChart = () => {
                 tickLine={false}
                 // tickCount={5}
                 interval={'preserveStartEnd'}
-                tick={({x, y, payload}) => {
+                tick={({ x, y, payload }) => {
                   return (
                     <g transform={`translate(${x},${y})`}>
                       <text
@@ -181,7 +222,7 @@ export const TinyAreaChart = () => {
                         {payload.value}
                       </text>
                     </g>
-                  );
+                  )
                 }}
               />
             </AreaChart>
@@ -195,7 +236,9 @@ export const TinyAreaChart = () => {
           <span>
             {formatNumeral(
               fields?.transferCount,
-              chooseNumeralFormat({value: fields?.transferCount})
+              chooseNumeralFormat({
+                value: fields?.transferCount,
+              }),
             )}
           </span>
         </TinyAreaChartStyled.Info>
@@ -204,13 +247,16 @@ export const TinyAreaChart = () => {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="transferCountStroke">
-                  <stop offset="0%" stopColor="#E79900"/>
-                  <stop offset="50%" stopColor="#CEB300"/>
-                  <stop offset="100%" stopColor="#CAB600"/>
+                  <stop offset="0%" stopColor="#E79900" />
+                  <stop offset="50%" stopColor="#CEB300" />
+                  <stop offset="100%" stopColor="#CAB600" />
                 </linearGradient>
                 <linearGradient id="transferCountFill">
-                  <stop offset="0.5%" stopColor="#E76F00"/>
-                  <stop offset="97.9%" stopColor="#FF782D"/>
+                  <stop offset="0.5%" stopColor="#E76F00" />
+                  <stop
+                    offset="97.9%"
+                    stopColor="#FF782D"
+                  />
                 </linearGradient>
               </defs>
               <Tooltip
@@ -218,7 +264,7 @@ export const TinyAreaChart = () => {
                   showLegendDot: false,
                   shouldBeShortened: false,
                   showValueLabel: false,
-                  valueFormatter: (value) => value
+                  valueFormatter: (value) => value,
                 })}
               />
               <Area
@@ -237,7 +283,7 @@ export const TinyAreaChart = () => {
                 tickLine={false}
                 // tickCount={5}
                 interval={'preserveStartEnd'}
-                tick={({x, y, payload}) => {
+                tick={({ x, y, payload }) => {
                   return (
                     <g transform={`translate(${x},${y})`}>
                       <text
@@ -252,7 +298,7 @@ export const TinyAreaChart = () => {
                         {payload.value}
                       </text>
                     </g>
-                  );
+                  )
                 }}
               />
             </AreaChart>
@@ -260,5 +306,5 @@ export const TinyAreaChart = () => {
         </TinyAreaChartStyled.Chart>
       </TinyAreaChartStyled.Item>
     </TinyAreaChartStyled.Component>
-  );
-};
+  )
+}
