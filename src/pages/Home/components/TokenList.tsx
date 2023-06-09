@@ -310,7 +310,7 @@ const TokenList = React.memo(() => {
             <HeaderCell
               {...getHeaderCellProps(SortByColumn.PRICE)}
             >
-              Price
+              Price, $
             </HeaderCell>
             <HeaderCell
               {...getHeaderCellProps(
@@ -322,7 +322,7 @@ const TokenList = React.memo(() => {
             <HeaderCell
               {...getHeaderCellProps(SortByColumn.VOLUME)}
             >
-              Volume, 24H
+              Volume, 24H, $
             </HeaderCell>
             {/*<HeaderCell {...getHeaderCellProps(SortByColumn.VOLUME_CHANGE_1H)}>1H Change</HeaderCell>*/}
             {/* <HeaderCell {...getHeaderCellProps(SortByColumn.VOLUME_CHANGE_24H)}>24H Change</HeaderCell> */}
@@ -338,7 +338,7 @@ const TokenList = React.memo(() => {
                 SortByColumn.MARKET_CAP,
               )}
             >
-              Market Cap
+              Market Cap, $
             </HeaderCell>
             <HeaderCell
               {...getHeaderCellProps(
